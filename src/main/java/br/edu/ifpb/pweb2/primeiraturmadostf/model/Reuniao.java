@@ -6,7 +6,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "reuniao")
+@Table(
+    name = "reuniao",
+    indexes = {
+        @Index(name = "idx_reuniao_status", columnList = "status"),
+        @Index(name = "idx_reuniao_colegiado", columnList = "colegiado_id")
+    }
+)
 public class Reuniao {
     
     @Id
@@ -27,7 +33,7 @@ public class Reuniao {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "colegiado_id", nullable = false)
     private Colegiado colegiado;
-
+    
     @ManyToMany
     @JoinTable(
         name = "reuniao_processo",
@@ -36,8 +42,16 @@ public class Reuniao {
     )
     private Set<Processo> processos = new HashSet<>();
     
-    @OneToMany(mappedBy = "reuniao")
+    @OneToMany(mappedBy = "reuniao", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Voto> votos = new HashSet<>();
+    
+    // Construtores
+    public Reuniao() {}
+    
+    public Reuniao(LocalDate dataReuniao, Colegiado colegiado) {
+        this.dataReuniao = dataReuniao;
+        this.colegiado = colegiado;
+    }
     
     // Getters e Setters
     public Long getId() {
@@ -87,7 +101,7 @@ public class Reuniao {
     public void setProcessos(Set<Processo> processos) {
         this.processos = processos;
     }
-
+    
     public Set<Voto> getVotos() {
         return votos;
     }
@@ -96,11 +110,9 @@ public class Reuniao {
         this.votos = votos;
     }
     
+    
     @Override
     public String toString() {
-        return "Reuniao{id=" + id + 
-               ", data=" + dataReuniao + 
-               ", status=" + status + 
-               ", processos=" + processos.size() + "}";
+        return "Reuniao{id=" + id + ", data=" + dataReuniao + ", status=" + status + "}";
     }
 }
