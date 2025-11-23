@@ -50,7 +50,8 @@
                                     </a>
 
                                     <form th:action="@{/admin/aluno/delete/{matricula}(matricula=${aluno.matricula})}"
-                                        method="post" style="display: inline;">
+                                        method="post" style="display: inline;" 
+                                        onsubmit="return confirm('Tem certeza que deseja excluir este aluno?');">
                                         <input type="hidden" name="_method" value="delete">
                                     <button class="btn btn-sm btn-outline-danger">Excluir</button>
                                 </form>

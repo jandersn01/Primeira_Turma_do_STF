@@ -53,7 +53,8 @@
                             <td>
                                 <a th:href="@{/admin/professor/id/{id}(id=${professor.id})}" class="btn btn-sm btn-outline-primary">Editar</a>
                                 <form th:action="@{/admin/professor/delete/{matricula}(matricula=${professor.matricula})}"
-                                    method="post" style="display: inline;">
+                                    method="post" style="display: inline;"
+                                    onsubmit="return confirm('Tem certeza que deseja excluir este Professor?');">
                                     <input type="hidden" name="_method" value="delete">
                                     <button class="btn btn-sm btn-outline-danger">Excluir</button>
                                 </form>
