@@ -67,4 +67,12 @@ public class Assunto {
     public String toString() {
         return "Assunto{id=" + id + ", nome='" + nome + "'}";
     }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
 }

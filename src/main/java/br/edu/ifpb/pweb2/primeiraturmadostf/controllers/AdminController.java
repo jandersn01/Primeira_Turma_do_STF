@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.edu.ifpb.pweb2.primeiraturmadostf.Services.AlunoService;
+import br.edu.ifpb.pweb2.primeiraturmadostf.Services.AssuntoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.Services.ProfessorService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Assunto;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
 
 @Controller
@@ -23,6 +25,8 @@ public class AdminController {
     private ProfessorService professorservice;
     @Autowired
     private AlunoService alunoService;
+    @Autowired
+    private AssuntoService assuntoService;
     
 
 
@@ -102,11 +106,48 @@ public class AdminController {
     }
 
 // ------------------------------ -- -- CRUD COORDENANDOR
+    //Aqui, poderia ser criado um filtro em professor/list par listar apenas professores;
 
-
-    public String getProfessorCoordenandorList(){
-        return "";
+    @GetMapping("/professor/cordenadore")
+    public String getProfessorCoordenandorList(Model model){
+        model.addAttribute("coordenadores", professorservice.findByCoordenadores());
+        return "professor/list";
     }
+
+// ------------------------------ -- -- CRUD ASSUNTOS
+
+@GetMapping("/assunto/form")
+    public String getAssuntoForm(Model model, Assunto assunto){
+        model.addAttribute("assunto", assunto);
+        return "assunto/form";
+    }
+
+    @GetMapping("/assunto/list")
+    public String getAssuntoList(Model model){
+        model.addAttribute("listaAssuntos", assuntoService.findAll());
+        return "assunto/list";
+    }
+
+    @PostMapping("/assunto/save")
+    public String postAssunto(Assunto assunto, RedirectAttributes redirect){
+        assuntoService.save(assunto);
+        redirect.addFlashAttribute("mensagem", "Assunto cadastrado com sucesso!");
+        return "redirect:/admin/assunto/list";
+    }
+
+    @GetMapping("assunto/id/{id}")
+    public String getAssuntoById(Model model, @PathVariable(value="id") Long id){
+        model.addAttribute("assunto", assuntoService.findById(id));
+        return "assunto/form";
+    }
+
+    @PostMapping("/assunto/delete/{id}")
+    public String deleteAssunto(RedirectAttributes redirect, @PathVariable(value="id")Long id){
+        assuntoService.remove(id);
+        redirect.addFlashAttribute("mensagem", "Registro de assunto apagado com sucesso!");
+        return "redirect:/admin/assunto/list";
+    }
+
 
 
 }
