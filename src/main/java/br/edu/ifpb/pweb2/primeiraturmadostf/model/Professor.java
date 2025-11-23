@@ -17,7 +17,7 @@ import jakarta.persistence.Table;
 @Table(
     name = "professor",
     indexes = {
-        @Index(name = "idx_professor_login", columnList = "login")
+        @Index(name = "idx_professor_login", columnList = "matricula")
     }
 )
 public class Professor {
@@ -33,7 +33,7 @@ public class Professor {
     private String fone;
     
     @Column(nullable = false, unique = true, length = 50)
-    private String login;
+    private String matricula;
     
     @Column(nullable = false, length = 100)
     private String senha; // Armazenar com BCrypt!
@@ -49,9 +49,12 @@ public class Professor {
     @OneToMany(mappedBy = "relator")
     private Set<Processo> processosRelator = new HashSet<>();
     
-    // Relacionamento: Professor vota em vários processos
+    /*  Relacionamento: Professor vota em vários processos
     @OneToMany(mappedBy = "professor")
     private Set<Voto> votos = new HashSet<>();
+    - De acordo com o diagrama de classes, o voto depende de professor.
+    - O professor não depende de voto, portanto não existe esse relacionamento. Por mais que ele faça sentido
+    */
     
     /** Relacionamento: Professor participa de várias reuniões
     @ManyToMany(mappedBy = "membros")
@@ -64,9 +67,9 @@ public class Professor {
     // Construtores
     public Professor() {}
     
-    public Professor(String nome, String login, String senha, Boolean coordenador) {
+    public Professor(String nome, String matricula, String senha, Boolean coordenador) {
         this.nome = nome;
-        this.login = login;
+        this.matricula = matricula;
         this.senha = senha;
         this.coordenador = coordenador;
     }
@@ -97,11 +100,11 @@ public class Professor {
     }
     
     public String getLogin() {
-        return login;
+        return matricula;
     }
     
     public void setLogin(String login) {
-        this.login = login;
+        this.matricula = login;
     }
     
     public String getSenha() {
@@ -136,6 +139,7 @@ public class Professor {
         this.processosRelator = processosRelator;
     }
     
+    /** 
     public Set<Voto> getVotos() {
         return votos;
     }
@@ -143,6 +147,7 @@ public class Professor {
     public void setVotos(Set<Voto> votos) {
         this.votos = votos;
     }
+        */
     
     /** 
     public Set<Reuniao> getReunioes() {
