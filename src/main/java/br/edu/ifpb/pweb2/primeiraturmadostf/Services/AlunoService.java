@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.edu.ifpb.pweb2.primeiraturmadostf.Repository.AlunoRepository;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
 
 @Service
 @Transactional
@@ -25,36 +26,34 @@ public class AlunoService {
         return this.alunoRepository.findAll();
     }
 
-    public Optional<Aluno> findById(Long id) {
-        return this.alunoRepository.findById(id);
+    public Aluno findById(Long id) {
+        return this.alunoRepository.findById(id)
+                .orElse(null);
     }
 
-    public Optional<Aluno> findByMatricula(String matricula) {
-        return this.alunoRepository.findByMatricula(matricula);
+    public Aluno findByMatricula(String matricula) {
+        return this.alunoRepository.findByMatricula(matricula)
+                .orElse(null);
     }
 
-    public Aluno  save(Aluno professor) {
-        return alunoRepository.save(professor);
+    public Aluno save(Aluno aluno) {
+        Aluno existente = this.findByMatricula(aluno.getMatricula());
+        if (existente != null && !existente.getId().equals(aluno.getId())) {
+            return null;
+    }
+    return alunoRepository.save(aluno);
     }
 
     public boolean remove(Long id) {
-        Optional<Aluno> student = this.findById(id);
-
-        if  (student.isPresent()) {
-            this.alunoRepository.deleteById(id);
-            return true;
-        }
-        return false;
+        Aluno aluno = this.findById(id);
+        this.alunoRepository.delete(aluno);
+        return true;
     }
 
     public boolean removeByMatricula(String matricula) {
-        Optional<Aluno> professor = this.findByMatricula(matricula);
-
-        if  (professor.isPresent()) {
-            this.alunoRepository.deleteByMatricula(matricula);
-            return true;
-        }
-        return false;
+        Aluno aluno = this.findByMatricula(matricula);
+        this.alunoRepository.delete(aluno);
+        return true;
     }
 
 

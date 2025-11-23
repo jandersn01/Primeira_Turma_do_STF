@@ -25,36 +25,34 @@ public class ProfessorService {
         return this.repository.findAll();
     }
 
-    public Optional<Professor> findById(Long id) {
-        return this.repository.findById(id);
+    public Professor findById(Long id) {
+        return this.repository.findById(id)
+                .orElse(null);
     }
 
-    public Optional<Professor> findByMatricula(String matricula) {
-        return this.repository.findByMatricula(matricula);
+    public Professor findByMatricula(String matricula) {
+        return this.repository.findByMatricula(matricula)
+                .orElse(null);
     }
 
     public Professor save(Professor professor) {
+        Professor existente = this.findByMatricula(professor.getMatricula());
+        if (existente != null && !existente.getId().equals(professor.getId())) {
+        return null;
+        }
         return repository.save(professor);
     }
 
     public boolean remove(Long id) {
-        Optional<Professor> student = this.findById(id);
-
-        if  (student.isPresent()) {
-            this.repository.deleteById(id);
-            return true;
-        }
-        return false;
+        Professor professor = this.findById(id);
+        this.repository.delete(professor);
+        return true;
     }
 
     public boolean removeByMatricula(String matricula) {
-        Optional<Professor> professor = this.findByMatricula(matricula);
-
-        if  (professor.isPresent()) {
-            this.repository.deleteByMatricula(matricula);
-            return true;
-        }
-        return false;
+        Professor professor = this.findByMatricula(matricula);
+        this.repository.delete(professor);
+        return true;
     }
 
     public List<Professor> findByCoordenadores() {

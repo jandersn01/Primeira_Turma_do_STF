@@ -25,36 +25,34 @@ private final AssuntoRepository assuntoRepository;
         return this.assuntoRepository.findAll();
     }
 
-    public Optional<Assunto> findById(Long id) {
-        return this.assuntoRepository.findById(id);
+  public Assunto findById(Long id) {
+        return this.assuntoRepository.findById(id)
+                .orElse(null);
     }
 
-    public Optional<Assunto> findByNome(String nome) {
-        return this.assuntoRepository.findByNome(nome);
+    public Assunto findByNome(String nome) {
+        return this.assuntoRepository.findByNome(nome)
+                .orElse(null);
     }
 
-    public Assunto  save(Assunto professor) {
-        return assuntoRepository.save(professor);
+    public Assunto save(Assunto assunto) {
+        Assunto existente = this.findByNome(assunto.getNome());
+        if(existente != null && !existente.getId().equals(assunto.getId())){
+            return null;
+        }
+        return assuntoRepository.save(assunto);
     }
 
     public boolean remove(Long id) {
-        Optional<Assunto> assunto = this.findById(id);
-
-        if  (assunto.isPresent()) {
-            this.assuntoRepository.deleteById(id);
-            return true;
-        }
-        return false;
+        Assunto assunto = this.findById(id);
+        this.assuntoRepository.delete(assunto);
+        return true;
     }
 
     public boolean removeByNome(String nome) {
-        Optional<Assunto> professor = this.findByNome(nome);
-
-        if  (professor.isPresent()) {
-            this.assuntoRepository.deleteByNome(nome);
-            return true;
-        }
-        return false;
+        Assunto assunto = this.findByNome(nome);
+        this.assuntoRepository.delete(assunto);
+        return true;
     }
 
 
