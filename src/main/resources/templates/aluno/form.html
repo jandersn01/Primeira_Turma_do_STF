@@ -45,7 +45,8 @@
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-success">Salvar</button>
-                        <button type="reset" class="btn btn-secondary">Cancelar</button>
+                        <button type="reset" th:if="${aluno.id == null}" class="btn btn-secondary">Cancelar</button>
+                        <a th:if="${aluno.id != null}"  th:href="@{/admin/aluno/list}" class="btn btn-secondary">Cancelar</a>
                     </div>
 
                 </form>
