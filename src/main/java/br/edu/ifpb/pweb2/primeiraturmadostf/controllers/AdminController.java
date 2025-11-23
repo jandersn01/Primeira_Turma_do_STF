@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import br.edu.ifpb.pweb2.primeiraturmadostf.Services.AlunoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.Services.ProfessorService;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
 
 @Controller
@@ -19,6 +21,8 @@ public class AdminController {
 
     @Autowired
     private ProfessorService professorservice;
+    @Autowired
+    private AlunoService alunoService;
     
 
 
@@ -39,7 +43,7 @@ public class AdminController {
     @PostMapping("/professor/save")
     public String postProfessor(Professor professor, RedirectAttributes redirect){
         professorservice.save(professor);
-        redirect.addAttribute("mensagem", "Professor salvo com sucesso");
+        redirect.addFlashAttribute("mensagem", "Professor salvo com sucesso");
         return "redirect:/admin/professor/list";
     }
 
@@ -57,33 +61,44 @@ public class AdminController {
 
     @PostMapping("/professor/delete/{matricula}")
     public String deleteProfessor(@PathVariable(value="matricula") String matricula, RedirectAttributes redirect){
-        redirect.addAttribute("mensagem", "Registro excluído com sucesso.");
+        redirect.addFlashAttribute("mensagem", "Registro excluído com sucesso.");
         professorservice.removeByMatricula(matricula);
         return "redirect:/admin/professor/list";
     }
 
 // ------------------------------ -- -- CRUD ALUNO
 
- 
-    public String getFormAluno(){
-        return "admin/professorform";
+    
+    @GetMapping("/aluno/form")
+    public String getFormAluno(Model model, Aluno aluno){
+        model.addAttribute("aluno", aluno);
+        return "aluno/form";
     }
 
-  
-    public String getAlunoList(){
-        return "";
+    @GetMapping("/aluno/list")
+    public String getAlunoList(Model model){
+        model.addAttribute("listaAlunos", alunoService.findAll());
+        return "aluno/list";
     }
 
-    public String postAluno(){
-        return "";
+    @PostMapping("/aluno/save")
+    public String postAluno(Aluno aluno, RedirectAttributes redirect){
+        alunoService.save(aluno);
+        redirect.addFlashAttribute("mensagem", "Aluno cadastrado com sucesso!");
+        return "redirect:/admin/aluno/list";
     }
 
-    public String getAlunoById(){
-        return "";
+    @GetMapping("aluno/id/{id}")
+    public String getAlunoById(Model model, @PathVariable(value="id") Long id){
+        model.addAttribute("aluno", alunoService.findById(id));
+        return "aluno/form";
     }
 
-    public String deleteAluno(){
-        return "";
+    @PostMapping("/aluno/delete/{matricula}")
+    public String deleteAluno(RedirectAttributes redirect, @PathVariable(value="matricula")String matricula){
+        alunoService.removeByMatricula(matricula);
+        redirect.addFlashAttribute("mensagem", "Registro de aluno apagado com sucesso!");
+        return "redirect:/admin/aluno/list";
     }
 
 // ------------------------------ -- -- CRUD COORDENANDOR
