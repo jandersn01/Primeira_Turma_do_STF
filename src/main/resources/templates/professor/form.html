@@ -15,7 +15,7 @@
             </div>
             <div class="card-body">
                 
-                <form th:action="@{/admin/saveprofessor}" method="post" th:object="${professor}">
+                <form th:action="@{/admin/professor/save}" method="post" th:object="${professor}">
                     
                     <input type="hidden" th:field="*{id}" />
 
@@ -32,8 +32,8 @@
 
                     <div class="mb-3">
                         <label for="login" class="form-label">Login / Matrícula</label>
-                        <input type="text" class="form-control" id="login" th:field="*{login}" required maxlength="50"/>
-                        <div class="text-danger" th:if="${#fields.hasErrors('login')}" th:errors="*{login}"></div>
+                        <input type="text" class="form-control" id="login" th:field="*{matricula}" required maxlength="50"/>
+                        <div class="text-danger" th:if="${#fields.hasErrors('matricula')}" th:errors="*{matricula}"></div>
                     </div>
 
                     <div class="mb-3">

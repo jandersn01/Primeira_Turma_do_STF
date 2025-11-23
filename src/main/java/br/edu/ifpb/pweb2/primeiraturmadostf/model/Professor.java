@@ -99,12 +99,12 @@ public class Professor {
         this.fone = fone;
     }
     
-    public String getLogin() {
+    public String getMatricula() {
         return matricula;
     }
     
-    public void setLogin(String login) {
-        this.matricula = login;
+    public void setMatricula(String matricula) {
+        this.matricula = matricula;
     }
     
     public String getSenha() {

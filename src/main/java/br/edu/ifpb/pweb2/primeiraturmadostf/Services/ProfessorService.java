@@ -48,9 +48,9 @@ public class ProfessorService {
     }
 
     public boolean removeByMatricula(String matricula) {
-        Optional<Professor> student = this.findByMatricula(matricula);
+        Optional<Professor> professor = this.findByMatricula(matricula);
 
-        if  (student.isPresent()) {
+        if  (professor.isPresent()) {
             this.repository.deleteByMatricula(matricula);
             return true;
         }
