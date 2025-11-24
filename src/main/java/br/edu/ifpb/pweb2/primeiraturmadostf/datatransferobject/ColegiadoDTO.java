@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 
 public class ColegiadoDTO {
     
@@ -44,11 +46,15 @@ public class ColegiadoDTO {
         this.membrosIds = membrosIds;
     }
     private Long id;
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dataInicio;
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dataFim;
     private String portaria;
     private String curso;
     private List<Long> membrosIds = new ArrayList<>();
+
+    
 
 
 }

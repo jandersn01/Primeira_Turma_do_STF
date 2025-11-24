@@ -31,7 +31,7 @@ public class AdminController {
     @Autowired
     private AssuntoService assuntoService;
     @Autowired
-    private ColegiadoService ColegiadoService;
+    private ColegiadoService colegiadoService;
     
 
 
@@ -170,28 +170,29 @@ public class AdminController {
 
     @GetMapping("/colegiado/list")
     public String getColegiadoList(Model model){
-        model.addAttribute("listaAssuntos", assuntoService.findAll());
-        return "assunto/list";
+        model.addAttribute("listaColegiados", colegiadoService.findAll());
+        return "colegiado/list";
     }
 
     @PostMapping("/colegiado/save")
-    public String postColegiado(Assunto assunto, RedirectAttributes redirect){
-        assuntoService.save(assunto);
-        redirect.addFlashAttribute("mensagem", "Assunto cadastrado com sucesso!");
-        return "redirect:/admin/assunto/list";
+    public String postColegiado(ColegiadoDTO dto, RedirectAttributes redirect){
+        colegiadoService.save(dto);
+        redirect.addFlashAttribute("mensagem", "Colegiado cadastrado com sucesso!");
+        return "redirect:/admin/colegiado/list";
     }
 
     @GetMapping("colegiado/id/{id}")
     public String getColegiadoById(Model model, @PathVariable(value="id") Long id){
-        model.addAttribute("assunto", assuntoService.findById(id));
-        return "assunto/form";
+        model.addAttribute("colegiado", colegiadoService.getForEdit(id));
+        model.addAttribute("professores", professorservice.findAll());
+        return "colegiado/form";
     }
 
     @PostMapping("/colegiado/delete/{id}")
     public String deleteColegiado(RedirectAttributes redirect, @PathVariable(value="id")Long id){
-        assuntoService.remove(id);
-        redirect.addFlashAttribute("mensagem", "Registro de assunto apagado com sucesso!");
-        return "redirect:/admin/assunto/list";
+        colegiadoService.remove(id);
+        redirect.addFlashAttribute("mensagem", "Registro de colegiado apagado com sucesso!");
+        return "redirect:/admin/colegiado/list";
 
     }
 
