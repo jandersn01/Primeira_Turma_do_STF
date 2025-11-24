@@ -10,12 +10,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import br.edu.ifpb.pweb2.primeiraturmadostf.Services.AlunoService;
-import br.edu.ifpb.pweb2.primeiraturmadostf.Services.AssuntoService;
-import br.edu.ifpb.pweb2.primeiraturmadostf.Services.ProfessorService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Assunto;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Colegiado;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
+import br.edu.ifpb.pweb2.primeiraturmadostf.services.AlunoService;
+import br.edu.ifpb.pweb2.primeiraturmadostf.services.AssuntoService;
+import br.edu.ifpb.pweb2.primeiraturmadostf.services.ColegiadoService;
+import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProfessorService;
 
 @Controller
 @RequestMapping("/admin")
@@ -27,6 +29,8 @@ public class AdminController {
     private AlunoService alunoService;
     @Autowired
     private AssuntoService assuntoService;
+    @Autowired
+    private ColegiadoService ColegiadoService;
     
 
 
@@ -148,6 +152,42 @@ public class AdminController {
         return "redirect:/admin/assunto/list";
     }
 
+
+// ------------------------------ -- -- CRUD COLEGIADO
+
+@GetMapping("/colegiado/form")
+    public String getColegiadoForm(Model model, Colegiado colegiado){
+        model.addAttribute("assunto", colegiado);
+        model.addAttribute("professores", professorservice.findAll());
+        return "colegiado/form";
+    }
+
+    @GetMapping("/colegiado/list")
+    public String getColegiadoList(Model model){
+        model.addAttribute("listaAssuntos", assuntoService.findAll());
+        return "assunto/list";
+    }
+
+    @PostMapping("/colegiado/save")
+    public String postColegiado(Assunto assunto, RedirectAttributes redirect){
+        assuntoService.save(assunto);
+        redirect.addFlashAttribute("mensagem", "Assunto cadastrado com sucesso!");
+        return "redirect:/admin/assunto/list";
+    }
+
+    @GetMapping("colegiado/id/{id}")
+    public String getColegiadoById(Model model, @PathVariable(value="id") Long id){
+        model.addAttribute("assunto", assuntoService.findById(id));
+        return "assunto/form";
+    }
+
+    @PostMapping("/colegiado/delete/{id}")
+    public String deleteColegiado(RedirectAttributes redirect, @PathVariable(value="id")Long id){
+        assuntoService.remove(id);
+        redirect.addFlashAttribute("mensagem", "Registro de assunto apagado com sucesso!");
+        return "redirect:/admin/assunto/list";
+
+    }
 
 
 }
