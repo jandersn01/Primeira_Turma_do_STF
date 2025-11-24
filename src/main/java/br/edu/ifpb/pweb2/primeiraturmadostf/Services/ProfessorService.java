@@ -60,5 +60,10 @@ public class ProfessorService {
         return repository.findByCoordenadorTrue();
     }
 
+    public List<Professor> findAllById(List<Long> list) {
+       return repository.findAllById(list);
+    }
+       
+
 
 }

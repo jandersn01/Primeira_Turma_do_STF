@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import br.edu.ifpb.pweb2.primeiraturmadostf.datatransferobject.ColegiadoDTO;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Assunto;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Colegiado;
@@ -156,11 +157,16 @@ public class AdminController {
 // ------------------------------ -- -- CRUD COLEGIADO
 
 @GetMapping("/colegiado/form")
-    public String getColegiadoForm(Model model, Colegiado colegiado){
-        model.addAttribute("assunto", colegiado);
+    public String getColegiadoForm(Model model){
+        ColegiadoDTO dto = new ColegiadoDTO();
+        for (int i = 0; i < 5; i++) {
+            dto.getMembrosIds().add(null);
+        }
+        model.addAttribute("colegiado", dto);
         model.addAttribute("professores", professorservice.findAll());
         return "colegiado/form";
     }
+
 
     @GetMapping("/colegiado/list")
     public String getColegiadoList(Model model){

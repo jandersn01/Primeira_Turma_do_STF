@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+<head>
+    <title>Cadastro de Assunto</title>
+</head>
+<body>
+
+    <div layout:fragment="conteudo">
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Cadastro de Colegiado</h4>
+            </div>
+            <div class="card-body">
+
+                <form th:action="@{/admin/colegiado/save}" method="post" th:object="${colegiado}">
+                    <input type="hidden" th:field="*{id}" />
+                    <hr>
+                    <h5 class="mb-3 text-secondary">Seleção de Membros</h5>
+
+                    <div class="mb-3" th:each="i : ${#numbers.sequence(0,4)}">
+                        <label class="form-label" th:text="'Membro #' + (${i} + 1)"></label>
+
+                        <select th:field="*{membrosIds[__${i}__]}" class="form-select select-professor" required>
+                            <option value="">Selecione...</option>
+                            <option th:each="prof : ${professores}"
+                            th:value="${prof.id}"
+                            th:text="${prof.nome}"></option>
+                        </select>
+                    </div>
+                </form>
+                
+                
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
