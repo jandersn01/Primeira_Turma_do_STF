@@ -1,8 +1,17 @@
 package br.edu.ifpb.pweb2.primeiraturmadostf.model;
 
-import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(
@@ -44,9 +53,13 @@ public class Professor {
     @OneToMany(mappedBy = "professor")
     private Set<Voto> votos = new HashSet<>();
     
-    // Relacionamento: Professor participa de várias reuniões
+    /** Relacionamento: Professor participa de várias reuniões
     @ManyToMany(mappedBy = "membros")
     private Set<Reuniao> reunioes = new HashSet<>();
+    - De acordo com o diagrama de classes, o professor. não se relaciona diretamnte com reunião
+    - Uma reunião agrega um processo, que tem um professor relator.
+    - Reunião, por sua vez, é agregada em colegiado.
+    **/
     
     // Construtores
     public Professor() {}
@@ -131,6 +144,7 @@ public class Professor {
         this.votos = votos;
     }
     
+    /** 
     public Set<Reuniao> getReunioes() {
         return reunioes;
     }
@@ -138,6 +152,7 @@ public class Professor {
     public void setReunioes(Set<Reuniao> reunioes) {
         this.reunioes = reunioes;
     }
+    **/
     
     // Métodos auxiliares
     public void addColegiado(Colegiado colegiado) {
