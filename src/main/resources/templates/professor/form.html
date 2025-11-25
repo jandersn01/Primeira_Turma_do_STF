@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+<head>
+    <title>Cadastro de Professor</title>
+</head>
+<body>
+
+    <div layout:fragment="conteudo">
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Cadastro de Professores</h4>
+            </div>
+            <div class="card-body">
+                
+                <form th:action="@{/admin/professor/save}" method="post" th:object="${professor}">
+                    
+                    <input type="hidden" th:field="*{id}" />
+
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome Completo</label>
+                        <input type="text" class="form-control" id="nome" th:field="*{nome}" required maxlength="100"/>
+                        <div class="text-danger" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="fone" class="form-label">Telefone</label>
+                        <input type="text" class="form-control" id="fone" th:field="*{fone}" maxlength="15"/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="login" class="form-label">Login / Matrícula</label>
+                        <input type="text" class="form-control" id="login" th:field="*{matricula}" required maxlength="50"/>
+                        <div class="text-danger" th:if="${#fields.hasErrors('matricula')}" th:errors="*{matricula}"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="senha" class="form-label">Senha</label>
+                        <input type="password" class="form-control" id="senha" th:field="*{senha}" required maxlength="100"/>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="coordenador" th:field="*{coordenador}"/>
+                        <label class="form-check-label" for="coordenador">Este professor é Coordenador?</label>
+                    </div>
+
+                    <hr>
+
+                    <button type="submit" class="btn btn-success">Salvar</button>
+                    <a th:href="@{/professores}" class="btn btn-secondary">Cancelar</a>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
