@@ -49,8 +49,8 @@
                     <hr>
 
                     <button type="submit" class="btn btn-success">Salvar</button>
-                    <a th:href="@{/professores}" class="btn btn-secondary">Cancelar</a>
-
+                    <button type="reset" th:if="${professor.id == null}" class="btn btn-secondary">Cancelar</button>
+                    <a th:if="${professor.id != null}" th:href="@{/admin/professor/list}" class="btn btn-secondary">Cancelar</a>
                 </form>
             </div>
         </div>

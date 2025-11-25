@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Lista de Assuntos</title>
+</head>
+<body>
+
+    <div layout:fragment="conteudo">
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Assuntos Cadastrados</h4>
+                <a th:href="@{/admin/assunto/form}" class="btn btn-light btn-sm">Novo Assunto</a>
+            </div>
+            
+            <div class="card-body">
+                
+                <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <span th:text="${mensagem}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <table class="table table-striped table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Descrição</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="assunto : ${listaAssuntos}">
+                            <td th:text="${assunto.id}"></td>
+                            
+                            <td>
+                                <a th:href="@{/admin/assunto/id/{id}(id=${assunto.id})}" 
+                                   th:text="${assunto.nome}" class="text-decoration-none">Nome do Assunto</a>
+                            </td>
+                            
+                             <td th:text="${assunto.descricao != null ? (#strings.length(assunto.descricao) > 60 ? assunto.descricao.substring(0, 60) + '...' : assunto.descricao) : '—'}">
+                            </td>
+                            
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a th:href="@{/admin/assunto/id/{id}(id=${assunto.id})}" class="btn btn-sm btn-outline-primary">
+                                        Editar
+                                    </a>
+
+                                    <form th:action="@{/admin/assunto/delete/{id}(id=${assunto.id})}"
+                                        method="post" style="display: inline;" 
+                                        onsubmit="return confirm('Tem certeza que deseja excluir este assunto?');">
+                                        <input type="hidden" name="_method" value="delete">
+                                    <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                                </form>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <tr th:if="${#lists.isEmpty(listaAssuntos)}">
+                            <td colspan="5" class="text-center text-muted py-3">
+                                Nenhum assunto cadastrado no sistema.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

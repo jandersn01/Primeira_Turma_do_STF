@@ -16,12 +16,16 @@ public class Assunto {
     
     @OneToMany(mappedBy = "assunto")
     private Set<Processo> processos = new HashSet<>();
+
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String descricao;
     
     // Construtores
     public Assunto() {}
     
-    public Assunto(String nome) {
+    public Assunto(String nome, String descricao) {
         this.nome = nome;
+        this.descricao = descricao;
     }
     
     // Getters e Setters
@@ -62,5 +66,13 @@ public class Assunto {
     @Override
     public String toString() {
         return "Assunto{id=" + id + ", nome='" + nome + "'}";
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
     }
 }

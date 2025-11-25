@@ -1,0 +1,59 @@
+package br.edu.ifpb.pweb2.primeiraturmadostf.Services;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import br.edu.ifpb.pweb2.primeiraturmadostf.Repository.AssuntoRepository;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Assunto;
+
+@Service
+@Transactional
+public class AssuntoService {
+
+private final AssuntoRepository assuntoRepository;
+
+    @Autowired
+    public AssuntoService(AssuntoRepository repository){
+        this.assuntoRepository = repository;
+    }
+
+     public List<Assunto> findAll() {
+        return this.assuntoRepository.findAll();
+    }
+
+  public Assunto findById(Long id) {
+        return this.assuntoRepository.findById(id)
+                .orElse(null);
+    }
+
+    public Assunto findByNome(String nome) {
+        return this.assuntoRepository.findByNome(nome)
+                .orElse(null);
+    }
+
+    public Assunto save(Assunto assunto) {
+        Assunto existente = this.findByNome(assunto.getNome());
+        if(existente != null && !existente.getId().equals(assunto.getId())){
+            return null;
+        }
+        return assuntoRepository.save(assunto);
+    }
+
+    public boolean remove(Long id) {
+        Assunto assunto = this.findById(id);
+        this.assuntoRepository.delete(assunto);
+        return true;
+    }
+
+    public boolean removeByNome(String nome) {
+        Assunto assunto = this.findByNome(nome);
+        this.assuntoRepository.delete(assunto);
+        return true;
+    }
+
+
+}

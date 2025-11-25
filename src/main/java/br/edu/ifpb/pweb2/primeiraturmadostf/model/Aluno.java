@@ -26,9 +26,10 @@ public class Aluno {
     
     @Column(length = 15)
     private String fone;
-    
+
+    /** 
     @Column(nullable = false, unique = true, length = 50)
-    private String login;
+    private String login;*/
     
     @Column(nullable = false, length = 100)
     private String senha; // IMPORTANTE: armazenar com BCrypt no Service!
@@ -42,7 +43,7 @@ public class Aluno {
     public Aluno(String matricula, String nome, String login, String senha) {
         this.matricula = matricula;
         this.nome = nome;
-        this.login = login;
+        //this.login = login;
         this.senha = senha;
     }
     
@@ -79,13 +80,14 @@ public class Aluno {
         this.fone = fone;
     }
     
+    /**
     public String getLogin() {
         return login;
-    }
+    } 
     
     public void setLogin(String login) {
         this.login = login;
-    }
+    } */
     
     public String getSenha() {
         return senha;
