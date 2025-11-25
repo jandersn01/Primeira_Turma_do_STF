@@ -1,4 +1,4 @@
-package br.edu.ifpb.pweb2.primeiraturmadostf.Services;
+package br.edu.ifpb.pweb2.primeiraturmadostf.services;
 
 import java.util.List;
 import java.util.Optional;
@@ -7,8 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.edu.ifpb.pweb2.primeiraturmadostf.Repository.ProfessorRepository;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
+import br.edu.ifpb.pweb2.primeiraturmadostf.repository.ProfessorRepository;
+
 
 @Service
 @Transactional
@@ -58,6 +59,11 @@ public class ProfessorService {
     public List<Professor> findByCoordenadores() {
         return repository.findByCoordenadorTrue();
     }
+
+    public List<Professor> findAllById(List<Long> list) {
+       return repository.findAllById(list);
+    }
+       
 
 
 }

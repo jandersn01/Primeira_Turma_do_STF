@@ -1,4 +1,4 @@
-package br.edu.ifpb.pweb2.primeiraturmadostf.Repository;
+package br.edu.ifpb.pweb2.primeiraturmadostf.repository;
 
 import java.util.Optional;
 

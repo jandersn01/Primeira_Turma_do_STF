@@ -1,4 +1,4 @@
-package br.edu.ifpb.pweb2.primeiraturmadostf.Services;
+package br.edu.ifpb.pweb2.primeiraturmadostf.services;
 
 import java.util.List;
 import java.util.Optional;
@@ -7,9 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.edu.ifpb.pweb2.primeiraturmadostf.Repository.AlunoRepository;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
+import br.edu.ifpb.pweb2.primeiraturmadostf.repository.AlunoRepository;
 
 @Service
 @Transactional

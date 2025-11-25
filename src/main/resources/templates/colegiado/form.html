@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+<head>
+    <title>Cadastro de Assunto</title>
+</head>
+<body>
+
+    <div layout:fragment="conteudo">
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Cadastro de Colegiado</h4>
+            </div>
+            <div class="card-body">
+
+                <form th:action="@{/admin/colegiado/save}" method="post" th:object="${colegiado}">
+                    
+                    <input type="hidden" th:field="*{id}" />
+
+                    <div class="mb-3">
+                        <label for="curso" class="form-label">Nome do Curso</label>
+                        <input type="text" class="form-control" id="curso" th:field="*{curso}" 
+                               required maxlength="100" placeholder="Ex: Sistemas para Internet"/>
+                        <div class="text-danger" th:if="${#fields.hasErrors('curso')}" th:errors="*{curso}"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="portaria" class="form-label">Portaria</label>
+                        <input type="text" class="form-control" id="portaria" th:field="*{portaria}" 
+                               required maxlength="50" placeholder="Ex: Portaria 123/2024"/>
+                        <div class="text-danger" th:if="${#fields.hasErrors('portaria')}" th:errors="*{portaria}"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="dataInicio" class="form-label">Data de Início</label>
+                            <input type="date" class="form-control" id="dataInicio" th:field="*{dataInicio}" required/>
+                            <div class="text-danger" th:if="${#fields.hasErrors('dataInicio')}" th:errors="*{dataInicio}"></div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="dataFim" class="form-label">Data de Fim (Opcional)</label>
+                            <input type="date" class="form-control" id="dataFim" th:field="*{dataFim}"/>
+                            <div class="text-danger" th:if="${#fields.hasErrors('dataFim')}" th:errors="*{dataFim}"></div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    
+                    <h5 class="mb-3 text-secondary">Seleção de Membros</h5>
+                    <p class="text-muted small">Selecione até 5 professores para compor o colegiado.</p>
+
+                    <div class="mb-3" th:each="i : ${#numbers.sequence(0,4)}">
+                        <label class="form-label" th:text="'Membro #' + (${i} + 1)"></label>
+
+                        <select th:field="*{membrosIds[__${i}__]}" class="form-select select-professor">
+                            <option value="">Selecione...</option>
+                            <option th:each="prof : ${professores}"
+                                    th:value="${prof.id}"
+                                    th:text="${prof.nome}"></option>
+                        </select>
+                        
+                        <div class="text-danger" th:if="${#fields.hasErrors('membrosIds[' + i + ']')}" 
+                             th:errors="*{membrosIds[__${i}__]}"></div>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">Salvar</button>
+                        
+                        <button type="reset" th:if="${colegiado.id == null}" class="btn btn-secondary">Cancelar</button>
+                        
+                        <a th:if="${colegiado.id != null}" th:href="@{/admin/colegiado/list}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                    
+                </form>
+                
+                
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
