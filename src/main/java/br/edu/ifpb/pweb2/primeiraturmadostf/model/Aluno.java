@@ -8,8 +8,7 @@ import java.util.Set;
 @Table(
     name = "aluno",
     indexes = {
-        @Index(name = "idx_aluno_matricula", columnList = "matricula"),
-        @Index(name = "idx_aluno_login", columnList = "login")
+        @Index(name = "idx_aluno_matricula", columnList = "matricula")
     }
 )
 public class Aluno {
