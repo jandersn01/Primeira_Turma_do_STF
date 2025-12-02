@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Processos Designados</title>
+</head>
+<body>
+
+    <div layout:fragment="conteudo">
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Processos Designados como Relator</h4>
+            </div>
+            
+            <div class="card-body">
+                
+                <div th:if="${professor}" class="mb-3">
+                    <p class="text-muted">
+                        <strong>Professor:</strong> 
+                        <span th:text="${professor.nome}">Nome do Professor</span>
+                        <span class="ms-2">(<span th:text="${professor.matricula}">Matrícula</span>)</span>
+                    </p>
+                </div>
+
+                <div th:if="${#lists.isEmpty(processos)}" class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Nenhum processo foi designado para você como relator.
+                </div>
+
+                <table th:unless="${#lists.isEmpty(processos)}" class="table table-striped table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Assunto</th>
+                            <th>Status</th>
+                            <th>Data de Recepção</th>
+                            <th>Interessado</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="processo : ${processos}">
+                            <td>
+                                <strong th:text="${processo.numero}">123/2024</strong>
+                            </td>
+                            <td th:text="${processo.assunto.nome}">Assunto do Processo</td>
+                            <td>
+                                <span class="badge bg-secondary" 
+                                      th:if="${processo.status.name() == 'CRIADO'}"
+                                      th:text="${processo.status.descricao}">Criado</span>
+                                <span class="badge bg-info" 
+                                      th:if="${processo.status.name() == 'DISTRIBUIDO'}"
+                                      th:text="${processo.status.descricao}">Distribuído</span>
+                                <span class="badge bg-warning" 
+                                      th:if="${processo.status.name() == 'EM_PAUTA'}"
+                                      th:text="${processo.status.descricao}">Em Pauta</span>
+                                <span class="badge bg-primary" 
+                                      th:if="${processo.status.name() == 'EM_JULGAMENTO'}"
+                                      th:text="${processo.status.descricao}">Em Julgamento</span>
+                                <span class="badge bg-success" 
+                                      th:if="${processo.status.name() == 'JULGADO'}"
+                                      th:text="${processo.status.descricao}">Julgado</span>
+                            </td>
+                            <td th:text="${#temporals.format(processo.dataRecepcao, 'dd/MM/yyyy')}">01/01/2024</td>
+                            <td th:text="${processo.interessado.nome}">Nome do Aluno</td>
+                            <td>
+                                <a th:href="@{/professor/processo/{id}(id=${processo.id})}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    Ver Detalhes
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+<head>
+    <title>Cadastrar Novo Processo</title>
+</head>
+<body>
+
+    <div layout:fragment="conteudo">
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Cadastrar Novo Processo</h4>
+            </div>
+            <div class="card-body">
+                
+                <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert" th:classappend="${mensagem.contains('Erro')} ? 'alert-danger' : 'alert-success'">
+                    <span th:text="${mensagem}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <div th:if="${aluno}" class="mb-3">
+                    <p class="text-muted">
+                        <strong>Aluno:</strong> 
+                        <span th:text="${aluno.nome}">Nome do Aluno</span>
+                        <span class="ms-2">(<span th:text="${aluno.matricula}">Matrícula</span>)</span>
+                    </p>
+                </div>
+                
+                <form th:action="@{/aluno/processo/save}" method="post" th:object="${processo}">
+                    
+                    <input type="hidden" th:field="*{id}" />
+
+                    <div class="mb-3">
+                        <label for="assunto" class="form-label">Assunto *</label>
+                        <select class="form-select" id="assunto" th:field="*{assunto}" required>
+                            <option value="">Selecione um assunto</option>
+                            <option th:each="assunto : ${assuntos}" 
+                                    th:value="${assunto.id}" 
+                                    th:text="${assunto.nome}">Assunto</option>
+                        </select>
+                        <div class="text-danger" th:if="${#fields.hasErrors('assunto')}" th:errors="*{assunto}"></div>
+                        <small class="form-text text-muted">Selecione o tipo de solicitação acadêmica</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="textoRequerimento" class="form-label">Texto do Requerimento *</label>
+                        <textarea class="form-control" 
+                                  id="textoRequerimento" 
+                                  th:field="*{textoRequerimento}" 
+                                  rows="8" 
+                                  required
+                                  placeholder="Descreva detalhadamente sua solicitação acadêmica..."></textarea>
+                        <div class="text-danger" th:if="${#fields.hasErrors('textoRequerimento')}" th:errors="*{textoRequerimento}"></div>
+                        <small class="form-text text-muted">Descreva sua solicitação de forma clara e objetiva</small>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Cadastrar Processo
+                        </button>
+                        <a th:href="@{/home}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Informações Importantes</h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>O número do processo será gerado automaticamente pelo sistema</li>
+                    <li>O processo será criado com status "Criado" e aguardará distribuição para um relator</li>
+                    <li>Você poderá acompanhar o andamento do processo na lista de processos</li>
+                    <li>Certifique-se de preencher todos os campos obrigatórios (*)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+
