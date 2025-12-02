@@ -38,6 +38,10 @@ public class Processo {
     @Column(columnDefinition = "TEXT")
     private String parecer; // Voto fundamentado do relator
     
+    @Lob
+    @Column(name = "texto_requerimento", columnDefinition = "TEXT", nullable = false)
+    private String textoRequerimento; // Texto do requerimento do aluno
+    
     // ADICIONADO: Faltava no diagrama mas está no diagrama de estados
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -127,6 +131,14 @@ public class Processo {
     
     public void setParecer(String parecer) {
         this.parecer = parecer;
+    }
+    
+    public String getTextoRequerimento() {
+        return textoRequerimento;
+    }
+    
+    public void setTextoRequerimento(String textoRequerimento) {
+        this.textoRequerimento = textoRequerimento;
     }
     
     public StatusProcesso getStatus() {
