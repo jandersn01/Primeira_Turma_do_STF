@@ -8,10 +8,14 @@ import jakarta.annotation.PostConstruct;
 
 
 @Controller
-@RequestMapping("/home")
 public class HomeController {
 
-    @GetMapping
+    @GetMapping("/")
+    public String redirectToHome(){
+        return "redirect:/home";
+    }
+
+    @GetMapping("/home")
     public String exibirHome(){
         return "auth/login";
     }
