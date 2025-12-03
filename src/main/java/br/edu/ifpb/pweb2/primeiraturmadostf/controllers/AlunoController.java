@@ -51,11 +51,6 @@ public class AlunoController {
         // Busca o primeiro aluno apenas como fallback inicial para o formulário
         Aluno aluno = alunoService.findAll().stream().findFirst().orElse(null);
         
-        if (aluno == null) {
-            model.addAttribute("mensagem", "Erro: Nenhum aluno cadastrado no sistema.");
-            return "redirect:/admin/aluno/form";
-        }
-        
         if (processo == null) {
             processo = new Processo();
         }
@@ -63,6 +58,11 @@ public class AlunoController {
         model.addAttribute("processo", processo);
         model.addAttribute("assuntos", assuntoService.findAll());
         model.addAttribute("aluno", aluno);
+        
+        // Se não houver aluno, apenas adiciona mensagem (sem redirecionar)
+        if (aluno == null) {
+            model.addAttribute("mensagem", "Nenhum aluno cadastrado no sistema.");
+        }
         
         return "aluno/processo/form";
     }

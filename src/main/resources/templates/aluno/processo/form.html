@@ -20,6 +20,23 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
 
+                <!-- Mensagem quando não há aluno cadastrado -->
+                <div th:if="${aluno == null}" class="alert alert-warning">
+                    <h5 class="alert-heading">
+                        <i class="bi bi-exclamation-triangle"></i> Nenhum aluno cadastrado
+                    </h5>
+                    <p>Não é possível criar um processo sem um aluno cadastrado no sistema. Por favor, solicite ao administrador que cadastre alunos no sistema.</p>
+                    <hr>
+                    <p class="mb-0">
+                        <a th:href="@{/admin/aluno/form}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Cadastrar Aluno (Admin)
+                        </a>
+                        <a th:href="@{/admin/aluno/list}" class="btn btn-outline-primary ms-2">
+                            <i class="bi bi-list-ul"></i> Ver Alunos Cadastrados
+                        </a>
+                    </p>
+                </div>
+
                 <!-- Mensagem quando não há assuntos cadastrados -->
                 <div th:if="${#lists.isEmpty(assuntos)}" class="alert alert-warning">
                     <h5 class="alert-heading">
@@ -74,14 +91,13 @@
                                   th:field="*{textoRequerimento}"
                                   th:classappend="${#fields.hasErrors('textoRequerimento')} ? 'is-invalid'"
                                   rows="8" 
-                                  minlength="50"
                                   maxlength="5000"
                                   required
                                   placeholder="Descreva detalhadamente sua solicitação acadêmica..."></textarea>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('textoRequerimento')}">
                             <span th:errors="*{textoRequerimento}">Erro no texto do requerimento</span>
                         </div>
-                        <small class="form-text text-muted">Descreva sua solicitação de forma clara e objetiva (mínimo 50 caracteres)</small>
+                        <small class="form-text text-muted">Descreva sua solicitação de forma clara e objetiva (máximo 5000 caracteres)</small>
                     </div>
 
                     <hr>
