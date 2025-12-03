@@ -51,19 +51,13 @@ public class ProcessoSpecifications {
             relator != null ? cb.equal(root.get("relator"), relator) : null;
     }
     
-    /**
-     * Filtra processos que estão em reuniões de um colegiado específico.
-     * Se o colegiado for null, retorna null (não aplica filtro).
-     */
     public static Specification<Processo> byColegiado(Colegiado colegiado) {
         return (root, query, cb) -> {
             if (colegiado == null) {
                 return null;
             }
-            // Garantir que a query retorne resultados distintos para evitar duplicatas
-            query.distinct(true);
-            // Join com reunioes e depois com colegiado
-            return cb.equal(root.join("reunioes").get("colegiado"), colegiado);
+            // MUDANÇA AQUI: Filtra pelo atributo direto 'colegiado' da entidade Processo
+            return cb.equal(root.get("colegiado"), colegiado);
         };
     }
     
