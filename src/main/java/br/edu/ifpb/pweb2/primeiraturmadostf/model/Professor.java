@@ -12,6 +12,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.*;
 
 @Entity
 @Table(
@@ -26,15 +27,25 @@ public class Professor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @NotBlank(message = "Nome é obrigatório")
+    @Size(min = 3, max = 100, message = "Nome deve ter entre 3 e 100 caracteres")
+    @Pattern(regexp = "^[a-zA-ZÀ-ÿ\\s]+$", message = "Nome deve conter apenas letras e espaços")
     @Column(nullable = false, length = 100)
     private String nome;
     
+    @Size(max = 15, message = "Telefone deve ter no máximo 15 caracteres")
+    @Pattern(regexp = "^\\(?[0-9]{2}\\)?[\\s-]?[0-9]{4,5}-?[0-9]{4}$|^$", message = "Telefone inválido. Use o formato (XX) XXXXX-XXXX ou deixe em branco")
     @Column(length = 15)
     private String fone;
     
+    @NotBlank(message = "Matrícula é obrigatória")
+    @Size(min = 3, max = 50, message = "Matrícula deve ter entre 3 e 50 caracteres")
+    @Pattern(regexp = "^[a-zA-Z0-9]+$", message = "Matrícula deve conter apenas letras e números")
     @Column(nullable = false, unique = true, length = 50)
     private String matricula;
     
+    @NotBlank(message = "Senha é obrigatória")
+    @Size(min = 6, max = 100, message = "Senha deve ter entre 6 e 100 caracteres")
     @Column(nullable = false, length = 100)
     private String senha; // Armazenar com BCrypt!
     
