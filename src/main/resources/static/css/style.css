@@ -1,0 +1,56 @@
+
+body {
+    padding-top: 0;
+    overflow-x: hidden; 
+}
+
+
+@media (min-width: 992px) {
+    .sidebar-desktop {
+        position: sticky;
+        top: 0;
+        height: 100vh; /* Ocupa toda a altura da tela */
+        overflow-y: auto; /* Permite rolar o menu se ele for muito longo */
+        z-index: 1000;
+    }
+}
+
+
+.sidebar-link {
+    color: rgba(255, 255, 255, 0.85);
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.sidebar-link i {
+    margin-right: 10px;
+    font-size: 1.1rem;
+}
+
+.sidebar-link:hover, .sidebar-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.dropdown-toggle::after {
+    margin-left: auto; 
+}
+
+
+.main-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+
+@media (max-width: 991.98px) {
+    .main-wrapper {
+        padding-top: 60px; 
+    }
+}
