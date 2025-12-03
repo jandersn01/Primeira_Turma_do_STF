@@ -6,11 +6,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Assunto;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Processo;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusProcesso;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.AlunoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.AssuntoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProcessoService;
@@ -102,5 +104,64 @@ public class AlunoController {
         return "redirect:/aluno/processo/form";
     }
 
+    @GetMapping("/processo/list")
+    public String listarProcessos(
+            Model model,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long assuntoId,
+            @RequestParam(required = false, defaultValue = "desc") String ordenacao) {
+        
+        // TODO: Quando implementar autenticação, pegar o aluno logado
+        // Por enquanto, vamos usar o primeiro aluno como exemplo
+        Aluno aluno = alunoService.findAll().stream()
+                .findFirst()
+                .orElse(null);
+        
+        // Se não houver aluno, ainda mostramos a página mas com lista vazia
+        // Isso melhora a UX permitindo que o usuário veja a interface
+        java.util.List<Processo> processos = new java.util.ArrayList<>();
+        
+        if (aluno != null) {
+            // Converter string de status para enum (se fornecido)
+            StatusProcesso statusEnum = null;
+            if (status != null && !status.isEmpty()) {
+                try {
+                    statusEnum = StatusProcesso.valueOf(status);
+                } catch (IllegalArgumentException e) {
+                    // Status inválido, ignorar
+                }
+            }
+            
+            // Carregar assunto se fornecido
+            Assunto assunto = null;
+            if (assuntoId != null) {
+                assunto = assuntoService.findById(assuntoId);
+            }
+            
+            // Buscar processos com filtros apenas se houver aluno
+            processos = processoService.findByInteressadoWithFilters(
+                aluno, statusEnum, assunto, ordenacao);
+        }
+        
+        // Adicionar atributos ao model
+        model.addAttribute("processos", processos);
+        model.addAttribute("aluno", aluno);
+        model.addAttribute("assuntos", assuntoService.findAll());
+        model.addAttribute("statusList", StatusProcesso.values());
+        
+        // Manter valores dos filtros selecionados
+        model.addAttribute("statusSelecionado", status);
+        model.addAttribute("assuntoSelecionado", assuntoId);
+        model.addAttribute("ordenacaoSelecionada", ordenacao);
+        
+        // Mensagem informativa se não houver aluno
+        if (aluno == null) {
+            model.addAttribute("mensagem", "Nenhum aluno cadastrado no sistema. Por favor, cadastre um aluno primeiro para visualizar seus processos.");
+        }
+        
+        return "aluno/processo/list";
+    }
+
 }
+
 
