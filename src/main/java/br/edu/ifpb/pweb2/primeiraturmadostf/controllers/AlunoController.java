@@ -97,12 +97,26 @@ public class AlunoController {
         processo.setInteressado(aluno);
         processo.setStatus(StatusProcesso.CRIADO);
         
-        Processo processoSalvo = processoService.save(processo);
-        
-        if (processoSalvo != null) {
-            redirect.addFlashAttribute("mensagem", "Processo cadastrado com sucesso! Número: " + processoSalvo.getNumero());
-        } else {
-            redirect.addFlashAttribute("mensagem", "Erro ao cadastrar o processo.");
+        try {
+            Processo processoSalvo = processoService.save(processo);
+            
+            if (processoSalvo != null) {
+                redirect.addFlashAttribute("mensagem", "Processo cadastrado com sucesso! Número: " + processoSalvo.getNumero());
+            } else {
+                redirect.addFlashAttribute("mensagem", "Erro ao cadastrar o processo.");
+            }
+        } catch (IllegalStateException e) {
+            // Erro quando não há colegiado ativo para o curso do aluno
+            redirect.addFlashAttribute("mensagem", "Erro: " + e.getMessage() + " Por favor, cadastre um colegiado ativo para o curso do aluno.");
+            model.addAttribute("assuntos", assuntoService.findAll());
+            model.addAttribute("aluno", aluno);
+            return "aluno/processo/form";
+        } catch (Exception e) {
+            // Outros erros
+            redirect.addFlashAttribute("mensagem", "Erro ao cadastrar o processo: " + e.getMessage());
+            model.addAttribute("assuntos", assuntoService.findAll());
+            model.addAttribute("aluno", aluno);
+            return "aluno/processo/form";
         }
         
         return "redirect:/aluno/processo/form";

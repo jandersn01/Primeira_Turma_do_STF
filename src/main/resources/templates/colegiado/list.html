@@ -42,7 +42,7 @@
                             <!-- Curso com link para edição (estilo fw-bold mantido do exemplo) -->
                             <td class="fw-bold">
                                 <a th:href="@{/admin/colegiado/id/{id}(id=${colegiado.id})}" 
-                                   th:text="${colegiado.curso}" class="text-decoration-none text-dark">
+                                   th:text="${colegiado.curso?.nome}" class="text-decoration-none text-dark">
                                    Sistemas para Internet
                                 </a>
                             </td>
