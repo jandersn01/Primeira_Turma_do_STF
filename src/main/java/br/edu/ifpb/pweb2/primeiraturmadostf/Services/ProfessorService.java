@@ -63,7 +63,14 @@ public class ProfessorService {
     public List<Professor> findAllById(List<Long> list) {
        return repository.findAllById(list);
     }
-       
 
+    public boolean existsByMatricula(String matricula) {
+        return this.findByMatricula(matricula) != null;
+    }
+
+    public boolean existsByMatriculaAndNotId(String matricula, Long id) {
+        Professor professor = this.findByMatricula(matricula);
+        return professor != null && !professor.getId().equals(id);
+    }
 
 }
