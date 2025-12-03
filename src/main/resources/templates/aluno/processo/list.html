@@ -10,273 +10,196 @@
 
     <div layout:fragment="conteudo">
         <div class="card mt-4">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Meus Processos</h4>
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="bi bi-folder2-open"></i> Meus Processos</h4>
             </div>
             
             <div class="card-body">
                 
-                <!-- Mensagem quando não há aluno cadastrado -->
-                <div th:if="${aluno == null}" class="alert alert-warning">
-                    <h5 class="alert-heading">
-                        <i class="bi bi-exclamation-triangle"></i> Nenhum aluno cadastrado
-                    </h5>
-                    <p th:text="${mensagem}">Nenhum aluno cadastrado no sistema. Por favor, cadastre um aluno primeiro para visualizar seus processos.</p>
-                    <hr>
-                    <p class="mb-0">
-                        <a th:href="@{/admin/aluno/form}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Cadastrar Aluno
-                        </a>
-                    </p>
-                </div>
-                
-                <!-- Informações do Aluno -->
-                <div th:if="${aluno != null}" class="mb-3">
-                    <p class="text-muted">
-                        <strong>Aluno:</strong> 
-                        <span th:text="${aluno.nome}">Nome do Aluno</span>
-                        <span class="ms-2">(<span th:text="${aluno.matricula}">Matrícula</span>)</span>
-                    </p>
+                <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert" th:classappend="${mensagem.contains('Erro')} ? 'alert-danger' : 'alert-success'">
+                    <span th:text="${mensagem}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
 
-                <!-- Formulário de Filtros (só mostra se houver aluno) -->
-                <div th:if="${aluno != null}" class="card mb-4">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">Filtros</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="get" th:action="@{/aluno/processo/list}">
-                            <div class="row g-3">
-                                <!-- Filtro por Status -->
-                                <div class="col-md-4">
-                                    <label for="status" class="form-label">Status</label>
-                                    <select class="form-select" id="status" name="status">
-                                        <option value="">Todos os status</option>
-                                        <option th:each="s : ${statusList}" 
-                                                th:value="${s.name()}" 
-                                                th:text="${s.descricao}"
-                                                th:selected="${statusSelecionado == s.name()}">
-                                            Status
-                                        </option>
-                                    </select>
-                                </div>
-                                
-                                <!-- Filtro por Assunto -->
-                                <div class="col-md-4">
-                                    <label for="assuntoId" class="form-label">Assunto</label>
-                                    <select class="form-select" id="assuntoId" name="assuntoId">
-                                        <option value="">Todos os assuntos</option>
-                                        <option th:each="a : ${assuntos}" 
-                                                th:value="${a.id}" 
-                                                th:text="${a.nome}"
-                                                th:selected="${assuntoSelecionado == a.id}">
-                                            Assunto
-                                        </option>
-                                    </select>
-                                </div>
-                                
-                                <!-- Ordenação -->
-                                <div class="col-md-4">
-                                    <label for="ordenacao" class="form-label">Ordenar por Data</label>
-                                    <select class="form-select" id="ordenacao" name="ordenacao">
-                                        <option value="desc" th:selected="${ordenacaoSelecionada == 'desc'}">
-                                            Mais recentes primeiro
-                                        </option>
-                                        <option value="asc" th:selected="${ordenacaoSelecionada == 'asc'}">
-                                            Mais antigos primeiro
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
+                <!-- === BLOCO DE SIMULAÇÃO DE LOGIN (ALUNO) === -->
+                <div th:if="${aluno != null}" class="card mb-4 border-info bg-light">
+                    <div class="card-body py-2 d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="bi bi-person-badge text-info"></i> 
+                            <strong>Aluno Logado:</strong> 
+                            <span th:text="${aluno.nome}" class="fw-bold">Nome</span>
+                            <span class="text-muted small" th:text="'(Mat: ' + ${aluno.matricula} + ')'"></span>
+                        </div>
+                        
+                        <!-- Formulário de Troca -->
+                        <form th:action="@{/aluno/processo/list}" method="get" class="d-flex align-items-center gap-2 ms-3 flex-grow-1">
+                            <label for="trocaAluno" class="col-form-label col-form-label-sm fw-bold text-info text-nowrap">Simular Acesso:</label>
+                            <select name="alunoId" id="trocaAluno" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option th:each="a : ${todosAlunos}" 
+                                        th:value="${a.id}" 
+                                        th:text="${a.nome + ' (Mat: ' + a.matricula + ')'}"
+                                        th:selected="${a.id == aluno.id}">
+                                </option>
+                            </select>
                             
-                            <div class="row mt-3">
-                                <div class="col-12">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-funnel"></i> Filtrar
-                                    </button>
-                                    <a th:href="@{/aluno/processo/list}" class="btn btn-secondary ms-2">
-                                        <i class="bi bi-x-circle"></i> Limpar Filtros
-                                    </a>
-                                </div>
-                            </div>
+                            <!-- Manter filtros ao trocar -->
+                            <input type="hidden" name="status" th:value="${statusSelecionado}" th:if="${statusSelecionado}" />
+                            <input type="hidden" name="ordenacao" th:value="${ordenacaoSelecionada}" />
                         </form>
                     </div>
                 </div>
+                <!-- =========================================== -->
 
-                <!-- Mensagem quando não há processos (mas há aluno) -->
-                <div th:if="${aluno != null && #lists.isEmpty(processos)}" class="alert alert-info">
-                    <i class="bi bi-info-circle"></i>
-                    Nenhum processo encontrado com os filtros selecionados.
+                <!-- Filtros de Processos -->
+                <div th:if="${aluno != null}" class="mb-3">
+                    <form method="get" th:action="@{/aluno/processo/list}" class="row g-2 align-items-end">
+                        <input type="hidden" name="alunoId" th:value="${aluno.id}" />
+                        
+                        <div class="col-md-3">
+                            <label class="form-label small">Status</label>
+                            <select name="status" class="form-select form-select-sm">
+                                <option value="">Todos</option>
+                                <option th:each="s : ${statusList}" th:value="${s}" th:text="${s.descricao}" th:selected="${s.name() == statusSelecionado}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Assunto</label>
+                            <select name="assuntoId" class="form-select form-select-sm">
+                                <option value="">Todos</option>
+                                <option th:each="as : ${assuntos}" th:value="${as.id}" th:text="${as.nome}" th:selected="${as.id == assuntoSelecionado}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-sm btn-secondary w-100">Filtrar</button>
+                        </div>
+                        <div class="col-md-4 text-end">
+                             <a th:href="@{/aluno/processo/form}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus-lg"></i> Novo Processo
+                             </a>
+                        </div>
+                    </form>
                 </div>
 
-                <!-- Tabela de Processos (só mostra se houver aluno e processos) -->
-                <div th:if="${aluno != null && !#lists.isEmpty(processos)}">
-                    <div class="table-responsive">
+                <!-- Tabela de Processos -->
+                <div th:if="${aluno != null}">
+                    <div th:if="${#lists.isEmpty(processos)}" class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Nenhum processo encontrado.
+                    </div>
+
+                    <div th:unless="${#lists.isEmpty(processos)}" class="table-responsive">
                         <table class="table table-striped table-hover align-middle">
-                            <thead>
+                            <thead class="table-light">
                                 <tr>
                                     <th>Número</th>
                                     <th>Assunto</th>
                                     <th>Status</th>
-                                    <th>Data de Recepção</th>
-                                    <th>Relator</th>
+                                    <th>Data Recepção</th>
                                     <th>Documentos</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="processo : ${processos}">
+                                <tr th:each="p : ${processos}">
                                     <td>
-                                        <strong th:text="${processo.numero}">123/2024</strong>
+                                        <strong th:text="${p.numero}" class="text-primary">123/2024</strong>
                                     </td>
-                                    <td th:text="${processo.assunto.nome}">Assunto do Processo</td>
+                                    <td th:text="${p.assunto.nome}">Assunto</td>
                                     <td>
-                                        <span class="badge bg-secondary" 
-                                              th:if="${processo.status.name() == 'CRIADO'}"
-                                              th:text="${processo.status.descricao}">Criado</span>
-                                        <span class="badge bg-info" 
-                                              th:if="${processo.status.name() == 'DISTRIBUIDO'}"
-                                              th:text="${processo.status.descricao}">Distribuído</span>
-                                        <span class="badge bg-warning" 
-                                              th:if="${processo.status.name() == 'EM_PAUTA'}"
-                                              th:text="${processo.status.descricao}">Em Pauta</span>
-                                        <span class="badge bg-primary" 
-                                              th:if="${processo.status.name() == 'EM_JULGAMENTO'}"
-                                              th:text="${processo.status.descricao}">Em Julgamento</span>
-                                        <span class="badge bg-success" 
-                                              th:if="${processo.status.name() == 'JULGADO'}"
-                                              th:text="${processo.status.descricao}">Julgado</span>
+                                        <span class="badge bg-secondary" th:if="${p.status.name() == 'CRIADO'}" th:text="${p.status.descricao}"></span>
+                                        <span class="badge bg-info text-dark" th:if="${p.status.name() == 'DISTRIBUIDO'}" th:text="${p.status.descricao}"></span>
+                                        <span class="badge bg-warning text-dark" th:if="${p.status.name() == 'EM_PAUTA'}" th:text="${p.status.descricao}"></span>
+                                        <span class="badge bg-primary" th:if="${p.status.name() == 'EM_JULGAMENTO'}" th:text="${p.status.descricao}"></span>
+                                        <span class="badge bg-success" th:if="${p.status.name() == 'JULGADO'}" th:text="${p.status.descricao}"></span>
                                     </td>
-                                    <td th:text="${#temporals.format(processo.dataRecepcao, 'dd/MM/yyyy')}">01/01/2024</td>
+                                    <td th:text="${#temporals.format(p.dataRecepcao, 'dd/MM/yyyy')}"></td>
                                     <td>
-                                        <span th:if="${processo.relator != null}" 
-                                              th:text="${processo.relator.nome}">Nome do Relator</span>
-                                        <span th:if="${processo.relator == null}" 
-                                              class="text-muted fst-italic">Aguardando designação</span>
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="bi bi-paperclip"></i> <span th:text="${#lists.size(p.documentos)}">0</span>
+                                        </span>
                                     </td>
                                     <td>
-                                        <span class="badge bg-info" th:text="${#lists.size(processo.documentos)}">0</span>
-                                        <span class="text-muted ms-1">documento(s)</span>
-                                    </td>
-                                    <td>
-                                        <button type="button" 
-                                                class="btn btn-sm btn-outline-primary" 
-                                                data-bs-toggle="modal" 
-                                                th:attr="data-bs-target='#modalDocumentos' + ${processo.id}">
-                                            <i class="bi bi-paperclip"></i> Gerenciar
+                                        <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="modal" th:data-bs-target="'#modalDocs' + ${p.id}">
+                                            <i class="bi bi-folder2-open"></i> Gerenciar Docs
                                         </button>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    
-                    <!-- Informação sobre quantidade de processos -->
-                    <div class="mt-3">
-                        <p class="text-muted">
-                            <strong>Total de processos:</strong> 
-                            <span th:text="${#lists.size(processos)}">0</span>
-                        </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modais de Documentos (Fora da tabela para evitar problemas de layout) -->
+        <div th:if="${aluno != null}" th:each="p : ${processos}">
+            <div class="modal fade" th:id="'modalDocs' + ${p.id}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-light">
+                            <h5 class="modal-title">Documentos do Processo <span th:text="${p.numero}"></span></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            
+                            <!-- Lista de Documentos Existentes -->
+                            <h6 class="mb-3">Anexos:</h6>
+                            <div th:if="${#lists.isEmpty(p.documentos)}" class="text-muted fst-italic mb-3">
+                                Nenhum documento anexado.
+                            </div>
+                            
+                            <ul th:unless="${#lists.isEmpty(p.documentos)}" class="list-group mb-4">
+                                <li th:each="doc : ${p.documentos}" class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-file-earmark-text me-2"></i>
+                                        <span th:text="${doc.nomeOriginal}">arquivo.pdf</span>
+                                        <small class="text-muted ms-2" th:if="${doc.descricao}" th:text="'(' + ${doc.descricao} + ')'"></small>
+                                    </div>
+                                    <div class="btn-group">
+                                        <a th:href="@{/aluno/processo/{pid}/documento/{did}/download(pid=${p.id}, did=${doc.id})}" class="btn btn-sm btn-outline-primary" title="Baixar">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        <!-- Só permite excluir se o processo ainda estiver CRIADO -->
+                                        <form th:if="${p.status.name() == 'CRIADO'}" 
+                                              th:action="@{/aluno/processo/{pid}/documento/{did}/delete(pid=${p.id}, did=${doc.id})}" 
+                                              method="post" 
+                                              th:onsubmit="return confirm('Excluir este documento?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger ms-1" title="Excluir">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </li>
+                            </ul>
+                            
+                            <hr>
+                            
+                            <!-- Formulário de Upload (Só se status for CRIADO) -->
+                            <div th:if="${p.status.name() == 'CRIADO'}">
+                                <h6 class="mb-3"><i class="bi bi-cloud-upload"></i> Adicionar Novo Documento</h6>
+                                <form th:action="@{/aluno/processo/{id}/documento/upload(id=${p.id})}" method="post" enctype="multipart/form-data">
+                                    <div class="input-group mb-2">
+                                        <input type="file" name="arquivo" class="form-control" required>
+                                    </div>
+                                    <div class="input-group mb-2">
+                                        <span class="input-group-text">Descrição</span>
+                                        <input type="text" name="descricao" class="form-control" placeholder="Opcional (ex: Histórico Escolar)">
+                                    </div>
+                                    <div class="text-end">
+                                        <button type="submit" class="btn btn-success text-white">Enviar</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div th:unless="${p.status.name() == 'CRIADO'}" class="alert alert-warning py-2 small">
+                                <i class="bi bi-lock"></i> O processo já foi tramitado e não aceita novos documentos.
+                            </div>
+                            
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Modais para Gerenciar Documentos (um para cada processo) -->
-        <div th:each="processo : ${processos}">
-            <div class="modal fade" th:id="'modalDocumentos' + ${processo.id}" tabindex="-1" aria-labelledby="modalDocumentosLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="modalDocumentosLabel">
-                                Documentos do Processo <span th:text="${processo.numero}">123/2024</span>
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <!-- Formulário de Upload -->
-                            <div class="card mb-3">
-                                <div class="card-header bg-light">
-                                    <h6 class="mb-0">Enviar Novo Documento</h6>
-                                </div>
-                                <div class="card-body">
-                                    <form th:action="@{/aluno/processo/{id}/documento/upload(id=${processo.id})}" 
-                                          method="post" 
-                                          enctype="multipart/form-data">
-                                        <div class="mb-3">
-                                            <label for="arquivo" class="form-label">Selecionar Arquivo *</label>
-                                            <input type="file" 
-                                                   class="form-control" 
-                                                   id="arquivo" 
-                                                   name="arquivo" 
-                                                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
-                                                   required>
-                                            <small class="form-text text-muted">
-                                                Tipos permitidos: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, GIF. Tamanho máximo: 10MB
-                                            </small>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="descricao" class="form-label">Descrição (Opcional)</label>
-                                            <textarea class="form-control" 
-                                                      id="descricao" 
-                                                      name="descricao" 
-                                                      rows="2" 
-                                                      maxlength="500"
-                                                      placeholder="Descreva o documento..."></textarea>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-upload"></i> Enviar Documento
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                            
-                            <!-- Lista de Documentos -->
-                            <div>
-                                <h6 class="mb-3">Documentos Enviados</h6>
-                                <div th:if="${#lists.isEmpty(processo.documentos)}" class="alert alert-info">
-                                    <i class="bi bi-info-circle"></i> Nenhum documento enviado ainda.
-                                </div>
-                                <div th:unless="${#lists.isEmpty(processo.documentos)}" class="list-group">
-                                    <div th:each="documento : ${processo.documentos}" class="list-group-item">
-                                        <div class="d-flex w-100 justify-content-between align-items-center">
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1" th:text="${documento.nomeOriginal}">Nome do Arquivo</h6>
-                                                <p class="mb-1 text-muted small" th:if="${documento.descricao}" th:text="${documento.descricao}">Descrição</p>
-                                                <small class="text-muted">
-                                                    <span th:text="${#temporals.format(documento.dataUpload, 'dd/MM/yyyy HH:mm')}">Data</span>
-                                                    <span class="ms-2">•</span>
-                                                    <span class="ms-2" th:text="${documento.tamanhoFormatado}">Tamanho</span>
-                                                </small>
-                                            </div>
-                                            <div class="btn-group" role="group">
-                                                <a th:href="@{/aluno/processo/{processoId}/documento/{documentoId}/download(processoId=${processo.id}, documentoId=${documento.id})}" 
-                                                   class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-download"></i> Download
-                                                </a>
-                                                <form th:action="@{/aluno/processo/{processoId}/documento/{documentoId}/delete(processoId=${processo.id}, documentoId=${documento.id})}" 
-                                                      method="post" 
-                                                      class="d-inline"
-                                                      th:onsubmit="return confirm('Tem certeza que deseja remover este documento?');">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                        <i class="bi bi-trash"></i> Remover
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
 </body>
 </html>
-
