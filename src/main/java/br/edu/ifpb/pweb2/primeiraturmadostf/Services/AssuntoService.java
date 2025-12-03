@@ -55,5 +55,13 @@ private final AssuntoRepository assuntoRepository;
         return true;
     }
 
+    public boolean existsByNome(String nome) {
+        return this.findByNome(nome) != null;
+    }
+
+    public boolean existsByNomeAndNotId(String nome, Long id) {
+        Assunto assunto = this.findByNome(nome);
+        return assunto != null && !assunto.getId().equals(id);
+    }
 
 }
