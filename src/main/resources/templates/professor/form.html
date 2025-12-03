@@ -49,6 +49,17 @@
                         <small class="form-text text-muted">Formato: (XX) XXXXX-XXXX (opcional)</small>
                     </div>
 
+                     <div class="mb-3">
+                        <label class="form-label">Curso *</label>
+                        <select class="form-select" th:field="*{curso}" required>
+                            <option value="">Selecione...</option>
+                            <option th:each="c : ${listaCursos}" 
+                                    th:value="${c.id}" 
+                                    th:text="${c.nome}">
+                            </option>
+                        </select>
+                    </div>
+
                     <div class="mb-3">
                         <label for="login" class="form-label">Login / Matrícula *</label>
                         <input type="text" 

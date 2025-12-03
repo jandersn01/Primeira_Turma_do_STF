@@ -8,126 +8,160 @@
     
     <title layout:title-pattern="$CONTENT_TITLE - Collegialis">Collegialis</title>
     
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
-    <style>
-        /* Faz o footer ficar sempre no final da página */
-        body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        main {
-            flex: 1;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body>
+<body class="bg-light">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+
+    <nav class="navbar navbar-dark bg-primary fixed-top d-lg-none p-2 shadow">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#" th:href="@{/}">Collegialis</a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="bi bi-mortarboard-fill"></i> Collegialis
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <!-- Menu comum para todos -->
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/home}">
-                            <i class="bi bi-house-door"></i> Início
-                        </a>
-                    </li>
-                    
-                    <!-- Seção: ALUNO -->
-                    <!-- TODO: Adicionar condicional th:if="${#authentication.principal.role == 'ALUNO'}" quando autenticação for implementada -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="alunoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person"></i> Aluno
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="alunoDropdown">
-                            <li><h6 class="dropdown-header">Processos</h6></li>
-                            <li><a class="dropdown-item" th:href="@{/aluno/processo/form}">
-                                <i class="bi bi-plus-circle"></i> Novo Processo
-                            </a></li>
-                            <li><a class="dropdown-item" th:href="@{/aluno/processo/list}">
-                                <i class="bi bi-list-ul"></i> Meus Processos
-                            </a></li>
-                        </ul>
-                    </li>
-                    
-                    <!-- Seção: PROFESSOR -->
-                    <!-- TODO: Adicionar condicional th:if="${#authentication.principal.role == 'PROFESSOR'}" quando autenticação for implementada -->
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/professor/processo/list}">
-                            <i class="bi bi-person-badge"></i> Processos como Relator
-                        </a>
-                    </li>
-                    
-                    <!-- Seção: COORDENADOR -->
-                    <!-- TODO: Adicionar condicional th:if="${#authentication.principal.coordenador == true}" quando autenticação for implementada -->
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/coordenador/processo/list}">
-                            <i class="bi bi-people"></i> Processos do Colegiado
-                        </a>
-                    </li>
-                    
-                    <!-- Seção: ADMIN -->
-                    <!-- TODO: Adicionar condicional th:if="${#authentication.principal.role == 'ADMIN'}" quando autenticação for implementada -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-gear"></i> Admin
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-                            <li><h6 class="dropdown-header">Cadastros</h6></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/assunto/form}">
-                                <i class="bi bi-file-earmark-text"></i> Cadastrar Assunto
-                            </a></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/colegiado/form}">
-                                <i class="bi bi-people"></i> Cadastrar Colegiado
-                            </a></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/professor/form}">
-                                <i class="bi bi-person-badge"></i> Cadastrar Professor
-                            </a></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/aluno/form}">
-                                <i class="bi bi-person"></i> Cadastrar Aluno
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><h6 class="dropdown-header">Listagens</h6></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/assunto/list}">
-                                <i class="bi bi-list-ul"></i> Listar Assuntos
-                            </a></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/colegiado/list}">
-                                <i class="bi bi-list-ul"></i> Listar Colegiados
-                            </a></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/professor/list}">
-                                <i class="bi bi-list-ul"></i> Listar Professores
-                            </a></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/aluno/list}">
-                                <i class="bi bi-list-ul"></i> Listar Alunos
-                            </a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
         </div>
     </nav>
 
-    <main class="container">
-        <div layout:fragment="conteudo">
-            <p>Carregando...</p>
-        </div>
-    </main>
+    <div class="container-fluid">
+        <div class="row">
+            
+            
+            <div class="col-lg-2 bg-primary sidebar-desktop offcanvas-lg offcanvas-start" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
+                
+                <!-- Cabeçalho do Menu (Apenas Mobile) -->
+                <div class="offcanvas-header text-white border-bottom border-white-50">
+                    <h5 class="offcanvas-title" id="sidebarMenuLabel">Collegialis</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu" aria-label="Close"></button>
+                </div>
 
-    <footer class="bg-light text-center py-3 mt-auto border-top">
-        <div class="container">
-            <span class="text-muted">© 2023 Collegialis - Sistema Acadêmico</span>
-        </div>
-    </footer>
+                <!-- Corpo do Menu -->
+                <div class="offcanvas-body d-flex flex-column p-0 pt-lg-3">
+                    
+                    <!-- Logo Desktop -->
+                    <a href="/" class="d-none d-lg-flex align-items-center mb-4 text-white text-decoration-none px-3">
+                        <i class="bi bi-mortarboard-fill fs-4 me-2"></i>
+                        <span class="fs-4 fw-bold">Collegialis</span>
+                    </a>
+                    
+                    <!-- Lista de Links -->
+                    <ul class="nav nav-pills flex-column mb-auto px-2">
+                        
+                        <li class="nav-item">
+                            <a th:href="@{/home}" class="sidebar-link">
+                                <i class="bi bi-house-door"></i> Início
+                            </a>
+                        </li>
+                        
+                        <!-- Menu Aluno -->
+                        <li class="nav-item">
+                            <a class="sidebar-link dropdown-toggle text-white-50 small fw-bold text-uppercase px-3 mb-1" href="#submenuAluno" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="submenuAluno">
+                                <i class="bi bi-person"></i> Aluno
+                            </a>
+                            <div class="collapse ps-3" id="submenuAluno">
+                                <ul class="nav flex-column">
+                                    <li class="nav-item">
+                                        <a class="sidebar-link" th:href="@{/aluno/processo/form}">
+                                            <i class="bi bi-plus-circle"></i> Novo Processo
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="sidebar-link" th:href="@{/aluno/processo/list}">
+                                            <i class="bi bi-list-ul"></i> Meus Processos
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+                        <!-- Menu Professor -->
+                        <li class="nav-item">
+                            <a class="sidebar-link dropdown-toggle text-white-50 small fw-bold text-uppercase px-3 mb-1" href="#submenuProfessor" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="submenuAluno">
+                                <i class="bi bi-person"></i> Professores
+                            </a>
+                            <div class="collapse ps-3" id="submenuProfessor">
+                                <ul class="nav flex-column">
+                                    <li class="nav-item">
+                                        <a class="sidebar-link" th:href="@{/professor/processo/list}">
+                                            <i class="bi bi-person-badge"></i> Relatoria
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <!-- Menu Coordenador -->
+                        <li class="nav-item">
+                            <a class="sidebar-link dropdown-toggle text-white-50 small fw-bold text-uppercase px-3 mb-1" href="#submenuCoordenador" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="submenuAluno">
+                                <i class="bi bi-person"></i> Coordenação
+                            </a>
+                            <div class="collapse ps-3" id="submenuCoordenador">
+                                <ul class="nav flex-column">
+                                    <li class="nav-item">
+                                        <a class="sidebar-link" th:href="@{/coordenador/processo/list}">
+                                            <i class="bi bi-people"></i> Colegiado
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <!-- Menu Admin -->
+                        <li class="nav-item mt-3">
+                            <a class="sidebar-link dropdown-toggle text-white-50 small fw-bold text-uppercase px-3 mb-1" href="#submenuAdmin" data-bs-toggle="collapse" role="button" aria-expanded="false">
+                                <i class="bi bi-gear"></i> Administração
+                            </a>
+                            <div class="collapse ps-3" id="submenuAdmin">
+                                <ul class="nav flex-column">
+                                    <li><a class="sidebar-link" th:href="@{/admin/aluno/list}">Alunos</a></li>
+                                    <li><a class="sidebar-link" th:href="@{/admin/assunto/list}">Assuntos</a></li>
+                                    <li><a class="sidebar-link" th:href="@{/admin/colegiado/list}">Colegiados</a></li>
+                                    <li><a class="sidebar-link" th:href="@{/admin/curso/list}">Cursos</a></li>
+                                    <li><a class="sidebar-link" th:href="@{/admin/professor/list}">Professores</a></li>
+                                    
+
+                                </ul>
+                            </div>
+                        </li>
+                        
+                    </ul>
+
+                    <!-- Rodapé do Menu (User Info) -->
+                    <div class="mt-auto p-3 border-top border-white-50">
+                        <div class="d-flex align-items-center text-white">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-person-circle fs-3"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-2">
+                                <div class="small fw-bold">Usuário Logado</div>
+                                <div class="small text-white-50" style="font-size: 0.75rem;">Sair</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+ 
+            <main class="col-lg-10 ms-sm-auto px-md-4 main-wrapper bg-white shadow-sm">
+                
+                <!-- Área de Conteúdo Injetada -->
+                <div class="py-4 px-2" layout:fragment="conteudo">
+                    <p>Carregando...</p>
+                </div>
+
+                <!-- Footer do Conteúdo -->
+                <footer class="mt-auto py-3 text-center text-muted border-top">
+                    <small>© 2023 Collegialis - Sistema Acadêmico</small>
+                </footer>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

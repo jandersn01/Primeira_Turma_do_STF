@@ -166,6 +166,7 @@
                                     <th>Status</th>
                                     <th>Data de Recepção</th>
                                     <th>Relator</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -174,35 +175,69 @@
                                         <strong th:text="${processo.numero}">123/2024</strong>
                                     </td>
                                     <td>
-                                        <span th:text="${processo.interessado.nome}">Nome do Aluno</span>
-                                        <br>
+                                        <span th:text="${processo.interessado.nome}">Nome</span><br>
                                         <small class="text-muted" th:text="'(' + ${processo.interessado.matricula} + ')'">Matrícula</small>
                                     </td>
-                                    <td th:text="${processo.assunto.nome}">Assunto do Processo</td>
+                                    <td th:text="${processo.assunto.nome}">Assunto</td>
                                     <td>
-                                        <span class="badge bg-secondary" 
-                                              th:if="${processo.status.name() == 'CRIADO'}"
-                                              th:text="${processo.status.descricao}">Criado</span>
-                                        <span class="badge bg-info" 
-                                              th:if="${processo.status.name() == 'DISTRIBUIDO'}"
-                                              th:text="${processo.status.descricao}">Distribuído</span>
-                                        <span class="badge bg-warning" 
-                                              th:if="${processo.status.name() == 'EM_PAUTA'}"
-                                              th:text="${processo.status.descricao}">Em Pauta</span>
-                                        <span class="badge bg-primary" 
-                                              th:if="${processo.status.name() == 'EM_JULGAMENTO'}"
-                                              th:text="${processo.status.descricao}">Em Julgamento</span>
-                                        <span class="badge bg-success" 
-                                              th:if="${processo.status.name() == 'JULGADO'}"
-                                              th:text="${processo.status.descricao}">Julgado</span>
+                                        <span class="badge bg-secondary" th:if="${processo.status.name() == 'CRIADO'}" th:text="${processo.status.descricao}"></span>
+                                        <span class="badge bg-info" th:if="${processo.status.name() == 'DISTRIBUIDO'}" th:text="${processo.status.descricao}"></span>
+                                        <span class="badge bg-warning" th:if="${processo.status.name() == 'EM_PAUTA'}" th:text="${processo.status.descricao}"></span>
+                                        <span class="badge bg-primary" th:if="${processo.status.name() == 'EM_JULGAMENTO'}" th:text="${processo.status.descricao}"></span>
+                                        <span class="badge bg-success" th:if="${processo.status.name() == 'JULGADO'}" th:text="${processo.status.descricao}"></span>
                                     </td>
-                                    <td th:text="${#temporals.format(processo.dataRecepcao, 'dd/MM/yyyy')}">01/01/2024</td>
+                                    <td th:text="${#temporals.format(processo.dataRecepcao, 'dd/MM/yyyy')}">Data</td>
                                     <td>
-                                        <span th:if="${processo.relator != null}" 
-                                              th:text="${processo.relator.nome}">Nome do Relator</span>
-                                        <span th:if="${processo.relator == null}" 
-                                              class="text-muted fst-italic">Aguardando designação</span>
+                                        <span th:if="${processo.relator != null}" th:text="${processo.relator.nome}">Relator</span>
+                                        <span th:if="${processo.relator == null}" class="text-muted fst-italic">Aguardando</span>
                                     </td>
+
+                                    <td>
+                                        <button th:if="${processo.status.name() == 'CRIADO'}" 
+                                                type="button" 
+                                                class="btn btn-sm btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                th:data-bs-target="'#modalDistribuir' + ${processo.id}">
+                                            <i class="bi bi-person-check"></i> Distribuir
+                                        </button>
+
+                                        <div th:if="${processo.status.name() == 'CRIADO'}" 
+                                            class="modal fade" 
+                                            th:id="'modalDistribuir' + ${processo.id}" 
+                                            tabindex="-1" 
+                                            aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <form th:action="@{/coordenador/processo/distribuir}" method="post">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Distribuir Processo <span th:text="${processo.numero}"></span></h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <input type="hidden" name="processoId" th:value="${processo.id}" />
+                                                            <input type="hidden" name="colegiadoId" th:value="${colegiadoSelecionado.id}" />
+                                                            
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Selecione o Relator:</label>
+                                                                <select name="relatorId" class="form-select" required>
+                                                                    <option value="">-- Selecione um Professor --</option>
+                                                                    <option th:each="membro : ${colegiadoSelecionado.membros}"
+                                                                            th:value="${membro.id}"
+                                                                            th:text="${membro.nome}">
+                                                                    </option>
+                                                                </select>
+                                                                <div class="form-text">Listando apenas membros do colegiado atual.</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                            <button type="submit" class="btn btn-primary">Confirmar Distribuição</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        </td>
                                 </tr>
                             </tbody>
                         </table>

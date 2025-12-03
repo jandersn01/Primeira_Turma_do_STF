@@ -68,6 +68,10 @@ public class Processo {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "interessado_id", nullable = false)
     private Aluno interessado;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "colegiado_id")
+    private Colegiado colegiado;
     
     // como não tive a chance de perguntar ao professor, assumi que o processo pode estar em várias pautas
     @ManyToMany(mappedBy = "processos")
@@ -85,6 +89,7 @@ public class Processo {
         this.numero = numero;
         this.assunto = assunto;
         this.interessado = interessado;
+        this.colegiado = colegiado;
         this.dataRecepcao = LocalDate.now();
         this.status = StatusProcesso.CRIADO;
     }
@@ -122,6 +127,9 @@ public class Processo {
     public void setDataDistribuicao(LocalDate dataDistribuicao) {
         this.dataDistribuicao = dataDistribuicao;
     }
+
+    public Colegiado getColegiado() { return colegiado; }
+    public void setColegiado(Colegiado colegiado) { this.colegiado = colegiado; }
     
     public LocalDate getDataParecer() {
         return dataParecer;

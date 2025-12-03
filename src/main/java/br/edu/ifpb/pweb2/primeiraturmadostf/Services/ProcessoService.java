@@ -3,6 +3,7 @@ package br.edu.ifpb.pweb2.primeiraturmadostf.services;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -23,8 +24,12 @@ public class ProcessoService {
 
     private final ProcessoRepository processoRepository;
 
-    public ProcessoService(ProcessoRepository processoRepository) {
+    private final ProfessorService professorService;
+
+    @Autowired
+    public ProcessoService(ProcessoRepository processoRepository, ProfessorService professorService) {
         this.processoRepository = processoRepository;
+        this.professorService = professorService;
     }
 
     public List<Processo> findAll() {
@@ -156,6 +161,30 @@ public class ProcessoService {
         
         return processoRepository.findAll(spec, sort);
     }
+
+    public void distribuirProcesso(Long processoId, Long relatorId) {
+    Processo processo = findById(processoId);
+    
+    if (processo == null) {
+        throw new IllegalArgumentException("Processo não encontrado");
+    }
+
+    if (processo.getStatus() != StatusProcesso.CRIADO) {
+        throw new IllegalStateException("O processo não está no estado CRIADO e não pode ser distribuído.");
+    }
+
+    Professor relator = professorService.findById(relatorId);
+    if (relator == null) {
+        throw new IllegalArgumentException("Professor relator não encontrado");
+    }
+
+    // Atualização dos campos
+    processo.setRelator(relator);
+    processo.setStatus(StatusProcesso.DISTRIBUIDO);
+    processo.setDataDistribuicao(LocalDate.now());
+
+    processoRepository.save(processo);
+}
 
 }
 

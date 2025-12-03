@@ -15,5 +15,7 @@ public interface AlunoRepository extends JpaRepository<Aluno, Long> {
 
     void deleteByMatricula(String matricula);
 
+    List<Aluno> findByCursoId(Long cursoId);
+
 
 }
