@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+<head>
+    <title>Cadastro de Assunto</title>
+</head>
+<body>
+
+    <div layout:fragment="conteudo">
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Cadastro de Assuntos</h4>
+            </div>
+            <div class="card-body">
+                
+                <form th:action="@{/admin/assunto/save}" method="post" th:object="${assunto}">
+                    
+                    <input type="hidden" th:field="*{id}" />
+
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome do Assunto *</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="nome" 
+                               th:field="*{nome}"
+                               th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'"
+                               required 
+                               maxlength="100" 
+                               placeholder="Ex: Revisão de Nota"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}">
+                            <span th:errors="*{nome}">Erro no nome</span>
+                        </div>
+                        <small class="form-text text-muted">Digite o nome do assunto (3 a 100 caracteres)</small>
+                    </div>
+
+                     <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição *</label>
+                        <textarea class="form-control" 
+                                  id="descricao" 
+                                  th:field="*{descricao}"
+                                  th:classappend="${#fields.hasErrors('descricao')} ? 'is-invalid'"
+                                  rows="4" 
+                                  minlength="10"
+                                  maxlength="2000"
+                                  required
+                                  placeholder="Descreva brevemente o assunto..."></textarea>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('descricao')}">
+                            <span th:errors="*{descricao}">Erro na descrição</span>
+                        </div>
+                        <small class="form-text text-muted">Descreva o assunto (10 a 2000 caracteres)</small>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">Salvar</button>
+                        <button type="reset" th:if="${assunto.id == null}" class="btn btn-secondary">Cancelar</button>
+                        <a th:if="${assunto.id != null}" th:href="@{/admin/assunto/list}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+
+                    
+                </form>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Lista de Professores</title>
+</head>
+<body>
+
+    <div layout:fragment="conteudo">
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Professores Cadastrados</h4>
+                <a th:href="@{/admin/professor/form}" class="btn btn-light btn-sm">Novo Professor</a>
+            </div>
+            
+            <div class="card-body">
+                
+                <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <span th:text="${mensagem}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Matricula</th>
+                            <th>Curso</th>
+                            <th class="text-center">Coord?</th>
+                            <th>Fone</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="professor : ${listaProfessores}">
+                            <td th:text="${professor.id}">1</td>
+                            
+                            <td>
+                                <a th:href="@{/admin/professor/id/{id}(id=${professor.id})}" 
+                                   th:text="${professor.nome}" class="text-decoration-none fw-bold">Nome</a>
+                            </td>
+                            
+                            <td th:text="${professor.matricula}">admin</td>
+                            <td th:text="${professor.curso != null ? professor.curso.nome : '—'}">Curso</td>
+                            
+                            <td class="text-center">
+                                <span th:if="${professor.coordenador}" class="badge bg-success">Sim</span>
+                                <span th:unless="${professor.coordenador}" class="badge bg-secondary">Não</span>
+                            </td>
+                            <td th:text="${professor.fone}">(83) 9999-9999</td>
+                            <td>
+                                <a th:href="@{/admin/professor/id/{id}(id=${professor.id})}" class="btn btn-sm btn-outline-primary">Editar</a>
+                                <form th:action="@{/admin/professor/delete/{matricula}(matricula=${professor.matricula})}"
+                                    method="post" style="display: inline;"
+                                    onsubmit="return confirm('Tem certeza que deseja excluir este Professor?');">
+                                    <input type="hidden" name="_method" value="delete">
+                                    <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                                </form>
+                            </td>
+                        </tr>
+                        
+                        <tr th:if="${#lists.isEmpty(listaProfessores)}">
+                            <td colspan="6" class="text-center text-muted">Nenhum professor cadastrado.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

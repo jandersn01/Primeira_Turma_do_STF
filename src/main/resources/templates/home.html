@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Collegialis</title>
+</head>
+<body>
+    <div layout:fragment="conteudo">
+        <!-- Header da Página -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+            <div class="mb-2 mb-md-0">
+                <h2 class="mb-1 page-title">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </h2>
+                <p class="text-muted mb-0 small">Visão geral do sistema Collegialis</p>
+            </div>
+            <div>
+                <span class="badge date-badge">
+                    <i class="bi bi-calendar3"></i> 
+                    <span th:text="${#temporals.format(#temporals.createToday(), 'dd/MM/yyyy')}">Hoje</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Cards de Estatísticas - Processos -->
+        <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-md-6 col-sm-6">
+                <div class="card stat-card stat-card-primary h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="stat-label">Total de Processos</h6>
+                                <h2 class="stat-value mb-0" th:text="${totalProcessos}">0</h2>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-folder-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 col-sm-6">
+                <div class="card stat-card stat-card-warning h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="stat-label">Criados</h6>
+                                <h2 class="stat-value mb-0" th:text="${processosCriados}">0</h2>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-file-earmark-plus"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 col-sm-6">
+                <div class="card stat-card stat-card-info h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="stat-label">Em Tramitação</h6>
+                                <h2 class="stat-value mb-0" th:text="${processosEmTramitacao}">0</h2>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 col-sm-6">
+                <div class="card stat-card stat-card-success h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="stat-label">Finalizados</h6>
+                                <h2 class="stat-value mb-0" th:text="${processosFinalizados}">0</h2>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards de Estatísticas - Cadastros -->
+        <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-md-6 col-sm-6">
+                <div class="card stat-card stat-card-secondary h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="stat-label">Alunos</h6>
+                                <h2 class="stat-value mb-0" th:text="${totalAlunos}">0</h2>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 col-sm-6">
+                <div class="card stat-card stat-card-secondary h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="stat-label">Professores</h6>
+                                <h2 class="stat-value mb-0" th:text="${totalProfessores}">0</h2>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-person-badge"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 col-sm-6">
+                <div class="card stat-card stat-card-secondary h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="stat-label">Assuntos</h6>
+                                <h2 class="stat-value mb-0" th:text="${totalAssuntos}">0</h2>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 col-sm-6">
+                <div class="card stat-card stat-card-secondary h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="stat-label">Colegiados</h6>
+                                <h2 class="stat-value mb-0" th:text="${totalColegiados}">0</h2>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-building"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações Rápidas -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-lightning-charge"></i> Ações Rápidas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-lg-3 col-md-6 col-sm-6">
+                                <a th:href="@{/aluno/processo/form}" class="text-decoration-none">
+                                    <div class="card quick-action-card h-100">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-plus-circle quick-action-icon"></i>
+                                            <h6 class="mt-2 mb-1">Novo Processo</h6>
+                                            <p class="text-muted small mb-0">Criar um novo processo acadêmico</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            
+                            <div class="col-lg-3 col-md-6 col-sm-6">
+                                <a th:href="@{/aluno/processo/list}" class="text-decoration-none">
+                                    <div class="card quick-action-card h-100">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-list-ul quick-action-icon"></i>
+                                            <h6 class="mt-2 mb-1">Meus Processos</h6>
+                                            <p class="text-muted small mb-0">Ver todos os meus processos</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            
+                            <div class="col-lg-3 col-md-6 col-sm-6">
+                                <a th:href="@{/professor/processo/list}" class="text-decoration-none">
+                                    <div class="card quick-action-card h-100">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-person-badge quick-action-icon"></i>
+                                            <h6 class="mt-2 mb-1">Processos como Relator</h6>
+                                            <p class="text-muted small mb-0">Ver processos designados</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            
+                            <div class="col-lg-3 col-md-6 col-sm-6">
+                                <a th:href="@{/coordenador/processo/list}" class="text-decoration-none">
+                                    <div class="card quick-action-card h-100">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-people quick-action-icon"></i>
+                                            <h6 class="mt-2 mb-1">Processos do Colegiado</h6>
+                                            <p class="text-muted small mb-0">Gerenciar processos do colegiado</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processos Recentes -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history"></i> Processos Recentes
+                        </h5>
+                        <a th:href="@{/aluno/processo/list}" class="btn btn-sm btn-outline-secondary mt-2 mt-md-0">
+                            Ver Todos <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div th:if="${#lists.isEmpty(processosRecentes)}" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            <p class="mb-0">Nenhum processo encontrado</p>
+                        </div>
+                        <div th:if="${!#lists.isEmpty(processosRecentes)}" class="list-group list-group-flush">
+                            <div th:each="processo : ${processosRecentes}" 
+                                 class="list-group-item processo-item">
+                                <div class="d-flex justify-content-between align-items-start flex-wrap">
+                                    <div class="flex-grow-1 mb-2 mb-md-0">
+                                        <h6 class="mb-1">
+                                            Processo #<span th:text="${processo.numero}">N/A</span>
+                                        </h6>
+                                        <p class="mb-1 text-muted small" th:text="${processo.assunto?.nome}">Assunto</p>
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar"></i>
+                                            <span th:if="${processo.dataRecepcao != null}" 
+                                                  th:text="${#temporals.format(processo.dataRecepcao, 'dd/MM/yyyy')}">Data</span>
+                                            <span th:if="${processo.dataRecepcao == null}">Data não informada</span>
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <span th:switch="${processo.status}" class="badge status-badge">
+                                            <span th:case="CRIADO" class="badge bg-warning-subtle text-warning-emphasis">Criado</span>
+                                            <span th:case="DISTRIBUIDO" class="badge bg-info-subtle text-info-emphasis">Distribuído</span>
+                                            <span th:case="EM_PAUTA" class="badge bg-info-subtle text-info-emphasis">Em Pauta</span>
+                                            <span th:case="EM_JULGAMENTO" class="badge bg-info-subtle text-info-emphasis">Em Julgamento</span>
+                                            <span th:case="JULGADO" class="badge bg-success-subtle text-success-emphasis">Julgado</span>
+                                            <span th:case="*" class="badge bg-secondary-subtle text-secondary-emphasis" th:text="${processo.status?.descricao}">Status</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+<head>
+    <title>Cadastrar Novo Processo</title>
+</head>
+<body>
+
+    <div layout:fragment="conteudo">
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Cadastrar Novo Processo</h4>
+            </div>
+            <div class="card-body">
+                
+                <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert" th:classappend="${mensagem.contains('Erro')} ? 'alert-danger' : 'alert-success'">
+                    <span th:text="${mensagem}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Mensagem quando não há aluno cadastrado -->
+                <div th:if="${aluno == null}" class="alert alert-warning">
+                    <h5 class="alert-heading">
+                        <i class="bi bi-exclamation-triangle"></i> Nenhum aluno cadastrado
+                    </h5>
+                    <p>Não é possível criar um processo sem um aluno cadastrado no sistema. Por favor, solicite ao administrador que cadastre alunos no sistema.</p>
+                    <hr>
+                    <p class="mb-0">
+                        <a th:href="@{/admin/aluno/form}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Cadastrar Aluno (Admin)
+                        </a>
+                        <a th:href="@{/admin/aluno/list}" class="btn btn-outline-primary ms-2">
+                            <i class="bi bi-list-ul"></i> Ver Alunos Cadastrados
+                        </a>
+                    </p>
+                </div>
+
+                <!-- Mensagem quando não há assuntos cadastrados -->
+                <div th:if="${#lists.isEmpty(assuntos)}" class="alert alert-warning">
+                    <h5 class="alert-heading">
+                        <i class="bi bi-exclamation-triangle"></i> Nenhum assunto cadastrado
+                    </h5>
+                    <p>Não é possível criar um processo sem assuntos cadastrados. Por favor, solicite ao administrador que cadastre assuntos no sistema.</p>
+                    <hr>
+                    <p class="mb-0">
+                        <a th:href="@{/admin/assunto/form}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Cadastrar Assunto (Admin)
+                        </a>
+                        <a th:href="@{/admin/assunto/list}" class="btn btn-outline-primary ms-2">
+                            <i class="bi bi-list-ul"></i> Ver Assuntos Cadastrados
+                        </a>
+                    </p>
+                </div>
+
+                <div th:if="${aluno}" class="mb-3">
+                    <p class="text-muted">
+                        <strong>Aluno:</strong> 
+                        <span th:text="${aluno.nome}">Nome do Aluno</span>
+                        <span class="ms-2">(<span th:text="${aluno.matricula}">Matrícula</span>)</span>
+                    </p>
+                </div>
+                
+                <form th:action="@{/aluno/processo/save}" method="post" th:object="${processo}" th:if="${!#lists.isEmpty(assuntos)}">
+                    
+                    <input type="hidden" th:field="*{id}" />
+
+                    <div class="mb-3">
+                        <label for="assunto" class="form-label">Assunto *</label>
+                        <select class="form-select" 
+                                id="assunto" 
+                                th:field="*{assunto}"
+                                th:classappend="${#fields.hasErrors('assunto')} ? 'is-invalid'"
+                                required>
+                            <option value="">Selecione um assunto</option>
+                            <option th:each="assunto : ${assuntos}" 
+                                    th:value="${assunto.id}" 
+                                    th:text="${assunto.nome}">Assunto</option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('assunto')}">
+                            <span th:errors="*{assunto}">Erro no assunto</span>
+                        </div>
+                        <small class="form-text text-muted">Selecione o tipo de solicitação acadêmica</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="textoRequerimento" class="form-label">Texto do Requerimento *</label>
+                        <textarea class="form-control" 
+                                  id="textoRequerimento" 
+                                  th:field="*{textoRequerimento}"
+                                  th:classappend="${#fields.hasErrors('textoRequerimento')} ? 'is-invalid'"
+                                  rows="8" 
+                                  maxlength="5000"
+                                  required
+                                  placeholder="Descreva detalhadamente sua solicitação acadêmica..."></textarea>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('textoRequerimento')}">
+                            <span th:errors="*{textoRequerimento}">Erro no texto do requerimento</span>
+                        </div>
+                        <small class="form-text text-muted">Descreva sua solicitação de forma clara e objetiva (máximo 5000 caracteres)</small>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Cadastrar Processo
+                        </button>
+                        <a th:href="@{/home}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+
+                </form>
+                
+                <!-- Formulário desabilitado quando não há assuntos -->
+                <div th:if="${#lists.isEmpty(assuntos)}" class="card bg-light">
+                    <div class="card-body">
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-lock"></i> O formulário está desabilitado até que pelo menos um assunto seja cadastrado.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Informações Importantes</h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>O número do processo será gerado automaticamente pelo sistema</li>
+                    <li>O processo será criado com status "Criado" e aguardará distribuição para um relator</li>
+                    <li>Você poderá acompanhar o andamento do processo na lista de processos</li>
+                    <li>Certifique-se de preencher todos os campos obrigatórios (*)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+
+
