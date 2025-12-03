@@ -53,7 +53,7 @@
                                         <option value="">Selecione um colegiado</option>
                                         <option th:each="c : ${colegiados}" 
                                                 th:value="${c.id}" 
-                                                th:text="${c.curso + ' - ' + c.portaria}"
+                                                th:text="${c.curso?.nome + ' - ' + c.portaria}"
                                                 th:selected="${colegiadoIdSelecionado == c.id}">
                                             Colegiado
                                         </option>
@@ -148,7 +148,7 @@
                 <div th:if="${coordenador != null && colegiadoSelecionado != null}" class="mb-3">
                     <div class="alert alert-light">
                         <strong>Colegiado Selecionado:</strong>
-                        <span th:text="${colegiadoSelecionado.curso}">Curso</span>
+                        <span th:text="${colegiadoSelecionado?.curso?.nome}">Curso</span>
                         <span class="ms-2">-</span>
                         <span th:text="${colegiadoSelecionado.portaria}">Portaria</span>
                     </div>

@@ -68,7 +68,7 @@ public class ColegiadoDTO {
     
     @NotBlank(message = "Portaria é obrigatória")
     @Size(min = 5, max = 50, message = "Portaria deve ter entre 5 e 50 caracteres")
-    @Pattern(regexp = "^\\d{1,5}/\\d{4}$", message = "Portaria deve estar no formato: Portaria NNN/YYYY")
+    @Pattern(regexp = "^\\d{1,5}/\\d{4}$", message = "Portaria deve estar no formato: NNN/YYYY")
     private String portaria;
     
     @NotNull(message = "Definir o curso é obrigatório")
