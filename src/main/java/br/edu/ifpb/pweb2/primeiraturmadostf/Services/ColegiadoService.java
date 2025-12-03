@@ -143,4 +143,8 @@ public class ColegiadoService {
 
     }
 
+    public Colegiado findAtivoPorCurso(Curso curso) {
+    return colegiadoRepository.findByCursoAndDataFimIsNull(curso);
+}
+
 }

@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Assunto;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Colegiado;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Curso;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Processo;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusProcesso;
@@ -26,10 +27,13 @@ public class ProcessoService {
 
     private final ProfessorService professorService;
 
+    private final ColegiadoService colegiadoService;
+
     @Autowired
-    public ProcessoService(ProcessoRepository processoRepository, ProfessorService professorService) {
+    public ProcessoService(ProcessoRepository processoRepository, ProfessorService professorService, ColegiadoService colegiadoService) {
         this.processoRepository = processoRepository;
         this.professorService = professorService;
+        this.colegiadoService = colegiadoService;
     }
 
     public List<Processo> findAll() {
@@ -49,6 +53,7 @@ public class ProcessoService {
         return this.processoRepository.findByRelatorAndStatus(relator, status);
     }
 
+
     public Processo save(Processo processo) {
         // Se o processo não tem número, gerar automaticamente
         if (processo.getNumero() == null || processo.getNumero().isEmpty()) {
@@ -63,6 +68,23 @@ public class ProcessoService {
         // Se não tem status, definir como CRIADO
         if (processo.getStatus() == null) {
             processo.setStatus(StatusProcesso.CRIADO);
+        }
+
+        // Se o processo tem um interessado (Aluno), descobrimos o curso e o colegiado
+        if (processo.getColegiado() == null && processo.getInteressado() != null) {
+            Aluno aluno = processo.getInteressado();
+            Curso curso = aluno.getCurso();
+            
+            if (curso != null) {
+                // Busca o colegiado ativo daquele curso
+                Colegiado colegiado = colegiadoService.findAtivoPorCurso(curso);
+                
+                if (colegiado != null) {
+                    processo.setColegiado(colegiado);
+                } else {
+                    throw new IllegalStateException("Não existe colegiado ativo para o curso do aluno.");
+                }
+            }
         }
         
         return processoRepository.save(processo);
