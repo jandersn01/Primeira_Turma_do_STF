@@ -120,6 +120,8 @@
                                     <th>Status</th>
                                     <th>Data de Recepção</th>
                                     <th>Relator</th>
+                                    <th>Documentos</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -152,6 +154,18 @@
                                         <span th:if="${processo.relator == null}" 
                                               class="text-muted fst-italic">Aguardando designação</span>
                                     </td>
+                                    <td>
+                                        <span class="badge bg-info" th:text="${#lists.size(processo.documentos)}">0</span>
+                                        <span class="text-muted ms-1">documento(s)</span>
+                                    </td>
+                                    <td>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                th:attr="data-bs-target='#modalDocumentos' + ${processo.id}">
+                                            <i class="bi bi-paperclip"></i> Gerenciar
+                                        </button>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -163,6 +177,100 @@
                             <strong>Total de processos:</strong> 
                             <span th:text="${#lists.size(processos)}">0</span>
                         </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modais para Gerenciar Documentos (um para cada processo) -->
+        <div th:each="processo : ${processos}">
+            <div class="modal fade" th:id="'modalDocumentos' + ${processo.id}" tabindex="-1" aria-labelledby="modalDocumentosLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalDocumentosLabel">
+                                Documentos do Processo <span th:text="${processo.numero}">123/2024</span>
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Formulário de Upload -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Enviar Novo Documento</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form th:action="@{/aluno/processo/{id}/documento/upload(id=${processo.id})}" 
+                                          method="post" 
+                                          enctype="multipart/form-data">
+                                        <div class="mb-3">
+                                            <label for="arquivo" class="form-label">Selecionar Arquivo *</label>
+                                            <input type="file" 
+                                                   class="form-control" 
+                                                   id="arquivo" 
+                                                   name="arquivo" 
+                                                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+                                                   required>
+                                            <small class="form-text text-muted">
+                                                Tipos permitidos: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, GIF. Tamanho máximo: 10MB
+                                            </small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="descricao" class="form-label">Descrição (Opcional)</label>
+                                            <textarea class="form-control" 
+                                                      id="descricao" 
+                                                      name="descricao" 
+                                                      rows="2" 
+                                                      maxlength="500"
+                                                      placeholder="Descreva o documento..."></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-upload"></i> Enviar Documento
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <!-- Lista de Documentos -->
+                            <div>
+                                <h6 class="mb-3">Documentos Enviados</h6>
+                                <div th:if="${#lists.isEmpty(processo.documentos)}" class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> Nenhum documento enviado ainda.
+                                </div>
+                                <div th:unless="${#lists.isEmpty(processo.documentos)}" class="list-group">
+                                    <div th:each="documento : ${processo.documentos}" class="list-group-item">
+                                        <div class="d-flex w-100 justify-content-between align-items-center">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1" th:text="${documento.nomeOriginal}">Nome do Arquivo</h6>
+                                                <p class="mb-1 text-muted small" th:if="${documento.descricao}" th:text="${documento.descricao}">Descrição</p>
+                                                <small class="text-muted">
+                                                    <span th:text="${#temporals.format(documento.dataUpload, 'dd/MM/yyyy HH:mm')}">Data</span>
+                                                    <span class="ms-2">•</span>
+                                                    <span class="ms-2" th:text="${documento.tamanhoFormatado}">Tamanho</span>
+                                                </small>
+                                            </div>
+                                            <div class="btn-group" role="group">
+                                                <a th:href="@{/aluno/processo/{processoId}/documento/{documentoId}/download(processoId=${processo.id}, documentoId=${documento.id})}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-download"></i> Download
+                                                </a>
+                                                <form th:action="@{/aluno/processo/{processoId}/documento/{documentoId}/delete(processoId=${processo.id}, documentoId=${documento.id})}" 
+                                                      method="post" 
+                                                      class="d-inline"
+                                                      th:onsubmit="return confirm('Tem certeza que deseja remover este documento?');">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-trash"></i> Remover
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        </div>
                     </div>
                 </div>
             </div>

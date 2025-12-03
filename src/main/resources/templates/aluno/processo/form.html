@@ -20,6 +20,23 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
 
+                <!-- Mensagem quando não há assuntos cadastrados -->
+                <div th:if="${#lists.isEmpty(assuntos)}" class="alert alert-warning">
+                    <h5 class="alert-heading">
+                        <i class="bi bi-exclamation-triangle"></i> Nenhum assunto cadastrado
+                    </h5>
+                    <p>Não é possível criar um processo sem assuntos cadastrados. Por favor, solicite ao administrador que cadastre assuntos no sistema.</p>
+                    <hr>
+                    <p class="mb-0">
+                        <a th:href="@{/admin/assunto/form}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Cadastrar Assunto (Admin)
+                        </a>
+                        <a th:href="@{/admin/assunto/list}" class="btn btn-outline-primary ms-2">
+                            <i class="bi bi-list-ul"></i> Ver Assuntos Cadastrados
+                        </a>
+                    </p>
+                </div>
+
                 <div th:if="${aluno}" class="mb-3">
                     <p class="text-muted">
                         <strong>Aluno:</strong> 
@@ -28,7 +45,7 @@
                     </p>
                 </div>
                 
-                <form th:action="@{/aluno/processo/save}" method="post" th:object="${processo}">
+                <form th:action="@{/aluno/processo/save}" method="post" th:object="${processo}" th:if="${!#lists.isEmpty(assuntos)}">
                     
                     <input type="hidden" th:field="*{id}" />
 
@@ -77,6 +94,15 @@
                     </div>
 
                 </form>
+                
+                <!-- Formulário desabilitado quando não há assuntos -->
+                <div th:if="${#lists.isEmpty(assuntos)}" class="card bg-light">
+                    <div class="card-body">
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-lock"></i> O formulário está desabilitado até que pelo menos um assunto seja cadastrado.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
         
