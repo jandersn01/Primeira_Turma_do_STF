@@ -52,6 +52,30 @@
                         <small class="form-text text-muted">Digite apenas letras e números (5 a 20 caracteres)</small>
                     </div>
 
+                <div class="mb-3">
+                <label for="curso" class="form-label">Curso *</label>
+
+                <select class="form-select"
+                        id="curso"
+                        th:field="*{curso.id}"
+                        th:classappend="${#fields.hasErrors('curso')} ? 'is-invalid'"
+                        required>
+
+                    <option value="" disabled selected>Selecione um curso</option>
+
+                    <option th:each="curso : ${listaCursos}"
+                            th:value="${curso.id}"
+                            th:text="${curso.codigo + ' - ' + curso.nome}">
+                    </option>
+                </select>
+
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('curso')}">
+                    <span th:errors="*{curso}">Erro no curso</span>
+                </div>
+
+                <small class="form-text text-muted">Selecione o curso do aluno</small>
+            </div>
+
                     <div class="mb-3">
                         <label for="fone" class="form-label">Telefone</label>
                         <input type="text" 

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Cadastro de Curso</title>
+</head>
+<body>
+
+<div layout:fragment="conteudo">
+    <div class="card mt-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Cadastro de Curso</h4>
+        </div>
+
+        <div class="card-body">
+            <form th:action="@{/admin/curso/save}" method="post" th:object="${curso}">
+
+                <!-- ID oculto -->
+                <input type="hidden" th:field="*{id}" />
+
+                <!-- NOME -->
+                <div class="mb-3">
+                    <label for="nome" class="form-label">Nome do Curso *</label>
+                    <input type="text"
+                           class="form-control"
+                           id="nome"
+                           th:field="*{nome}"
+                           th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'"
+                           required
+                           minlength="3"
+                           maxlength="100"
+                           placeholder="Ex: Sistemas de Informação" />
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}">
+                        <span th:errors="*{nome}">Erro no nome</span>
+                    </div>
+                    <small class="form-text text-muted">Digite o nome do curso (3 a 100 caracteres)</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="codigo" class="form-label">Código do Curso *</label>
+                    <input type="text"
+                        class="form-control"
+                        id="codigo"
+                        th:field="*{codigo}"
+                        th:classappend="${#fields.hasErrors('codigo')} ? 'is-invalid'"
+                        required
+                        minlength="3"
+                        maxlength="3"
+                        pattern="[0-9]{3}"
+                        placeholder="Ex: 123" />
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('codigo')}">
+                        <span th:errors="*{codigo}">Erro no código</span>
+                    </div>
+                    <small class="form-text text-muted">Formato obrigatório: <b>três dígitos numéricos</b> (Ex: 123)</small>
+                </div>
+
+                <hr/>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">Salvar</button>
+                    <button type="reset" th:if="${curso.id == null}" class="btn btn-secondary">Cancelar</button>
+                    <a th:if="${curso.id != null}" th:href="@{/admin/curso/list}" class="btn btn-secondary">Cancelar</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

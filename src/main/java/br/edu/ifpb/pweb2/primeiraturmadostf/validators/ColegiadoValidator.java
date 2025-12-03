@@ -30,18 +30,35 @@ public class ColegiadoValidator implements Validator {
             }
         }
         
-        // Validar máximo 5 membros e sem duplicatas
-        if (dto.getMembrosIds() != null) {
-            List<Long> membrosIds = dto.getMembrosIds().stream()
+        // Filtrar IDs nulos da lista de membros (caso o usuário não selecione todos os dropdowns)
+        List<Long> membrosSelecionados = dto.getMembrosIds().stream()
                 .filter(Objects::nonNull)
-                .distinct()
                 .collect(Collectors.toList());
+
+        // Validar Duplicatas DENTRO da lista de membros
+        long distintos = membrosSelecionados.stream().distinct().count();
+        if (membrosSelecionados.size() != distintos) {
+            errors.rejectValue("membrosIds", "membrosIds.duplicate", 
+                "Não selecione o mesmo professor mais de uma vez na lista de membros.");
+        }
+
+        // Validar se o COORDENADOR também foi selecionado como MEMBRO
+        if (dto.getCoordenadorId() != null && membrosSelecionados.contains(dto.getCoordenadorId())) {
+            errors.rejectValue("coordenadorId", "coordenador.duplicate", 
+                "O Coordenador não pode ser selecionado também como membro comum.");
                 
-            if (membrosIds.size() > 5) {
-                errors.rejectValue("membrosIds", "membrosIds.max", 
-                    "Selecione no máximo 5 membros diferentes");
-            }
+            // Esse fecho aqui marca erro na lista de membros também para ficar visualmente claro
+            errors.rejectValue("membrosIds", "membrosIds.conflict", 
+                "Remova o Coordenador da lista de membros.");
+        }
+
+        if (membrosSelecionados.size() < 3) {
+             errors.rejectValue("membrosIds", "membrosIds.size", 
+                "É necessário selecionar exatamente 3 membros professores.");
+        }
+                
+            
         }
     }
-}
+
 

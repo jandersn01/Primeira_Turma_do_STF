@@ -9,7 +9,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.*;
@@ -48,6 +50,10 @@ public class Professor {
     @Size(min = 6, max = 100, message = "Senha deve ter entre 6 e 100 caracteres")
     @Column(nullable = false, length = 100)
     private String senha; // Armazenar com BCrypt!
+
+    @ManyToOne
+    @JoinColumn(name = "id_curso", nullable = false)
+    private Curso curso;
     
     @Column(nullable = false)
     private Boolean coordenador = false; // Default false
@@ -194,5 +200,13 @@ public class Professor {
     @Override
     public String toString() {
         return "Professor{id=" + id + ", nome='" + nome + "', coordenador=" + coordenador + "}";
+    }
+
+    public Curso getCurso() {
+        return curso;
+    }
+
+    public void setCurso(Curso curso) {
+        this.curso = curso;
     }
 }

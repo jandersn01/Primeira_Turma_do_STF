@@ -46,8 +46,12 @@ public class Aluno {
     
     @OneToMany(mappedBy = "interessado")
     private Set<Processo> processos = new HashSet<>();
+
+    @ManyToOne
+    @JoinColumn(name = "id_curso", nullable = false)
+    @NotNull(message = "O curso é obrigatório")
+    private Curso curso;
     
-    // Construtores
     public Aluno() {}
     
     public Aluno(String matricula, String nome, String login, String senha) {
@@ -129,5 +133,13 @@ public class Aluno {
     @Override
     public String toString() {
         return "Aluno{id=" + id + ", matricula='" + matricula + "', nome='" + nome + "'}";
+    }
+
+    public Curso getCurso() {
+        return curso;
+    }
+
+    public void setCurso(Curso curso) {
+        this.curso = curso;
     }
 }

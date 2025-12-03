@@ -3,10 +3,7 @@ package br.edu.ifpb.pweb2.primeiraturmadostf.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
@@ -47,29 +44,21 @@ public class CoordenadorController {
             @RequestParam(required = false) Long relatorId,
             @RequestParam(required = false, defaultValue = "desc") String ordenacao) {
 
-        // TODO: Quando implementar autenticação, pegar o coordenador logado
-        // Por enquanto, vamos usar o primeiro coordenador como exemplo
-        Professor coordenador = professorService.findByCoordenadores().stream()
-                .findFirst()
-                .orElse(null);
+        // TODO: Pegar o coordenador logado via Security. Usando mock por enquanto.
+        Professor coordenador = professorService.findByCoordenadores().stream().findFirst().orElse(null);
 
-        // Se não houver coordenador, mostrar mensagem
         if (coordenador == null) {
-            model.addAttribute("mensagem", 
-                "Nenhum coordenador cadastrado no sistema. Por favor, cadastre um coordenador primeiro.");
+            model.addAttribute("mensagem", "Nenhum coordenador encontrado no sistema.");
             return "coordenador/processo/list";
         }
 
-        // Buscar colegiados do coordenador (ou todos se for admin)
-        List<Colegiado> colegiados = new ArrayList<>();
-        if (coordenador.getColegiados() != null && !coordenador.getColegiados().isEmpty()) {
-            colegiados = new ArrayList<>(coordenador.getColegiados());
-        } else {
-            // Se não houver colegiados específicos, mostrar todos (para desenvolvimento)
-            colegiados = colegiadoService.findAll();
+        List<Colegiado> colegiados = new ArrayList<>(coordenador.getColegiados());
+        if (colegiados.isEmpty()) {
+           // Isso daqui é só pra evitar um erro. Depois ajeito.
+            colegiados = colegiadoService.findAll(); 
         }
 
-        // Se não houver colegiado selecionado e houver colegiados disponíveis, usar o primeiro
+        // Define qual colegiado está selecionado
         Colegiado colegiadoSelecionado = null;
         if (colegiadoId != null) {
             colegiadoSelecionado = colegiadoService.findById(colegiadoId);
@@ -78,67 +67,48 @@ public class CoordenadorController {
             colegiadoId = colegiadoSelecionado.getId();
         }
 
-        // Lista de processos
+        // Busca os processos filtrados
         List<Processo> processos = new ArrayList<>();
-
         if (colegiadoSelecionado != null) {
-            // Converter string de status para enum (se fornecido)
             StatusProcesso statusEnum = null;
             if (status != null && !status.isEmpty()) {
-                try {
-                    statusEnum = StatusProcesso.valueOf(status);
-                } catch (IllegalArgumentException e) {
-                    // Status inválido, ignorar
-                }
+                try { statusEnum = StatusProcesso.valueOf(status); } catch (Exception e) {}
             }
 
-            // Carregar aluno se fornecido
-            Aluno aluno = null;
-            if (alunoId != null) {
-                aluno = alunoService.findById(alunoId);
-            }
+            Aluno aluno = (alunoId != null) ? alunoService.findById(alunoId) : null;
+            Professor relator = (relatorId != null) ? professorService.findById(relatorId) : null;
 
-            // Carregar relator se fornecido
-            Professor relator = null;
-            if (relatorId != null) {
-                relator = professorService.findById(relatorId);
-            }
-
-            // Buscar processos com filtros
             processos = processoService.findByColegiadoWithFilters(
                 colegiadoSelecionado, statusEnum, aluno, relator, ordenacao);
         }
 
-        // Adicionar atributos ao model
+        // Popula a View
         model.addAttribute("processos", processos);
         model.addAttribute("coordenador", coordenador);
         model.addAttribute("colegiados", colegiados);
         model.addAttribute("colegiadoSelecionado", colegiadoSelecionado);
+        
+        // Listas para os filtros
         model.addAttribute("alunos", alunoService.findAll());
-        model.addAttribute("professores", professorService.findAll());
+        model.addAttribute("professores", professorService.findAll()); // Para filtro de relator
         model.addAttribute("statusList", StatusProcesso.values());
 
-        // Manter valores dos filtros selecionados
+        // Mantém o estado dos filtros na tela
         model.addAttribute("colegiadoIdSelecionado", colegiadoId);
         model.addAttribute("statusSelecionado", status);
         model.addAttribute("alunoIdSelecionado", alunoId);
         model.addAttribute("relatorIdSelecionado", relatorId);
         model.addAttribute("ordenacaoSelecionada", ordenacao);
 
-        // Mensagem informativa se não houver colegiado
-        if (colegiadoSelecionado == null) {
-            model.addAttribute("mensagem", 
-                "Nenhum colegiado encontrado. Por favor, cadastre um colegiado primeiro.");
-        }
-
         return "coordenador/processo/list";
     }
 
+    // Distribuir processo para relator
     @PostMapping("/processo/distribuir")
     public String distribuirProcesso(
             @RequestParam("processoId") Long processoId,
             @RequestParam("relatorId") Long relatorId,
-            @RequestParam(name = "colegiadoId", required = false) Long colegiadoId, // <---- matém o filtro!!!!!!!
+            @RequestParam(value = "colegiadoId", required = false) Long colegiadoId,
             RedirectAttributes attr) {
         
         try {
@@ -147,14 +117,11 @@ public class CoordenadorController {
         } catch (Exception e) {
             attr.addFlashAttribute("mensagemErro", "Erro ao distribuir: " + e.getMessage());
         }
-
-        // Redireciona para a lista. Se tivermos o ID do colegiado, mantemos o filtro.
+        
         String redirect = "redirect:/coordenador/processo/list";
         if (colegiadoId != null) {
             redirect += "?colegiadoId=" + colegiadoId;
         }
-        
         return redirect;
     }
 }
-

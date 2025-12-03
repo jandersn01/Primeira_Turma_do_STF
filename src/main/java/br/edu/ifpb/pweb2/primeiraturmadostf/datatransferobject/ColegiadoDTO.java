@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Curso;
 import jakarta.validation.constraints.*;
 
 
@@ -33,13 +34,13 @@ public class ColegiadoDTO {
         return portaria;
     }
     public void setPortaria(String portaria) {
-        this.portaria = portaria;
+        this.portaria = portaria.trim();
     }
-    public String getCurso() {
-        return curso;
+    public Long getCursoId() {
+        return cursoId;
     }
-    public void setCurso(String curso) {
-        this.curso = curso;
+    public void setCursoId(Long cursoId) {
+        this.cursoId = cursoId;
     }
     public List<Long> getMembrosIds() {
         return membrosIds;
@@ -47,6 +48,14 @@ public class ColegiadoDTO {
     public void setMembrosIds(List<Long> membrosIds) {
         this.membrosIds = membrosIds;
     }
+    public Long getCoordenadorId() { return coordenadorId; }
+    public void setCoordenadorId(Long coordenadorId) { this.coordenadorId = coordenadorId; }
+    
+    public Long getAlunoId() { return alunoId; }
+    public void setAlunoId(Long alunoId) { this.alunoId = alunoId; }
+    
+
+
     private Long id;
     
     @NotNull(message = "Data de início é obrigatória")
@@ -59,16 +68,25 @@ public class ColegiadoDTO {
     
     @NotBlank(message = "Portaria é obrigatória")
     @Size(min = 5, max = 50, message = "Portaria deve ter entre 5 e 50 caracteres")
-    @Pattern(regexp = "^[Pp]ortaria\\s+\\d+/\\d{4}$", message = "Portaria deve estar no formato: Portaria XXX/YYYY")
+    @Pattern(regexp = "^\\d{1,5}/\\d{4}$", message = "Portaria deve estar no formato: Portaria NNN/YYYY")
     private String portaria;
     
-    @NotBlank(message = "Nome do curso é obrigatório")
-    @Size(min = 3, max = 100, message = "Nome do curso deve ter entre 3 e 100 caracteres")
-    private String curso;
+    @NotNull(message = "Definir o curso é obrigatório")
+    private Long cursoId;
+
+    @NotNull(message = "É obrigatório selecionar um Coordenador")
+    private Long coordenadorId; 
+
+    @NotNull(message = "É obrigatório selecionar um Aluno Representante")
+    private Long alunoId; 
     
     private List<Long> membrosIds = new ArrayList<>();
 
-    
+    public ColegiadoDTO() {
+        this.membrosIds.add(null);
+        this.membrosIds.add(null);
+        this.membrosIds.add(null);
+    }
 
 
 }

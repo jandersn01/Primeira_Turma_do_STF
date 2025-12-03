@@ -151,7 +151,6 @@ public class AlunoController {
                 .orElse(null);
         
         // Se não houver aluno, ainda mostramos a página mas com lista vazia
-        // Isso melhora a UX permitindo que o usuário veja a interface
         java.util.List<Processo> processos = new java.util.ArrayList<>();
         
         if (aluno != null) {

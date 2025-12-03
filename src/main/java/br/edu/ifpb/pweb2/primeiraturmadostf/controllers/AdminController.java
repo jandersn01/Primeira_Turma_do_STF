@@ -17,10 +17,12 @@ import jakarta.validation.Valid;
 import br.edu.ifpb.pweb2.primeiraturmadostf.datatransferobject.ColegiadoDTO;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Assunto;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Curso;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.AlunoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.AssuntoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ColegiadoService;
+import br.edu.ifpb.pweb2.primeiraturmadostf.services.CursoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProfessorService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.validators.ColegiadoValidator;
 
@@ -36,7 +38,8 @@ public class AdminController {
     private AssuntoService assuntoService;
     @Autowired
     private ColegiadoService colegiadoService;
-    
+    @Autowired
+    private CursoService cursoService;
     @Autowired
     private ColegiadoValidator colegiadoValidator;
     
@@ -47,6 +50,7 @@ public class AdminController {
     @GetMapping("/professor/form")
     public String getFormProfessor(Model model, Professor professor){
         model.addAttribute("professor", professor);
+        model.addAttribute("listaCursos", cursoService.findAll());
         return "professor/form";
     }
 
@@ -89,6 +93,7 @@ public class AdminController {
     @GetMapping("/professor/id/{id}")
     public String getProfessorById(Model model, @PathVariable(value="id") Long id){
         model.addAttribute("professor", professorservice.findById(id));
+         model.addAttribute("listaCursos", cursoService.findAll());
         return "professor/form";
     }
 
@@ -111,6 +116,7 @@ public class AdminController {
     @GetMapping("/aluno/form")
     public String getFormAluno(Model model, Aluno aluno){
         model.addAttribute("aluno", aluno);
+        model.addAttribute("listaCursos", cursoService.findAll());
         return "aluno/form";
     }
 
@@ -153,6 +159,7 @@ public class AdminController {
     @GetMapping("aluno/id/{id}")
     public String getAlunoById(Model model, @PathVariable(value="id") Long id){
         model.addAttribute("aluno", alunoService.findById(id));
+            model.addAttribute("listaCursos", cursoService.findAll());
         return "aluno/form";
     }
 
@@ -166,7 +173,7 @@ public class AdminController {
 // ------------------------------ -- -- CRUD COORDENANDOR
     //Aqui, poderia ser criado um filtro em professor/list par listar apenas professores;
 
-    @GetMapping("/professor/cordenadore")
+    @GetMapping("/professor/cordenador")
     public String getProfessorCoordenandorList(Model model){
         model.addAttribute("coordenadores", professorservice.findByCoordenadores());
         return "professor/list";
@@ -234,12 +241,10 @@ public class AdminController {
 
 @GetMapping("/colegiado/form")
     public String getColegiadoForm(Model model){
-        ColegiadoDTO dto = new ColegiadoDTO();
-        for (int i = 0; i < 5; i++) {
-            dto.getMembrosIds().add(null);
-        }
-        model.addAttribute("colegiado", dto);
+        model.addAttribute("colegiado", new ColegiadoDTO());
         model.addAttribute("professores", professorservice.findAll());
+        model.addAttribute("alunos", alunoService.findAll());
+        model.addAttribute("listaCursos", cursoService.findAll());
         return "colegiado/form";
     }
 
@@ -261,8 +266,10 @@ public class AdminController {
         colegiadoValidator.validate(dto, result);
         
         if (result.hasErrors()) {
-            // Preparar dados necessários para o formulário
+            
             model.addAttribute("professores", professorservice.findAll());
+            model.addAttribute("alunos", alunoService.findAll());
+            model.addAttribute("listaCursos", cursoService.findAll());
             return "colegiado/form";
         }
         
@@ -275,6 +282,8 @@ public class AdminController {
     public String getColegiadoById(Model model, @PathVariable(value="id") Long id){
         model.addAttribute("colegiado", colegiadoService.getForEdit(id));
         model.addAttribute("professores", professorservice.findAll());
+        model.addAttribute("alunos", alunoService.findAll());
+        model.addAttribute("listaCursos", cursoService.findAll());
         return "colegiado/form";
     }
 
@@ -284,6 +293,69 @@ public class AdminController {
         redirect.addFlashAttribute("mensagem", "Registro de colegiado apagado com sucesso!");
         return "redirect:/admin/colegiado/list";
 
+    }
+
+
+// ------------------------------ -- -- CRUD CURSO
+
+    // FORMULÁRIO DE CADASTRO/EDIÇÃO
+    @GetMapping("/curso/form")
+    public String getCursoForm(Model model, Curso curso) {
+        model.addAttribute("curso", curso);
+        return "curso/form";
+    }
+
+    // LISTAGEM
+    @GetMapping("/curso/list")
+    public String getCursoList(Model model) {
+        model.addAttribute("listaCursos", cursoService.findAll());
+        return "curso/list"; 
+    }
+
+    // SALVAR (POST)
+    @PostMapping("/curso/save")
+    public String postCurso(
+            @Valid @ModelAttribute("curso") Curso curso,
+            BindingResult result,
+            RedirectAttributes redirect) {
+
+        // Validação customizada: nome único
+        if (curso.getId() == null) {
+            // Cadastro novo
+            if (cursoService.existsByNome(curso.getNome())) {
+                result.rejectValue("nome", "nome.duplicate",
+                        "Nome do curso já cadastrado. Escolha outro nome.");
+            }
+        } else {
+            // Edição
+            if (cursoService.existsByNomeAndNotId(curso.getNome(), curso.getId())) {
+                result.rejectValue("nome", "nome.duplicate",
+                        "Nome do curso já está cadastrado em outro curso.");
+            }
+        }
+
+        if (result.hasErrors()) {
+            return "curso/form";
+        }
+
+        cursoService.save(curso);
+        redirect.addFlashAttribute("mensagem", "Curso salvo com sucesso!");
+        return "redirect:/admin/curso/list";
+    }
+
+    // EDITAR POR ID
+    @GetMapping("/curso/id/{id}")
+    public String getCursoById(Model model, @PathVariable("id") Long id) {
+        model.addAttribute("curso", cursoService.findById(id));
+        return "curso/form";
+    }
+
+    // DELETE (POST)
+    @PostMapping("/curso/delete/{id}")
+    public String deleteCurso(RedirectAttributes redirect, @PathVariable("id") Long id) {
+        cursoService.remove(id);
+        redirect.addFlashAttribute("mensagem", "Registro de curso apagado com sucesso!");
+        return "redirect:/admin/curso/list";
     }
 
 

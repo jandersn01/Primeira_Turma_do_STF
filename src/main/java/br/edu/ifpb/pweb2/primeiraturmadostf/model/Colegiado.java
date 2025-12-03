@@ -27,8 +27,13 @@ public class Colegiado {
     @Column(nullable = false, length = 50)
     private String portaria; // Ex: "Portaria 123/2024"
     
-    @Column(nullable = false, length = 100)
-    private String curso; // Ex: "Sistemas para Internet"
+    @ManyToOne
+    @JoinColumn(name = "id_curso", nullable = false)
+    private Curso curso;
+
+    @ManyToOne
+    @JoinColumn(name = "aluno_id") 
+    private Aluno representante;
     
     // Relacionamento: Colegiado tem vários membros (Professores)
     @ManyToMany
@@ -47,7 +52,7 @@ public class Colegiado {
     // Construtores
     public Colegiado() {}
     
-    public Colegiado(LocalDate dataInicio, String portaria, String curso) {
+    public Colegiado(LocalDate dataInicio, String portaria, Curso curso) {
         this.dataInicio = dataInicio;
         this.portaria = portaria;
         this.curso = curso;
@@ -86,11 +91,11 @@ public class Colegiado {
         this.portaria = portaria;
     }
     
-    public String getCurso() {
+    public Curso getCurso() {
         return curso;
     }
     
-    public void setCurso(String curso) {
+    public void setCurso(Curso curso) {
         this.curso = curso;
     }
     
@@ -130,6 +135,9 @@ public class Colegiado {
         reunioes.remove(reuniao);
         reuniao.setColegiado(null);
     }
+
+    public Aluno getRepresentante() { return representante; }
+    public void setRepresentante(Aluno representante) { this.representante = representante; }
     
     
     @Override

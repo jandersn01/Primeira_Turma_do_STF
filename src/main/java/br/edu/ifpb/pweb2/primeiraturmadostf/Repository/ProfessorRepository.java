@@ -17,4 +17,6 @@ public interface ProfessorRepository extends JpaRepository<Professor, Long>{
 
     List<Professor> findByCoordenadorTrue();
 
+    List<Professor> findByCursoId(Long cursoId);
+
 }
