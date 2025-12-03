@@ -1,5 +1,6 @@
 package br.edu.ifpb.pweb2.primeiraturmadostf.services;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -144,7 +145,12 @@ public class ColegiadoService {
     }
 
     public Colegiado findAtivoPorCurso(Curso curso) {
-    return colegiadoRepository.findByCursoAndDataFimIsNull(curso);
-}
+        List<Colegiado> colegiadosAtivos = colegiadoRepository.findAtivosPorCurso(curso, LocalDate.now());
+        if (colegiadosAtivos != null && !colegiadosAtivos.isEmpty()) {
+            // Retorna o primeiro colegiado ativo encontrado
+            return colegiadosAtivos.get(0);
+        }
+        return null;
+    }
 
 }
