@@ -12,7 +12,6 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.datatransferobject.ColegiadoDTO;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Colegiado;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
 import br.edu.ifpb.pweb2.primeiraturmadostf.repository.ColegiadoRepository;
-import br.edu.ifpb.pweb2.primeiraturmadostf.repository.ProfessorRepository;
 
 @Service
 @Transactional
