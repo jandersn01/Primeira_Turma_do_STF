@@ -40,7 +40,7 @@ public class Processo {
     private String parecer; // Voto fundamentado do relator
     
     @NotBlank(message = "Texto do requerimento é obrigatório")
-    @Size(min = 50, max = 5000, message = "Texto do requerimento deve ter entre 50 e 5000 caracteres")
+    @Size(max = 5000, message = "Texto do requerimento deve ter no máximo 5000 caracteres")
     @Lob
     @Column(name = "texto_requerimento", columnDefinition = "TEXT", nullable = false)
     private String textoRequerimento; // Texto do requerimento do aluno
