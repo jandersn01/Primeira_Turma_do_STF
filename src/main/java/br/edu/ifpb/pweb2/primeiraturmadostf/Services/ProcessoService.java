@@ -3,13 +3,19 @@ package br.edu.ifpb.pweb2.primeiraturmadostf.services;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Assunto;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Colegiado;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Processo;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusProcesso;
 import br.edu.ifpb.pweb2.primeiraturmadostf.repository.ProcessoRepository;
+import br.edu.ifpb.pweb2.primeiraturmadostf.repository.specification.ProcessoSpecifications;
 
 @Service
 @Transactional
@@ -98,6 +104,57 @@ public class ProcessoService {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Busca processos de um aluno com filtros opcionais e ordenação.
+     * 
+     * @param aluno Aluno interessado (obrigatório)
+     * @param status Status do processo (opcional, null para todos)
+     * @param assunto Assunto do processo (opcional, null para todos)
+     * @param ordenacao "asc" para crescente, "desc" para decrescente, null para crescente (padrão)
+     * @return Lista de processos filtrados e ordenados
+     */
+    public List<Processo> findByInteressadoWithFilters(
+            Aluno aluno, StatusProcesso status, Assunto assunto, String ordenacao) {
+        
+        // Construir specification com filtros dinâmicos
+        Specification<Processo> spec = ProcessoSpecifications.buildSpecification(
+            aluno, status, assunto);
+        
+        // Definir ordenação (padrão: crescente por data de recepção)
+        Sort sort = (ordenacao != null && ordenacao.equalsIgnoreCase("desc")) 
+            ? Sort.by("dataRecepcao").descending()
+            : Sort.by("dataRecepcao").ascending();
+        
+        return processoRepository.findAll(spec, sort);
+    }
+    
+    /**
+     * Busca processos de um colegiado com filtros opcionais e ordenação.
+     * Os processos são encontrados através das reuniões do colegiado.
+     * 
+     * @param colegiado Colegiado (obrigatório)
+     * @param status Status do processo (opcional, null para todos)
+     * @param aluno Aluno interessado (opcional, null para todos)
+     * @param relator Professor relator (opcional, null para todos)
+     * @param ordenacao "asc" para crescente, "desc" para decrescente, null para crescente (padrão)
+     * @return Lista de processos filtrados e ordenados
+     */
+    public List<Processo> findByColegiadoWithFilters(
+            Colegiado colegiado, StatusProcesso status, Aluno aluno, 
+            Professor relator, String ordenacao) {
+        
+        // Construir specification com filtros dinâmicos
+        Specification<Processo> spec = ProcessoSpecifications.buildSpecificationForColegiado(
+            colegiado, status, aluno, relator);
+        
+        // Definir ordenação (padrão: crescente por data de recepção)
+        Sort sort = (ordenacao != null && ordenacao.equalsIgnoreCase("desc")) 
+            ? Sort.by("dataRecepcao").descending()
+            : Sort.by("dataRecepcao").ascending();
+        
+        return processoRepository.findAll(spec, sort);
     }
 
 }
