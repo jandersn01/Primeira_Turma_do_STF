@@ -56,6 +56,14 @@ public class AlunoService {
         return true;
     }
 
+    public boolean existsByMatricula(String matricula) {
+        return this.findByMatricula(matricula) != null;
+    }
+
+    public boolean existsByMatriculaAndNotId(String matricula, Long id) {
+        Aluno aluno = this.findByMatricula(matricula);
+        return aluno != null && !aluno.getId().equals(id);
+    }
 
 }
 

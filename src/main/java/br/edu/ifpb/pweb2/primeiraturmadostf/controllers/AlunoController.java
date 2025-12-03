@@ -86,13 +86,13 @@ public class AlunoController {
         if (processo.getAssunto() == null || processo.getAssunto().getId() == null) {
             result.rejectValue("assunto", "assunto.required", "Selecione um assunto válido");
         } else {
-            // Carregar o assunto completo do banco
-            Assunto assunto = assuntoService.findById(processo.getAssunto().getId());
-            if (assunto == null) {
+        // Carregar o assunto completo do banco
+        Assunto assunto = assuntoService.findById(processo.getAssunto().getId());
+        if (assunto == null) {
                 result.rejectValue("assunto", "assunto.notfound", "Assunto não encontrado");
             } else {
                 processo.setAssunto(assunto);
-            }
+        }
         }
         
         if (result.hasErrors()) {
