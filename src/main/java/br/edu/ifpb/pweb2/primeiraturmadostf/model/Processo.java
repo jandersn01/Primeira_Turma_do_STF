@@ -76,6 +76,8 @@ public class Processo {
     @OneToMany(mappedBy = "processo", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Voto> votos = new HashSet<>();
     
+    @OneToMany(mappedBy = "processo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Documento> documentos = new HashSet<>();
 
     public Processo() {}
     
@@ -201,6 +203,23 @@ public class Processo {
         this.votos = votos;
     }
     
+    public Set<Documento> getDocumentos() {
+        return documentos;
+    }
+    
+    public void setDocumentos(Set<Documento> documentos) {
+        this.documentos = documentos;
+    }
+    
+    public void addDocumento(Documento documento) {
+        documentos.add(documento);
+        documento.setProcesso(this);
+    }
+    
+    public void removeDocumento(Documento documento) {
+        documentos.remove(documento);
+        documento.setProcesso(null);
+    }
     
     public boolean isJulgado() {
         return status == StatusProcesso.JULGADO;
