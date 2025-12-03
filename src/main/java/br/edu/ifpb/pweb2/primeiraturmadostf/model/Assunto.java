@@ -1,6 +1,7 @@
 package br.edu.ifpb.pweb2.primeiraturmadostf.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,12 +12,17 @@ public class Assunto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @NotBlank(message = "Nome do assunto é obrigatório")
+    @Size(min = 3, max = 100, message = "Nome deve ter entre 3 e 100 caracteres")
+    @Pattern(regexp = "^[a-zA-ZÀ-ÿ0-9\\s\\-]+$", message = "Nome contém caracteres inválidos")
     @Column(nullable = false, unique = true, length = 100)
     private String nome;
     
     @OneToMany(mappedBy = "assunto")
     private Set<Processo> processos = new HashSet<>();
 
+    @NotBlank(message = "Descrição é obrigatória")
+    @Size(min = 10, max = 2000, message = "Descrição deve ter entre 10 e 2000 caracteres")
     @Column(columnDefinition = "TEXT", nullable = false)
     private String descricao;
     

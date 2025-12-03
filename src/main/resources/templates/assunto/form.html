@@ -20,17 +20,36 @@
                     <input type="hidden" th:field="*{id}" />
 
                     <div class="mb-3">
-                        <label for="nome" class="form-label">Nome do Assunto</label>
-                        <input type="text" class="form-control" id="nome" th:field="*{nome}" required maxlength="100" placeholder="Ex: João da Silva"/>
-                        <div class="text-danger" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
+                        <label for="nome" class="form-label">Nome do Assunto *</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="nome" 
+                               th:field="*{nome}"
+                               th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'"
+                               required 
+                               maxlength="100" 
+                               placeholder="Ex: Revisão de Nota"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}">
+                            <span th:errors="*{nome}">Erro no nome</span>
+                        </div>
+                        <small class="form-text text-muted">Digite o nome do assunto (3 a 100 caracteres)</small>
                     </div>
 
                      <div class="mb-3">
-                        <label for="descricao" class="form-label">Descrição</label>
-                        <textarea class="form-control" id="descricao" th:field="*{descricao}" 
-                                  rows="4" maxlength="2000"
+                        <label for="descricao" class="form-label">Descrição *</label>
+                        <textarea class="form-control" 
+                                  id="descricao" 
+                                  th:field="*{descricao}"
+                                  th:classappend="${#fields.hasErrors('descricao')} ? 'is-invalid'"
+                                  rows="4" 
+                                  minlength="10"
+                                  maxlength="2000"
+                                  required
                                   placeholder="Descreva brevemente o assunto..."></textarea>
-                        <div class="text-danger" th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}"></div>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('descricao')}">
+                            <span th:errors="*{descricao}">Erro na descrição</span>
+                        </div>
+                        <small class="form-text text-muted">Descreva o assunto (10 a 2000 caracteres)</small>
                     </div>
 
                     <hr>

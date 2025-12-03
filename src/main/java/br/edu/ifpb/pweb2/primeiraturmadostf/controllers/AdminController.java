@@ -3,12 +3,16 @@ package br.edu.ifpb.pweb2.primeiraturmadostf.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import jakarta.validation.Valid;
 
 import br.edu.ifpb.pweb2.primeiraturmadostf.datatransferobject.ColegiadoDTO;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
@@ -19,6 +23,7 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.services.AlunoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.AssuntoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ColegiadoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProfessorService;
+import br.edu.ifpb.pweb2.primeiraturmadostf.validators.ColegiadoValidator;
 
 @Controller
 @RequestMapping("/admin")
@@ -32,6 +37,9 @@ public class AdminController {
     private AssuntoService assuntoService;
     @Autowired
     private ColegiadoService colegiadoService;
+    
+    @Autowired
+    private ColegiadoValidator colegiadoValidator;
     
 
 
@@ -50,7 +58,30 @@ public class AdminController {
     }
 
     @PostMapping("/professor/save")
-    public String postProfessor(Professor professor, RedirectAttributes redirect){
+    public String postProfessor(
+            @Valid @ModelAttribute("professor") Professor professor,
+            BindingResult result,
+            RedirectAttributes redirect){
+        
+        // Validação customizada: matrícula única
+        if (professor.getId() == null) {
+            // Novo professor - verificar se matrícula já existe
+            if (professorservice.existsByMatricula(professor.getMatricula())) {
+                result.rejectValue("matricula", "matricula.duplicate", 
+                    "Matrícula já cadastrada. Escolha outra matrícula.");
+            }
+        } else {
+            // Professor existente - verificar se matrícula pertence a outro professor
+            if (professorservice.existsByMatriculaAndNotId(professor.getMatricula(), professor.getId())) {
+                result.rejectValue("matricula", "matricula.duplicate", 
+                    "Matrícula já cadastrada para outro professor.");
+            }
+        }
+        
+        if (result.hasErrors()) {
+            return "professor/form";
+        }
+        
         professorservice.save(professor);
         redirect.addFlashAttribute("mensagem", "Professor salvo com sucesso");
         return "redirect:/admin/professor/list";
@@ -91,7 +122,30 @@ public class AdminController {
     }
 
     @PostMapping("/aluno/save")
-    public String postAluno(Aluno aluno, RedirectAttributes redirect){
+    public String postAluno(
+            @Valid @ModelAttribute("aluno") Aluno aluno,
+            BindingResult result,
+            RedirectAttributes redirect){
+        
+        // Validação customizada: matrícula única
+        if (aluno.getId() == null) {
+            // Novo aluno - verificar se matrícula já existe
+            if (alunoService.existsByMatricula(aluno.getMatricula())) {
+                result.rejectValue("matricula", "matricula.duplicate", 
+                    "Matrícula já cadastrada. Escolha outra matrícula.");
+            }
+        } else {
+            // Aluno existente - verificar se matrícula pertence a outro aluno
+            if (alunoService.existsByMatriculaAndNotId(aluno.getMatricula(), aluno.getId())) {
+                result.rejectValue("matricula", "matricula.duplicate", 
+                    "Matrícula já cadastrada para outro aluno.");
+            }
+        }
+        
+        if (result.hasErrors()) {
+            return "aluno/form";
+        }
+        
         alunoService.save(aluno);
         redirect.addFlashAttribute("mensagem", "Aluno cadastrado com sucesso!");
         return "redirect:/admin/aluno/list";
@@ -134,7 +188,30 @@ public class AdminController {
     }
 
     @PostMapping("/assunto/save")
-    public String postAssunto(Assunto assunto, RedirectAttributes redirect){
+    public String postAssunto(
+            @Valid @ModelAttribute("assunto") Assunto assunto,
+            BindingResult result,
+            RedirectAttributes redirect){
+        
+        // Validação customizada: nome único
+        if (assunto.getId() == null) {
+            // Novo assunto - verificar se nome já existe
+            if (assuntoService.existsByNome(assunto.getNome())) {
+                result.rejectValue("nome", "nome.duplicate", 
+                    "Nome do assunto já cadastrado. Escolha outro nome.");
+            }
+        } else {
+            // Assunto existente - verificar se nome pertence a outro assunto
+            if (assuntoService.existsByNomeAndNotId(assunto.getNome(), assunto.getId())) {
+                result.rejectValue("nome", "nome.duplicate", 
+                    "Nome do assunto já cadastrado para outro assunto.");
+            }
+        }
+        
+        if (result.hasErrors()) {
+            return "assunto/form";
+        }
+        
         assuntoService.save(assunto);
         redirect.addFlashAttribute("mensagem", "Assunto cadastrado com sucesso!");
         return "redirect:/admin/assunto/list";
@@ -175,7 +252,21 @@ public class AdminController {
     }
 
     @PostMapping("/colegiado/save")
-    public String postColegiado(ColegiadoDTO dto, RedirectAttributes redirect){
+    public String postColegiado(
+            @Valid @ModelAttribute("colegiado") ColegiadoDTO dto,
+            BindingResult result,
+            Model model,
+            RedirectAttributes redirect){
+        
+        // Executar validações customizadas
+        colegiadoValidator.validate(dto, result);
+        
+        if (result.hasErrors()) {
+            // Preparar dados necessários para o formulário
+            model.addAttribute("professores", professorservice.findAll());
+            return "colegiado/form";
+        }
+        
         colegiadoService.save(dto);
         redirect.addFlashAttribute("mensagem", "Colegiado cadastrado com sucesso!");
         return "redirect:/admin/colegiado/list";

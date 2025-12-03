@@ -20,30 +20,64 @@
                     <input type="hidden" th:field="*{id}" />
 
                     <div class="mb-3">
-                        <label for="curso" class="form-label">Nome do Curso</label>
-                        <input type="text" class="form-control" id="curso" th:field="*{curso}" 
-                               required maxlength="100" placeholder="Ex: Sistemas para Internet"/>
-                        <div class="text-danger" th:if="${#fields.hasErrors('curso')}" th:errors="*{curso}"></div>
+                        <label for="curso" class="form-label">Nome do Curso *</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="curso" 
+                               th:field="*{curso}"
+                               th:classappend="${#fields.hasErrors('curso')} ? 'is-invalid'"
+                               required 
+                               maxlength="100" 
+                               placeholder="Ex: Sistemas para Internet"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('curso')}">
+                            <span th:errors="*{curso}">Erro no nome do curso</span>
+                        </div>
+                        <small class="form-text text-muted">Digite o nome do curso (3 a 100 caracteres)</small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="portaria" class="form-label">Portaria</label>
-                        <input type="text" class="form-control" id="portaria" th:field="*{portaria}" 
-                               required maxlength="50" placeholder="Ex: Portaria 123/2024"/>
-                        <div class="text-danger" th:if="${#fields.hasErrors('portaria')}" th:errors="*{portaria}"></div>
+                        <label for="portaria" class="form-label">Portaria *</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="portaria" 
+                               th:field="*{portaria}"
+                               th:classappend="${#fields.hasErrors('portaria')} ? 'is-invalid'"
+                               required 
+                               maxlength="50" 
+                               placeholder="Ex: Portaria 123/2024"
+                               pattern="[Pp]ortaria\s+\d+/\d{4}"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('portaria')}">
+                            <span th:errors="*{portaria}">Erro na portaria</span>
+                        </div>
+                        <small class="form-text text-muted">Formato: Portaria XXX/YYYY</small>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="dataInicio" class="form-label">Data de Início</label>
-                            <input type="date" class="form-control" id="dataInicio" th:field="*{dataInicio}" required/>
-                            <div class="text-danger" th:if="${#fields.hasErrors('dataInicio')}" th:errors="*{dataInicio}"></div>
+                            <label for="dataInicio" class="form-label">Data de Início *</label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="dataInicio" 
+                                   th:field="*{dataInicio}"
+                                   th:classappend="${#fields.hasErrors('dataInicio')} ? 'is-invalid'"
+                                   required/>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('dataInicio')}">
+                                <span th:errors="*{dataInicio}">Erro na data de início</span>
+                            </div>
+                            <small class="form-text text-muted">Data não pode ser futura</small>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label for="dataFim" class="form-label">Data de Fim (Opcional)</label>
-                            <input type="date" class="form-control" id="dataFim" th:field="*{dataFim}"/>
-                            <div class="text-danger" th:if="${#fields.hasErrors('dataFim')}" th:errors="*{dataFim}"></div>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="dataFim" 
+                                   th:field="*{dataFim}"
+                                   th:classappend="${#fields.hasErrors('dataFim')} ? 'is-invalid'"/>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('dataFim')}">
+                                <span th:errors="*{dataFim}">Erro na data de fim</span>
+                            </div>
+                            <small class="form-text text-muted">Deve ser posterior à data de início</small>
                         </div>
                     </div>
 
@@ -51,19 +85,22 @@
                     
                     <h5 class="mb-3 text-secondary">Seleção de Membros</h5>
                     <p class="text-muted small">Selecione até 5 professores para compor o colegiado.</p>
+                    
+                    <!-- Mensagem de erro geral para membrosIds -->
+                    <div class="alert alert-danger" th:if="${#fields.hasErrors('membrosIds')}">
+                        <span th:errors="*{membrosIds}">Erro na seleção de membros</span>
+                    </div>
 
                     <div class="mb-3" th:each="i : ${#numbers.sequence(0,4)}">
-                        <label class="form-label" th:text="'Membro #' + (${i} + 1)"></label>
+                        <label class="form-label" th:text="'Membro #' + (${i} + 1) + ' (Opcional)'"></label>
 
-                        <select th:field="*{membrosIds[__${i}__]}" class="form-select select-professor">
+                        <select th:field="*{membrosIds[__${i}__]}" 
+                                class="form-select select-professor">
                             <option value="">Selecione...</option>
                             <option th:each="prof : ${professores}"
                                     th:value="${prof.id}"
                                     th:text="${prof.nome}"></option>
                         </select>
-                        
-                        <div class="text-danger" th:if="${#fields.hasErrors('membrosIds[' + i + ']')}" 
-                             th:errors="*{membrosIds[__${i}__]}"></div>
                     </div>
 
                     <hr>

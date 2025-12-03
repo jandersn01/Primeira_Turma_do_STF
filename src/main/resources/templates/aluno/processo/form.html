@@ -34,13 +34,19 @@
 
                     <div class="mb-3">
                         <label for="assunto" class="form-label">Assunto *</label>
-                        <select class="form-select" id="assunto" th:field="*{assunto}" required>
+                        <select class="form-select" 
+                                id="assunto" 
+                                th:field="*{assunto}"
+                                th:classappend="${#fields.hasErrors('assunto')} ? 'is-invalid'"
+                                required>
                             <option value="">Selecione um assunto</option>
                             <option th:each="assunto : ${assuntos}" 
                                     th:value="${assunto.id}" 
                                     th:text="${assunto.nome}">Assunto</option>
                         </select>
-                        <div class="text-danger" th:if="${#fields.hasErrors('assunto')}" th:errors="*{assunto}"></div>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('assunto')}">
+                            <span th:errors="*{assunto}">Erro no assunto</span>
+                        </div>
                         <small class="form-text text-muted">Selecione o tipo de solicitação acadêmica</small>
                     </div>
 
@@ -48,12 +54,17 @@
                         <label for="textoRequerimento" class="form-label">Texto do Requerimento *</label>
                         <textarea class="form-control" 
                                   id="textoRequerimento" 
-                                  th:field="*{textoRequerimento}" 
+                                  th:field="*{textoRequerimento}"
+                                  th:classappend="${#fields.hasErrors('textoRequerimento')} ? 'is-invalid'"
                                   rows="8" 
+                                  minlength="50"
+                                  maxlength="5000"
                                   required
                                   placeholder="Descreva detalhadamente sua solicitação acadêmica..."></textarea>
-                        <div class="text-danger" th:if="${#fields.hasErrors('textoRequerimento')}" th:errors="*{textoRequerimento}"></div>
-                        <small class="form-text text-muted">Descreva sua solicitação de forma clara e objetiva</small>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('textoRequerimento')}">
+                            <span th:errors="*{textoRequerimento}">Erro no texto do requerimento</span>
+                        </div>
+                        <small class="form-text text-muted">Descreva sua solicitação de forma clara e objetiva (mínimo 50 caracteres)</small>
                     </div>
 
                     <hr>
@@ -86,4 +97,5 @@
 
 </body>
 </html>
+
 

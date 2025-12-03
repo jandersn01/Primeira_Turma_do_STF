@@ -1,6 +1,7 @@
 package br.edu.ifpb.pweb2.primeiraturmadostf.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -38,6 +39,8 @@ public class Processo {
     @Column(columnDefinition = "TEXT")
     private String parecer; // Voto fundamentado do relator
     
+    @NotBlank(message = "Texto do requerimento é obrigatório")
+    @Size(min = 50, max = 5000, message = "Texto do requerimento deve ter entre 50 e 5000 caracteres")
     @Lob
     @Column(name = "texto_requerimento", columnDefinition = "TEXT", nullable = false)
     private String textoRequerimento; // Texto do requerimento do aluno
@@ -53,6 +56,7 @@ public class Processo {
     
     // Relacionamentos
     
+    @NotNull(message = "Assunto é obrigatório")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assunto_id", nullable = false)
     private Assunto assunto;

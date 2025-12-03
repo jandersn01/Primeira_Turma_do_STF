@@ -3,11 +3,15 @@ package br.edu.ifpb.pweb2.primeiraturmadostf.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import jakarta.validation.Valid;
 
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Assunto;
@@ -48,6 +52,11 @@ public class AlunoController {
             return "redirect:/admin/aluno/form";
         }
         
+        // Se processo for null, criar um novo
+        if (processo == null) {
+            processo = new Processo();
+        }
+        
         model.addAttribute("processo", processo);
         model.addAttribute("assuntos", assuntoService.findAll());
         model.addAttribute("aluno", aluno);
@@ -56,7 +65,12 @@ public class AlunoController {
     }
 
     @PostMapping("/processo/save")
-    public String postProcesso(Processo processo, RedirectAttributes redirect) {
+    public String postProcesso(
+            @Valid @ModelAttribute("processo") Processo processo,
+            BindingResult result,
+            Model model,
+            RedirectAttributes redirect) {
+        
         // TODO: Quando implementar autenticação, pegar o aluno logado
         // Por enquanto, vamos usar o primeiro aluno como exemplo
         Aluno aluno = alunoService.findAll().stream()
@@ -68,27 +82,27 @@ public class AlunoController {
             return "redirect:/admin/aluno/form";
         }
         
-        // Validar se o assunto foi selecionado
+        // Validação customizada: assunto válido
         if (processo.getAssunto() == null || processo.getAssunto().getId() == null) {
-            redirect.addFlashAttribute("mensagem", "Erro: É necessário selecionar um assunto.");
-            return "redirect:/aluno/processo/form";
+            result.rejectValue("assunto", "assunto.required", "Selecione um assunto válido");
+        } else {
+            // Carregar o assunto completo do banco
+            Assunto assunto = assuntoService.findById(processo.getAssunto().getId());
+            if (assunto == null) {
+                result.rejectValue("assunto", "assunto.notfound", "Assunto não encontrado");
+            } else {
+                processo.setAssunto(assunto);
+            }
         }
         
-        // Carregar o assunto completo do banco
-        Assunto assunto = assuntoService.findById(processo.getAssunto().getId());
-        if (assunto == null) {
-            redirect.addFlashAttribute("mensagem", "Erro: Assunto não encontrado.");
-            return "redirect:/aluno/processo/form";
-        }
-        
-        // Validar se o texto do requerimento foi preenchido
-        if (processo.getTextoRequerimento() == null || processo.getTextoRequerimento().trim().isEmpty()) {
-            redirect.addFlashAttribute("mensagem", "Erro: É necessário preencher o texto do requerimento.");
-            return "redirect:/aluno/processo/form";
+        if (result.hasErrors()) {
+            // Preparar dados necessários para o formulário
+            model.addAttribute("assuntos", assuntoService.findAll());
+            model.addAttribute("aluno", aluno);
+            return "aluno/processo/form";
         }
         
         // Configurar o processo
-        processo.setAssunto(assunto);
         processo.setInteressado(aluno);
         processo.setStatus(br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusProcesso.CRIADO);
         
