@@ -39,26 +39,41 @@ public class CoordenadorController {
     public String listarProcessosColegiado(
             Model model,
             @RequestParam(required = false) Long colegiadoId,
+            @RequestParam(required = false) Long coordenadorId, // ID para simular login!!!!!!!!!!!!!!!!!!!
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long alunoId,
             @RequestParam(required = false) Long relatorId,
             @RequestParam(required = false, defaultValue = "desc") String ordenacao) {
 
-        // TODO: Pegar o coordenador logado via Security. Usando mock por enquanto.
-        Professor coordenador = professorService.findByCoordenadores().stream().findFirst().orElse(null);
 
-        if (coordenador == null) {
+        List<Professor> todosCoordenadores = professorService.findByCoordenadores();
+
+        if (todosCoordenadores.isEmpty()) {
             model.addAttribute("mensagem", "Nenhum coordenador encontrado no sistema.");
             return "coordenador/processo/list";
         }
 
-        List<Colegiado> colegiados = new ArrayList<>(coordenador.getColegiados());
-        if (colegiados.isEmpty()) {
-           // Isso daqui é só pra evitar um erro. Depois ajeito.
-            colegiados = colegiadoService.findAll(); 
+        // 2. Definir o Coordenador Ativo ("Logado")
+        Professor coordenador = null;
+        if (coordenadorId != null) {
+            // Tenta achar o coordenador selecionado
+            coordenador = professorService.findById(coordenadorId);
+        }
+        
+        // Se não veio ID ou não achou, pega o primeiro como fallback
+        if (coordenador == null) {
+            coordenador = todosCoordenadores.get(0);
         }
 
-        // Define qual colegiado está selecionado
+        // 3. Buscar colegiados DESTE coordenador específico
+        List<Colegiado> colegiados = new ArrayList<>(coordenador.getColegiados());
+        if (colegiados.isEmpty()) {
+            // Fallback apenas para não quebrar a tela se o coordenador não tiver colegiado
+            // Em produção real, talvez fosse melhor mostrar msg vazia
+             colegiados = colegiadoService.findAll(); 
+        }
+
+        // 4. Define qual colegiado está selecionado
         Colegiado colegiadoSelecionado = null;
         if (colegiadoId != null) {
             colegiadoSelecionado = colegiadoService.findById(colegiadoId);
@@ -67,7 +82,7 @@ public class CoordenadorController {
             colegiadoId = colegiadoSelecionado.getId();
         }
 
-        // Busca os processos filtrados
+        // 5. Busca os processos filtrados
         List<Processo> processos = new ArrayList<>();
         if (colegiadoSelecionado != null) {
             StatusProcesso statusEnum = null;
@@ -84,16 +99,21 @@ public class CoordenadorController {
 
         // Popula a View
         model.addAttribute("processos", processos);
-        model.addAttribute("coordenador", coordenador);
+        
+        // Dados para o seletor de troca de usuário
+        model.addAttribute("todosCoordenadores", todosCoordenadores);
+        model.addAttribute("coordenador", coordenador); // O usuário "logado" atual
+        
         model.addAttribute("colegiados", colegiados);
         model.addAttribute("colegiadoSelecionado", colegiadoSelecionado);
         
         // Listas para os filtros
         model.addAttribute("alunos", alunoService.findAll());
-        model.addAttribute("professores", professorService.findAll()); // Para filtro de relator
+        model.addAttribute("professores", professorService.findAll()); 
         model.addAttribute("statusList", StatusProcesso.values());
 
-        // Mantém o estado dos filtros na tela
+        // Mantém o estado dos filtros
+        model.addAttribute("coordenadorIdSelecionado", coordenador.getId()); // ID do logado atual
         model.addAttribute("colegiadoIdSelecionado", colegiadoId);
         model.addAttribute("statusSelecionado", status);
         model.addAttribute("alunoIdSelecionado", alunoId);
@@ -109,6 +129,7 @@ public class CoordenadorController {
             @RequestParam("processoId") Long processoId,
             @RequestParam("relatorId") Long relatorId,
             @RequestParam(value = "colegiadoId", required = false) Long colegiadoId,
+            @RequestParam(value = "coordenadorId", required = false) Long coordenadorId, // Recebe para manter login
             RedirectAttributes attr) {
         
         try {
@@ -118,10 +139,11 @@ public class CoordenadorController {
             attr.addFlashAttribute("mensagemErro", "Erro ao distribuir: " + e.getMessage());
         }
         
-        String redirect = "redirect:/coordenador/processo/list";
-        if (colegiadoId != null) {
-            redirect += "?colegiadoId=" + colegiadoId;
-        }
-        return redirect;
+        // Monta o redirect mantendo o usuário logado
+        StringBuilder redirect = new StringBuilder("redirect:/coordenador/processo/list?");
+        if (colegiadoId != null) redirect.append("colegiadoId=").append(colegiadoId).append("&");
+        if (coordenadorId != null) redirect.append("coordenadorId=").append(coordenadorId);
+        
+        return redirect.toString();
     }
 }
