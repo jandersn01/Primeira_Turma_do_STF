@@ -4,6 +4,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,7 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.model.Processo;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Reuniao;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusReuniao;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ReuniaoService;
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/reunioes")
@@ -45,18 +47,38 @@ public class ReuniaoController {
         return "reuniao/list";
     }
 
-    @PostMapping("/save")
-    public String criarReuniao(Reuniao reuniao, 
-                               @RequestParam(name = "processosIds", required = false) List<Long> processosIds,
-                               RedirectAttributes redirectAttributes) {
-        try {
-            Long idColegiado = 1L; // Simulação
-            reuniaoService.criarReuniao(reuniao, processosIds, idColegiado);
-            redirectAttributes.addFlashAttribute("mensagem", "Reunião agendada com sucesso!");
-            return "redirect:/reunioes"; 
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("erro", "Erro ao criar reunião: " + e.getMessage());
-            return "redirect:/reunioes/form";
-        }
+@PostMapping("/save")
+public String criarReuniao(
+        @Valid Reuniao reuniao, 
+        BindingResult result, // DEVE vir logo após o @Valid
+        @RequestParam(name = "processosIds", required = false) List<Long> processosIds,
+        Model model,
+        RedirectAttributes redirectAttributes) {
+
+    // 1. Verifica se houve erro nas anotações (@NotNull, @FutureOrPresent, etc)
+    if (result.hasErrors()) {
+        // Recarrega os processos disponíveis para que o formulário não fique vazio ao voltar
+        Long idColegiado = 1L; // Simulação
+        List<Processo> processosDisponiveis = reuniaoService.listarProcessosDisponiveisParaReuniao(idColegiado);
+        model.addAttribute("processosDisponiveis", processosDisponiveis);
+        
+        // Retorna para o template do formulário (sem redirect para manter os erros no Model)
+        return "reuniao/form"; 
     }
+
+    try {
+        Long idColegiado = 1L; // Simulação
+        
+        // 2. Chama o service para salvar
+        reuniaoService.criarReuniao(reuniao, processosIds, idColegiado);
+        
+        redirectAttributes.addFlashAttribute("mensagem", "Reunião agendada com sucesso!");
+        return "redirect:/reunioes"; 
+
+    } catch (Exception e) {
+        // Caso ocorra um erro de regra de negócio no Service
+        redirectAttributes.addFlashAttribute("erro", "Erro ao salvar: " + e.getMessage());
+        return "redirect:/reunioes/form";
+    }
+}
 }
