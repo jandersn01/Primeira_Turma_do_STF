@@ -18,7 +18,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
 
-                <form th:action="@{/coordenador/reunioes/criar}" method="post" th:object="${reuniao}">
+                <form th:action="@{/reunioes/save}" method="post" th:object="${reuniao}">
                     
                     <input type="hidden" th:field="*{id}" />
 
@@ -30,7 +30,6 @@
                             <input type="date" class="form-control" id="dataReuniao" th:field="*{dataReuniao}"
                                    th:classappend="${#fields.hasErrors('dataReuniao')} ? 'is-invalid'" required/>
                             <div class="invalid-feedback" th:if="${#fields.hasErrors('dataReuniao')}" th:errors="*{dataReuniao}"></div>
-                            <div class="form-text">A reunião será criada com status <strong>PROGRAMADA</strong>.</div>
                         </div>
                     </div>
 
@@ -98,7 +97,7 @@
                         <button type="submit" class="btn btn-success">
                             <i class="bi bi-check-lg"></i> Agendar Reunião
                         </button>
-                        <a th:href="@{/coordenador/reunioes}" class="btn btn-secondary">
+                        <a th:href="@{/reunioes}" class="btn btn-secondary">
                             <i class="bi bi-arrow-return-left"></i> Cancelar
                         </a>
                     </div>
@@ -107,18 +106,7 @@
             </div>
         </div>
         
-        <div class="card mt-4">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Como funciona a Reunião?</h5>
-            </div>
-            <div class="card-body">
-                <ul class="mb-0 text-muted">
-                    <li>Ao agendar a reunião, os processos selecionados terão seu status alterado para <strong>EM PAUTA</strong>.</li>
-                    <li>Todos os membros do colegiado (Coordenador + 3 Professores) são automaticamente convocados.</li>
-                    <li>A reunião só poderá ser iniciada (Status: EM ANDAMENTO) no dia marcado.</li>
-                </ul>
-            </div>
-        </div>
+            
     </div>
 
 </body>

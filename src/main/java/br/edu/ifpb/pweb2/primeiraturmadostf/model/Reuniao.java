@@ -26,8 +26,7 @@ public class Reuniao {
     @Column(nullable = false, length = 20)
     private StatusReuniao status = StatusReuniao.PROGRAMADA;
     
-    @Lob
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "ata",columnDefinition = "TEXT")
     private String ata;
     
     @ManyToOne(fetch = FetchType.LAZY)

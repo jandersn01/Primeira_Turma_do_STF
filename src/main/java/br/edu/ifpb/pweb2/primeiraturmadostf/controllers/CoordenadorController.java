@@ -159,36 +159,5 @@ public class CoordenadorController {
         return redirect.toString();
     }
 
-    @GetMapping("/reunioes/form")
-    public String reuniaoForm(Model model) {
-
-        // Simulação: Pegar ID do colegiado do coordenador logado
-        Long idColegiado = 1L;
-
-        model.addAttribute("reuniao"
-        , new Reuniao()
-        );
-
-        List<Processo> processosDisponiveis = reuniaoService.listarProcessosDisponiveisParaReuniao(idColegiado);
-        model.addAttribute("processosDisponiveis", processosDisponiveis);
-        return "coordenador/reuniao/form";
-    }
-
-    public String criarReuniao(Reuniao reuniao, 
-                               @RequestParam(name = "processosIds", required = false) List<Long> processosIds,
-                               RedirectAttributes redirectAttributes){
-                                try {
-            // Simulação: ID do colegiado
-            Long idColegiado = 1L; 
-
-            reuniaoService.criarReuniao(reuniao, processosIds, idColegiado);
-            
-            redirectAttributes.addFlashAttribute("mensagem", "Reunião agendada com sucesso!");
-            return "redirect:/coordenador/reunioes"; // Redireciona para listagem
-            
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("erro", "Erro ao criar reunião: " + e.getMessage());
-            return "redirect:/coordenador/reunioes/criar";
-        }
-    }
+   
 }

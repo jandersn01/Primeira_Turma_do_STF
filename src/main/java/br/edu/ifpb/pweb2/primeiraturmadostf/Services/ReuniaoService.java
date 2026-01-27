@@ -30,50 +30,52 @@ public class ReuniaoService {
 
     @Transactional
     public Reuniao criarReuniao(Reuniao reuniao, List<Long> processosIds, Long colegiadoId) {
-        // 1. Recupera o colegiado (supondo que venha da sessão/usuário logado no futuro)
+        // 1. Recupera o colegiado
         Colegiado colegiado = colegiadoRepository.findById(colegiadoId)
                 .orElseThrow(() -> new RuntimeException("Colegiado não encontrado"));
 
         reuniao.setColegiado(colegiado);
         reuniao.setStatus(StatusReuniao.PROGRAMADA);
 
-        // 2. Recupera os processos selecionados pelo ID
+        // 2. Recupera os processos selecionados pelo ID e atualiza status
         if (processosIds != null && !processosIds.isEmpty()) {
             List<Processo> processosSelecionados = processoRepository.findAllById(processosIds);
 
             for (Processo processo : processosSelecionados) {
-                // Regra de Negócio: Ao entrar na pauta, o status do processo muda
                 processo.setStatus(StatusProcesso.EM_PAUTA);
-
-                // Associa o processo à reunião (relação ManyToMany)
                 reuniao.getProcessos().add(processo);
-
-                // Opcional: Se o relacionamento for bidirecional estrito, adicione:
-                processo.getReunioes().add(reuniao);
+                // processo.getReunioes().add(reuniao); // Opcional bidirecional
             }
         }
 
-        // 3. Salva a reunião (o Cascade persistirá as associações se configurado, 
-        // mas aqui salvamos a reunião que é a dona da relação na tabela de junção)
+        // 3. Salva a reunião
         return reuniaoRepository.save(reuniao);
     }
 
-// CORREÇÃO: Recebe Long (do controller) e converte para Colegiado (para a Specification)
+    @Transactional(readOnly = true)
     public List<Processo> listarProcessosDisponiveisParaReuniao(Long colegiadoId) {
-
-        // 1. Busca o Colegiado pelo ID
         Colegiado colegiado = colegiadoRepository.findById(colegiadoId)
                 .orElseThrow(() -> new IllegalArgumentException("Colegiado não encontrado com id: " + colegiadoId));
 
-        // 2. Chama a Specification passando o objeto Colegiado resolvido
         return processoRepository.findAll(
                 ProcessoSpecifications.buildSpecificationForColegiado(
-                        colegiado, // Objeto Colegiado obrigatório
-                        StatusProcesso.DISTRIBUIDO, // Apenas processos distribuídos
-                        null, // Ignora filtro de aluno
-                        null // Ignora filtro de relator
+                        colegiado, 
+                        StatusProcesso.DISTRIBUIDO, 
+                        null, 
+                        null
                 )
         );
     }
 
+    // --- NOVO MÉTODO PARA A LISTAGEM ---
+    @Transactional(readOnly = true)
+    public List<Reuniao> listarReunioesDoColegiado(Long colegiadoId, StatusReuniao status) {
+        if (status != null) {
+            // Se o usuário selecionou um filtro (ex: PROGRAMADA), busca filtrado
+            return reuniaoRepository.findByColegiadoIdAndStatus(colegiadoId, status);
+        } else {
+            // Se não tem filtro, traz todas as reuniões do colegiado
+            return reuniaoRepository.findByColegiadoId(colegiadoId);
+        }
+    }
 }
