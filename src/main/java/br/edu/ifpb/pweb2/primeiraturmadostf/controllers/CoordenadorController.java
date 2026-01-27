@@ -146,4 +146,8 @@ public class CoordenadorController {
         
         return redirect.toString();
     }
+
+    public String criarSessao(){
+        return "";
+    }
 }
