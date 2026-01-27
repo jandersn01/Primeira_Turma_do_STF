@@ -5,6 +5,8 @@ import jakarta.validation.constraints.*;
 import java.util.HashSet;
 import java.util.Set;
 
+import br.edu.ifpb.pweb2.primeiraturmadostf.anotations.Matricula;
+
 @Entity
 @Table(
     name = "aluno",
@@ -19,8 +21,7 @@ public class Aluno {
     private Long id;
     
     @NotBlank(message = "Matrícula é obrigatória")
-    @Size(min = 5, max = 20, message = "Matrícula deve ter entre 5 e 20 caracteres")
-    @Pattern(regexp = "^[a-zA-Z0-9]+$", message = "Matrícula deve conter apenas letras e números")
+    @Matricula(message = "Matrícula inválida")
     @Column(nullable = false, unique = true, length = 20)
     private String matricula;
     
