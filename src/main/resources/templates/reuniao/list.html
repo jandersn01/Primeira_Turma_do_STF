@@ -176,26 +176,25 @@
 
         <script th:inline="javascript">
             function carregarDetalhes(id) {
-                // O uso de [[@{/}]] garante que o Spring insira o context-path correto (/primeiraturmadostf/)
-                const baseUrl = [[@{/ reunioes /}]];
-            const url = baseUrl + id + '/detalhes';
+                // O Thymeleaf vai renderizar isso como '/primeiraturmadostf/reunioes/'
+                const baseUrl = /*[[@{/reunioes/}]]*/ '/reunioes/';
+                const url = baseUrl + id + '/detalhes';
 
-            fetch(url)
-                .then(response => {
-                    if (!response.ok) throw new Error('Reunião não encontrada ou erro no servidor');
-                    return response.text();
-                })
-                .then(html => {
-                    document.getElementById('conteudoModal').innerHTML = html;
-                    const modalElement = document.getElementById('modalDetalhes');
-                    const modal = new bootstrap.Modal(modalElement);
-                    modal.show();
-                })
-                .catch(error => {
-                    console.error(error);
-                    alert('Erro ao carregar detalhes: ' + error.message);
-                });
-    }
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Erro 404: Verifique o mapeamento do Controller');
+                        return response.text();
+                    })
+                    .then(html => {
+                        document.getElementById('conteudoModal').innerHTML = html;
+                        const modal = new bootstrap.Modal(document.getElementById('modalDetalhes'));
+                        modal.show();
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        alert('Erro ao carregar detalhes: ' + error.message);
+                    });
+            }
         </script>
 
     </div>
