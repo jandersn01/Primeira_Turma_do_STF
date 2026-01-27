@@ -19,9 +19,15 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProfessorService;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Reuniao;
+import br.edu.ifpb.pweb2.primeiraturmadostf.services.ReuniaoService;
+
 @Controller
 @RequestMapping("/coordenador")
 public class CoordenadorController {
+
+    @Autowired
+    private ReuniaoService reuniaoService;
 
     @Autowired
     private ProcessoService processoService;
@@ -45,7 +51,6 @@ public class CoordenadorController {
             @RequestParam(required = false) Long relatorId,
             @RequestParam(required = false, defaultValue = "desc") String ordenacao) {
 
-
         List<Professor> todosCoordenadores = professorService.findByCoordenadores();
 
         if (todosCoordenadores.isEmpty()) {
@@ -59,7 +64,7 @@ public class CoordenadorController {
             // Tenta achar o coordenador selecionado
             coordenador = professorService.findById(coordenadorId);
         }
-        
+
         // Se não veio ID ou não achou, pega o primeiro como fallback
         if (coordenador == null) {
             coordenador = todosCoordenadores.get(0);
@@ -70,7 +75,7 @@ public class CoordenadorController {
         if (colegiados.isEmpty()) {
             // Fallback apenas para não quebrar a tela se o coordenador não tiver colegiado
             // Em produção real, talvez fosse melhor mostrar msg vazia
-             colegiados = colegiadoService.findAll(); 
+            colegiados = colegiadoService.findAll();
         }
 
         // 4. Define qual colegiado está selecionado
@@ -87,29 +92,32 @@ public class CoordenadorController {
         if (colegiadoSelecionado != null) {
             StatusProcesso statusEnum = null;
             if (status != null && !status.isEmpty()) {
-                try { statusEnum = StatusProcesso.valueOf(status); } catch (Exception e) {}
+                try {
+                    statusEnum = StatusProcesso.valueOf(status);
+                } catch (Exception e) {
+                }
             }
 
             Aluno aluno = (alunoId != null) ? alunoService.findById(alunoId) : null;
             Professor relator = (relatorId != null) ? professorService.findById(relatorId) : null;
 
             processos = processoService.findByColegiadoWithFilters(
-                colegiadoSelecionado, statusEnum, aluno, relator, ordenacao);
+                    colegiadoSelecionado, statusEnum, aluno, relator, ordenacao);
         }
 
         // Popula a View
         model.addAttribute("processos", processos);
-        
+
         // Dados para o seletor de troca de usuário
         model.addAttribute("todosCoordenadores", todosCoordenadores);
         model.addAttribute("coordenador", coordenador); // O usuário "logado" atual
-        
+
         model.addAttribute("colegiados", colegiados);
         model.addAttribute("colegiadoSelecionado", colegiadoSelecionado);
-        
+
         // Listas para os filtros
         model.addAttribute("alunos", alunoService.findAll());
-        model.addAttribute("professores", professorService.findAll()); 
+        model.addAttribute("professores", professorService.findAll());
         model.addAttribute("statusList", StatusProcesso.values());
 
         // Mantém o estado dos filtros
@@ -131,23 +139,56 @@ public class CoordenadorController {
             @RequestParam(value = "colegiadoId", required = false) Long colegiadoId,
             @RequestParam(value = "coordenadorId", required = false) Long coordenadorId, // Recebe para manter login
             RedirectAttributes attr) {
-        
+
         try {
             processoService.distribuirProcesso(processoId, relatorId);
             attr.addFlashAttribute("mensagem", "Processo distribuído com sucesso!");
         } catch (Exception e) {
             attr.addFlashAttribute("mensagemErro", "Erro ao distribuir: " + e.getMessage());
         }
-        
+
         // Monta o redirect mantendo o usuário logado
         StringBuilder redirect = new StringBuilder("redirect:/coordenador/processo/list?");
-        if (colegiadoId != null) redirect.append("colegiadoId=").append(colegiadoId).append("&");
-        if (coordenadorId != null) redirect.append("coordenadorId=").append(coordenadorId);
-        
+        if (colegiadoId != null) {
+            redirect.append("colegiadoId=").append(colegiadoId).append("&");
+        }
+        if (coordenadorId != null) {
+            redirect.append("coordenadorId=").append(coordenadorId);
+        }
+
         return redirect.toString();
     }
 
-    public String criarSessao(){
-        return "";
+    @GetMapping("/reunioes/form")
+    public String reuniaoForm(Model model) {
+
+        // Simulação: Pegar ID do colegiado do coordenador logado
+        Long idColegiado = 1L;
+
+        model.addAttribute("reuniao"
+        , new Reuniao()
+        );
+
+        List<Processo> processosDisponiveis = reuniaoService.listarProcessosDisponiveisParaReuniao(idColegiado);
+        model.addAttribute("processosDisponiveis", processosDisponiveis);
+        return "coordenador/reuniao/form";
+    }
+
+    public String criarReuniao(Reuniao reuniao, 
+                               @RequestParam(name = "processosIds", required = false) List<Long> processosIds,
+                               RedirectAttributes redirectAttributes){
+                                try {
+            // Simulação: ID do colegiado
+            Long idColegiado = 1L; 
+
+            reuniaoService.criarReuniao(reuniao, processosIds, idColegiado);
+            
+            redirectAttributes.addFlashAttribute("mensagem", "Reunião agendada com sucesso!");
+            return "redirect:/coordenador/reunioes"; // Redireciona para listagem
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", "Erro ao criar reunião: " + e.getMessage());
+            return "redirect:/coordenador/reunioes/criar";
+        }
     }
 }
