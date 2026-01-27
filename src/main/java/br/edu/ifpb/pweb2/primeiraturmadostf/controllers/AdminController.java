@@ -68,13 +68,13 @@ public class AdminController {
         
         // Validação customizada: matrícula única
         if (professor.getId() == null) {
-            // Novo professor - verificar se matrícula já existe
+
             if (professorservice.existsByMatricula(professor.getMatricula())) {
                 result.rejectValue("matricula", "matricula.duplicate", 
                     "Matrícula já cadastrada. Escolha outra matrícula.");
             }
         } else {
-            // Professor existente - verificar se matrícula pertence a outro professor
+
             if (professorservice.existsByMatriculaAndNotId(professor.getMatricula(), professor.getId())) {
                 result.rejectValue("matricula", "matricula.duplicate", 
                     "Matrícula já cadastrada para outro professor.");
