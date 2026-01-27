@@ -16,9 +16,13 @@ public interface ReuniaoRepository extends JpaRepository<Reuniao, Long> {
 
     // Busca todas as reuniões de um colegiado específico
     List<Reuniao> findByColegiadoId(Long colegiadoId);
+    
+    Reuniao findReuniaoById(Long id);
 
     // Busca reuniões de um colegiado filtrando pelo status
     List<Reuniao> findByColegiadoIdAndStatus(Long colegiadoId, StatusReuniao status);
+
+    public boolean removeById(Long id);
     
 }
 

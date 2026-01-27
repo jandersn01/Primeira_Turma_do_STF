@@ -78,4 +78,13 @@ public class ReuniaoService {
             return reuniaoRepository.findByColegiadoId(colegiadoId);
         }
     }
+
+    public boolean remove(Long id) {
+        return reuniaoRepository.removeById(id);
+    }
+ 
+
+    public Reuniao findById(Long id) {
+        return reuniaoRepository.findReuniaoById(id);
+    }
 }

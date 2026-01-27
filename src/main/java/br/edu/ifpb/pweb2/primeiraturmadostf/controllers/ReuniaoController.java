@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,46 +40,72 @@ public class ReuniaoController {
 
         // Se o status vier vazio da URL, tratamos como null para o Service buscar todas
         List<Reuniao> reunioes = reuniaoService.listarReunioesDoColegiado(idColegiado, status);
-        
+
         model.addAttribute("reunioes", reunioes);
         model.addAttribute("statusSelecionado", status);
         model.addAttribute("colegiadoId", idColegiado); // Importante para o input hidden no HTML
-        
+
         return "reuniao/list";
     }
 
-@PostMapping("/save")
-public String criarReuniao(
-        @Valid Reuniao reuniao, 
-        BindingResult result, // DEVE vir logo após o @Valid
-        @RequestParam(name = "processosIds", required = false) List<Long> processosIds,
-        Model model,
-        RedirectAttributes redirectAttributes) {
+    @PostMapping("/save")
+    public String criarReuniao(
+            Reuniao reuniao,
+            BindingResult result, // DEVE vir logo após o @Valid
+            @RequestParam(name = "processosIds", required = false) List<Long> processosIds,
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
-    // 1. Verifica se houve erro nas anotações (@NotNull, @FutureOrPresent, etc)
-    if (result.hasErrors()) {
-        // Recarrega os processos disponíveis para que o formulário não fique vazio ao voltar
-        Long idColegiado = 1L; // Simulação
-        List<Processo> processosDisponiveis = reuniaoService.listarProcessosDisponiveisParaReuniao(idColegiado);
-        model.addAttribute("processosDisponiveis", processosDisponiveis);
-        
-        // Retorna para o template do formulário (sem redirect para manter os erros no Model)
-        return "reuniao/form"; 
+        // 1. Verifica se houve erro nas anotações (@NotNull, @FutureOrPresent, etc)
+        if (result.hasErrors()) {
+            // Recarrega os processos disponíveis para que o formulário não fique vazio ao voltar
+            Long idColegiado = 1L; // Simulação
+            List<Processo> processosDisponiveis = reuniaoService.listarProcessosDisponiveisParaReuniao(idColegiado);
+            model.addAttribute("processosDisponiveis", processosDisponiveis);
+
+            // Retorna para o template do formulário (sem redirect para manter os erros no Model)
+            return "reuniao/form";
+        }
+
+        try {
+            Long idColegiado = 1L; // Simulação
+
+            // 2. Chama o service para salvar
+            reuniaoService.criarReuniao(reuniao, processosIds, idColegiado);
+
+            redirectAttributes.addFlashAttribute("mensagem", "Reunião agendada com sucesso!");
+            return "redirect:/reunioes";
+
+        } catch (Exception e) {
+            // Caso ocorra um erro de regra de negócio no Service
+            redirectAttributes.addFlashAttribute("erro", "Erro ao salvar: " + e.getMessage());
+            return "redirect:/reunioes/form";
+        }
     }
 
-    try {
-        Long idColegiado = 1L; // Simulação
-        
-        // 2. Chama o service para salvar
-        reuniaoService.criarReuniao(reuniao, processosIds, idColegiado);
-        
-        redirectAttributes.addFlashAttribute("mensagem", "Reunião agendada com sucesso!");
-        return "redirect:/reunioes"; 
-
-    } catch (Exception e) {
-        // Caso ocorra um erro de regra de negócio no Service
-        redirectAttributes.addFlashAttribute("erro", "Erro ao salvar: " + e.getMessage());
-        return "redirect:/reunioes/form";
+    @GetMapping("/{id}/detalhes")
+    public String verDetalhes(@PathVariable Long id, Model model) {
+        Reuniao reuniao = reuniaoService.findById(id); // Certifique-se que este método existe no seu Service
+        if (reuniao == null) {
+            throw new IllegalArgumentException("Reunião não encontrada");
+        }
+        model.addAttribute("reuniao", reuniao);
+        // Retorna apenas o fragmento do modal
+        return "reuniao/detalhes";
     }
-}
+
+    @PostMapping("/delete/{id}")
+    public String excluirReuniao(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            boolean removido = reuniaoService.remove(id); // Certifique-se que este método existe no seu Service
+            if (removido) {
+                redirectAttributes.addFlashAttribute("mensagem", "Reunião cancelada com sucesso!");
+            } else {
+                redirectAttributes.addFlashAttribute("erro", "Não foi possível encontrar a reunião para exclusão.");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", "Erro ao excluir: " + e.getMessage());
+        }
+        return "redirect:/reunioes";
+    }
 }
