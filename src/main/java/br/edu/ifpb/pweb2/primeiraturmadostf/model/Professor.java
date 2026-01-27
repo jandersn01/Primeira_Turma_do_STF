@@ -3,6 +3,7 @@ package br.edu.ifpb.pweb2.primeiraturmadostf.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import br.edu.ifpb.pweb2.primeiraturmadostf.anotations.Matricula;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -41,8 +42,7 @@ public class Professor {
     private String fone;
     
     @NotBlank(message = "Matrícula é obrigatória")
-    @Size(min = 3, max = 50, message = "Matrícula deve ter entre 3 e 50 caracteres")
-    @Pattern(regexp = "^[a-zA-Z0-9]+$", message = "Matrícula deve conter apenas letras e números")
+    @Matricula(message="Matrícula inválida")
     @Column(nullable = false, unique = true, length = 50)
     private String matricula;
     
