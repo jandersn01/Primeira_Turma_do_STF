@@ -143,30 +143,45 @@ public class ProcessoService {
     }
 
     /**
-     * Busca processos de um aluno com filtros opcionais e ordenação.
+     * Busca processos com filtros opcionais e ordenação.
      *
-     * @param aluno Aluno interessado (obrigatório)
+     * @param aluno Aluno interessado (opcional, null para todos)
      * @param status Status do processo (opcional, null para todos)
      * @param assunto Assunto do processo (opcional, null para todos)
      * @param ordenacao "asc" para crescente, "desc" para decrescente, null para
      * crescente (padrão)
      * @return Lista de processos filtrados e ordenados
      */
-    public List<Processo> findByInteressadoWithFilters(
+    public List<Processo> findWithFilters(
             Aluno aluno, StatusProcesso status, Assunto assunto, String ordenacao) {
 
         // Construir specification com filtros dinâmicos
         Specification<Processo> spec = ProcessoSpecifications.buildSpecification(
-                aluno, status, assunto);
+            aluno, status, assunto);
 
         // Definir ordenação (padrão: crescente por data de recepção)
         Sort sort = (ordenacao != null && ordenacao.equalsIgnoreCase("desc"))
-                ? Sort.by("dataRecepcao").descending()
-                : Sort.by("dataRecepcao").ascending();
+            ? Sort.by("dataRecepcao").descending()
+            : Sort.by("dataRecepcao").ascending();
 
         return processoRepository.findAll(spec, sort);
     }
 
+    /**
+     * Busca processos de um aluno com filtros opcionais e ordenação.
+     *
+     * @param aluno Aluno interessado (obrigatório)
+     * @param status Status do processo (opcional, null para todos)
+     * @param assunto Assunto do processo (opcional, null para todos)
+     * @param ordenacao "asc" para crescente, "desc" para decrescente, null para crescente (padrão)
+     * @return Lista de processos filtrados e ordenados
+     */
+    public List<Processo> findByInteressadoWithFilters(
+            Aluno aluno, StatusProcesso status, Assunto assunto, String ordenacao) {
+
+        return findWithFilters(aluno, status, assunto, ordenacao);
+    }
+    
     /**
      * Busca processos de um colegiado com filtros opcionais e ordenação. Os
      * processos são encontrados através das reuniões do colegiado.

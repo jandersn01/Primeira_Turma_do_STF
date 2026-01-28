@@ -13,9 +13,9 @@
             <div class="card-header bg-info text-white">
                 <h4 class="mb-0"><i class="bi bi-folder2-open"></i> Meus Processos</h4>
             </div>
-            
+
             <div class="card-body">
-                
+
                 <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert" th:classappend="${mensagem.contains('Erro')} ? 'alert-danger' : 'alert-success'">
                     <span th:text="${mensagem}"></span>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -33,14 +33,22 @@
                     </div>
                 </div>
 
-                <!-- Filtros de Processos -->
-                <div th:if="${aluno != null}" class="mb-3">
+                <!-- Filtros de Processos - Exibe para aluno ou admin -->
+                <div th:if="${aluno != null or isAdmin}" class="mb-3">
                     <form method="get" th:action="@{/aluno/processo/list}" class="row g-2 align-items-end">
+                        <!-- Filtro de Aluno (apenas para admin) -->
+                        <div th:if="${isAdmin}" class="col-md-3">
+                            <label class="form-label small">Aluno</label>
+                            <select name="alunoId" class="form-select form-select-sm">
+                                <option value="">Todos os Alunos</option>
+                                <option th:each="a : ${todosAlunos}" th:value="${a.id}" th:text="${a.nome}" th:selected="${a.id == alunoIdSelecionado}"></option>
+                            </select>
+                        </div>
                         <div class="col-md-3">
                             <label class="form-label small">Status</label>
                             <select name="status" class="form-select form-select-sm">
                                 <option value="">Todos</option>
-                                <option th:each="s : ${statusList}" th:value="${s}" th:text="${s.descricao}" th:selected="${s.name() == statusSelecionado}"></option>
+                                <option th:each="s : ${statusList}" th:value="${s.name()}" th:text="${s.descricao}" th:selected="${s.name() == statusSelecionado}"></option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -53,7 +61,7 @@
                         <div class="col-md-2">
                             <button type="submit" class="btn btn-sm btn-secondary w-100">Filtrar</button>
                         </div>
-                        <div class="col-md-4 text-end">
+                        <div th:unless="${isAdmin}" class="col-md-4 text-end">
                              <a th:href="@{/aluno/processo/form}" class="btn btn-sm btn-primary">
                                 <i class="bi bi-plus-lg"></i> Novo Processo
                              </a>
@@ -61,8 +69,8 @@
                     </form>
                 </div>
 
-                <!-- Tabela de Processos -->
-                <div th:if="${aluno != null}">
+                <!-- Tabela de Processos - Exibe para aluno ou admin -->
+                <div th:if="${aluno != null or isAdmin}">
                     <div th:if="${#lists.isEmpty(processos)}" class="alert alert-info">
                         <i class="bi bi-info-circle"></i> Nenhum processo encontrado.
                     </div>
@@ -72,6 +80,7 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Número</th>
+                                    <th th:if="${isAdmin and aluno == null}">Interessado</th>
                                     <th>Assunto</th>
                                     <th>Status</th>
                                     <th>Data Recepção</th>
@@ -84,6 +93,7 @@
                                     <td>
                                         <strong th:text="${p.numero}" class="text-primary">123/2024</strong>
                                     </td>
+                                    <td th:if="${isAdmin and aluno == null}" th:text="${p.interessado.nome}">Nome do Aluno</td>
                                     <td th:text="${p.assunto.nome}">Assunto</td>
                                     <td>
                                         <span class="badge bg-secondary" th:if="${p.status.name() == 'CRIADO'}" th:text="${p.status.descricao}"></span>
@@ -108,11 +118,16 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Mensagem quando aluno não encontrado (apenas para não-admin) -->
+                <div th:if="${aluno == null and !isAdmin}" class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Aluno não encontrado.
+                </div>
             </div>
         </div>
-        
+
         <!-- Modais de Documentos (Fora da tabela para evitar problemas de layout) -->
-        <div th:if="${aluno != null}" th:each="p : ${processos}">
+        <div th:if="${aluno != null or isAdmin}" th:each="p : ${processos}">
             <div class="modal fade" th:id="'modalDocs' + ${p.id}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
@@ -121,18 +136,19 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            
+
                             <!-- Lista de Documentos Existentes -->
                             <h6 class="mb-3">Anexos:</h6>
                             <div th:if="${#lists.isEmpty(p.documentos)}" class="text-muted fst-italic mb-3">
                                 Nenhum documento anexado.
                             </div>
-                            
+
                             <ul th:unless="${#lists.isEmpty(p.documentos)}" class="list-group mb-4">
                                 <li th:each="doc : ${p.documentos}" class="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
-                                        <i class="bi bi-file-earmark-text me-2"></i>
+                                        <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
                                         <span th:text="${doc.nomeOriginal}">arquivo.pdf</span>
+                                        <small class="text-muted ms-2" th:text="${doc.tamanhoFormatado}"></small>
                                         <small class="text-muted ms-2" th:if="${doc.descricao}" th:text="'(' + ${doc.descricao} + ')'"></small>
                                     </div>
                                     <div class="btn-group">
@@ -140,9 +156,9 @@
                                             <i class="bi bi-download"></i>
                                         </a>
                                         <!-- Só permite excluir se o processo ainda estiver CRIADO -->
-                                        <form th:if="${p.status.name() == 'CRIADO'}" 
-                                              th:action="@{/aluno/processo/{pid}/documento/{did}/delete(pid=${p.id}, did=${doc.id})}" 
-                                              method="post" 
+                                        <form th:if="${p.status.name() == 'CRIADO'}"
+                                              th:action="@{/aluno/processo/{pid}/documento/{did}/delete(pid=${p.id}, did=${doc.id})}"
+                                              method="post"
                                               th:onsubmit="return confirm('Excluir este documento?');">
                                             <button type="submit" class="btn btn-sm btn-outline-danger ms-1" title="Excluir">
                                                 <i class="bi bi-trash"></i>
@@ -151,35 +167,38 @@
                                     </div>
                                 </li>
                             </ul>
-                            
+
                             <hr>
-                            
+
                             <!-- Formulário de Upload (Só se status for CRIADO) -->
                             <div th:if="${p.status.name() == 'CRIADO'}">
                                 <h6 class="mb-3"><i class="bi bi-cloud-upload"></i> Adicionar Novo Documento</h6>
                                 <form th:action="@{/aluno/processo/{id}/documento/upload(id=${p.id})}" method="post" enctype="multipart/form-data">
-                                    <div class="input-group mb-2">
-                                        <input type="file" name="arquivo" class="form-control" required>
+                                    <div class="mb-2">
+                                        <input type="file" name="arquivo" class="form-control" accept="application/pdf,.pdf" required>
+                                        <small class="text-muted">Apenas arquivos PDF. Tamanho máximo: 5MB.</small>
                                     </div>
                                     <div class="input-group mb-2">
                                         <span class="input-group-text">Descrição</span>
                                         <input type="text" name="descricao" class="form-control" placeholder="Opcional (ex: Histórico Escolar)">
                                     </div>
                                     <div class="text-end">
-                                        <button type="submit" class="btn btn-success text-white">Enviar</button>
+                                        <button type="submit" class="btn btn-success text-white">
+                                            <i class="bi bi-upload"></i> Enviar PDF
+                                        </button>
                                     </div>
                                 </form>
                             </div>
                             <div th:unless="${p.status.name() == 'CRIADO'}" class="alert alert-warning py-2 small">
                                 <i class="bi bi-lock"></i> O processo já foi tramitado e não aceita novos documentos.
                             </div>
-                            
+
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
+
     </div>
 
 </body>
