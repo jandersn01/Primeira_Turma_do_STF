@@ -79,6 +79,16 @@ public class ReuniaoService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<Reuniao> listarReunioesDoProfessor(Long professorId, StatusReuniao status) {
+        if (status != null) {
+            return reuniaoRepository.findByColegiadoMembrosIdAndStatus(professorId, status);
+        } else {
+            return reuniaoRepository.findByColegiadoMembrosId(professorId);
+        }
+    }
+
+
     public boolean remove(Long id) {
         return reuniaoRepository.removeById(id);
     }
