@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -26,7 +28,7 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.services.AlunoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.AssuntoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.DocumentoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProcessoService;
-import jakarta.validation.Valid; // Import necessário
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/aluno")
@@ -45,34 +47,31 @@ public class AlunoController {
     private DocumentoService documentoService;
 
     @GetMapping("/processo/form")
-    public String getFormProcesso(Model model, Processo processo) {
-        // Busca o primeiro aluno apenas como fallback inicial para o formulário
-        Aluno aluno = alunoService.findAll().stream().findFirst().orElse(null);
-        
+    public String getFormProcesso(Model model, Processo processo, @AuthenticationPrincipal UserDetails userDetails) {
+        Aluno aluno = alunoService.findByMatricula(userDetails.getUsername());
+
         if (processo == null) {
             processo = new Processo();
         }
-        
+
         model.addAttribute("processo", processo);
         model.addAttribute("assuntos", assuntoService.findAll());
         model.addAttribute("aluno", aluno);
-        
-        // Se não houver aluno, apenas adiciona mensagem (sem redirecionar)
+
         if (aluno == null) {
-            model.addAttribute("mensagem", "Nenhum aluno cadastrado no sistema.");
+            model.addAttribute("mensagem", "Aluno nao encontrado.");
         }
-        
+
         return "aluno/processo/form";
     }
 
     @PostMapping("/processo/save")
-    public String postProcesso(@Valid @ModelAttribute("processo") Processo processo, BindingResult result, Model model, RedirectAttributes redirect) {
-        // Lógica simplificada de pegar o primeiro aluno (Ideal seria vir do form ou sessão)
-        Aluno aluno = alunoService.findAll().stream().findFirst().orElse(null);
-        
+    public String postProcesso(@Valid @ModelAttribute("processo") Processo processo, BindingResult result, Model model, RedirectAttributes redirect, @AuthenticationPrincipal UserDetails userDetails) {
+        Aluno aluno = alunoService.findByMatricula(userDetails.getUsername());
+
         if (aluno == null) {
-            redirect.addFlashAttribute("mensagem", "Erro: Nenhum aluno cadastrado.");
-            return "redirect:/admin/aluno/form";
+            redirect.addFlashAttribute("mensagem", "Erro: Aluno nao encontrado.");
+            return "redirect:/aluno/processo/form";
         }
         
         if (processo.getAssunto() == null || processo.getAssunto().getId() == null) {
@@ -120,48 +119,32 @@ public class AlunoController {
         return "redirect:/aluno/processo/form";
     }
 
-    // --- MÉTODO ALTERADO PARA SIMULAÇÃO DE ACESSO ---
     @GetMapping("/processo/list")
     @Transactional(readOnly = true)
     public String listarProcessos(
             Model model,
-            @RequestParam(required = false) Long alunoId, // Parâmetro para simular login
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long assuntoId,
             @RequestParam(required = false, defaultValue = "desc") String ordenacao) {
-        
-        // 1. Buscar todos os alunos para o dropdown de "Trocar Usuário"
-        List<Aluno> todosAlunos = alunoService.findAll();
-        
-        // 2. Definir o Aluno "Logado"
-        Aluno aluno = null;
-        if (alunoId != null) {
-            aluno = alunoService.findById(alunoId);
-        }
-        
-        // Fallback: Se não veio ID, pega o primeiro da lista
-        if (aluno == null && !todosAlunos.isEmpty()) {
-            aluno = todosAlunos.get(0);
-        }
-        
+
+        Aluno aluno = alunoService.findByMatricula(userDetails.getUsername());
+
         java.util.List<Processo> processos = new java.util.ArrayList<>();
-        
+
         if (aluno != null) {
-            // Filtros
             StatusProcesso statusEnum = null;
             if (status != null && !status.isEmpty()) {
                 try { statusEnum = StatusProcesso.valueOf(status); } catch (Exception e) {}
             }
-            
+
             Assunto assunto = null;
             if (assuntoId != null) {
                 assunto = assuntoService.findById(assuntoId);
             }
-            
-            // Buscar processos
+
             processos = processoService.findByInteressadoWithFilters(aluno, statusEnum, assunto, ordenacao);
-            
-            // Carregar documentos (Lazy loading fix)
+
             for (Processo p : processos) {
                 try {
                     p.setDocumentos(new java.util.HashSet<>(documentoService.findByProcesso(p)));
@@ -169,25 +152,20 @@ public class AlunoController {
                 } catch (Exception e) {}
             }
         }
-        
-        // 3. Adicionar atributos ao model
+
         model.addAttribute("processos", processos);
-        model.addAttribute("aluno", aluno); // Aluno atual (simulado)
-        model.addAttribute("todosAlunos", todosAlunos); // Lista para o dropdown
-        
+        model.addAttribute("aluno", aluno);
         model.addAttribute("assuntos", assuntoService.findAll());
         model.addAttribute("statusList", StatusProcesso.values());
-        
-        // Manter filtros
+
         model.addAttribute("statusSelecionado", status);
         model.addAttribute("assuntoSelecionado", assuntoId);
         model.addAttribute("ordenacaoSelecionada", ordenacao);
-        model.addAttribute("alunoIdSelecionado", aluno != null ? aluno.getId() : null);
-        
+
         if (aluno == null) {
-            model.addAttribute("mensagem", "Nenhum aluno cadastrado no sistema.");
+            model.addAttribute("mensagem", "Aluno nao encontrado.");
         }
-        
+
         return "aluno/processo/list";
     }
     

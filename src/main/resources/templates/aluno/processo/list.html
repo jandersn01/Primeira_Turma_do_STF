@@ -21,40 +21,21 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
 
-                <!-- === BLOCO DE SIMULAÇÃO DE LOGIN (ALUNO) === -->
+                <!-- Info do Aluno Logado -->
                 <div th:if="${aluno != null}" class="card mb-4 border-info bg-light">
-                    <div class="card-body py-2 d-flex align-items-center justify-content-between">
+                    <div class="card-body py-2 d-flex align-items-center">
                         <div>
-                            <i class="bi bi-person-badge text-info"></i> 
-                            <strong>Aluno Logado:</strong> 
+                            <i class="bi bi-person-badge text-info"></i>
+                            <strong>Aluno:</strong>
                             <span th:text="${aluno.nome}" class="fw-bold">Nome</span>
                             <span class="text-muted small" th:text="'(Mat: ' + ${aluno.matricula} + ')'"></span>
                         </div>
-                        
-                        <!-- Formulário de Troca -->
-                        <form th:action="@{/aluno/processo/list}" method="get" class="d-flex align-items-center gap-2 ms-3 flex-grow-1">
-                            <label for="trocaAluno" class="col-form-label col-form-label-sm fw-bold text-info text-nowrap">Simular Acesso:</label>
-                            <select name="alunoId" id="trocaAluno" class="form-select form-select-sm" onchange="this.form.submit()">
-                                <option th:each="a : ${todosAlunos}" 
-                                        th:value="${a.id}" 
-                                        th:text="${a.nome + ' (Mat: ' + a.matricula + ')'}"
-                                        th:selected="${a.id == aluno.id}">
-                                </option>
-                            </select>
-                            
-                            <!-- Manter filtros ao trocar -->
-                            <input type="hidden" name="status" th:value="${statusSelecionado}" th:if="${statusSelecionado}" />
-                            <input type="hidden" name="ordenacao" th:value="${ordenacaoSelecionada}" />
-                        </form>
                     </div>
                 </div>
-                <!-- =========================================== -->
 
                 <!-- Filtros de Processos -->
                 <div th:if="${aluno != null}" class="mb-3">
                     <form method="get" th:action="@{/aluno/processo/list}" class="row g-2 align-items-end">
-                        <input type="hidden" name="alunoId" th:value="${aluno.id}" />
-                        
                         <div class="col-md-3">
                             <label class="form-label small">Status</label>
                             <select name="status" class="form-select form-select-sm">
