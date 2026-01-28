@@ -19,4 +19,11 @@ public enum TipoDecisao {
     public String getDescricao() {
         return descricao;
     }
+
+    /**
+     * Retorna a decisão oposta (DEFERIMENTO ↔ INDEFERIMENTO)
+     */
+    public TipoDecisao inverter() {
+        return this == DEFERIMENTO ? INDEFERIMENTO : DEFERIMENTO;
+    }
 }

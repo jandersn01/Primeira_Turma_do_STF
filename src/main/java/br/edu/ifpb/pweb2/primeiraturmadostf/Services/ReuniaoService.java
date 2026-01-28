@@ -1,5 +1,6 @@
 package br.edu.ifpb.pweb2.primeiraturmadostf.services;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -263,5 +264,155 @@ public class ReuniaoService {
     public Page<Reuniao> listarReunioesDoProfessorPaginadas(Long professorId, StatusReuniao status, Pageable pageable) {
         // Utiliza a query que já existe no seu repositório ajustada para paginação
         return reuniaoRepository.findByMembroIdAndStatus(professorId, status, pageable);
+    }
+
+    /**
+     * Apregoa um processo para julgamento.
+     * Muda o status do processo de EM_PAUTA para EM_JULGAMENTO.
+     *
+     * @param reuniaoId ID da reunião
+     * @param processoId ID do processo a ser apregoado
+     * @throws IllegalArgumentException se reunião ou processo não encontrados
+     * @throws IllegalStateException se reunião não está EM_ANDAMENTO,
+     *         processo não está EM_PAUTA ou já existe outro processo em julgamento
+     */
+    @Transactional
+    public void apregoarProcesso(Long reuniaoId, Long processoId) {
+        Reuniao reuniao = findById(reuniaoId);
+        if (reuniao == null) {
+            throw new IllegalArgumentException("Reunião não encontrada");
+        }
+
+        if (reuniao.getStatus() != StatusReuniao.EM_ANDAMENTO) {
+            throw new IllegalStateException("A reunião não está em andamento");
+        }
+
+        Processo processo = processoRepository.findById(processoId)
+                .orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
+
+        if (!reuniao.getProcessos().contains(processo)) {
+            throw new IllegalStateException("Processo não pertence à pauta desta reunião");
+        }
+
+        if (processo.getStatus() != StatusProcesso.EM_PAUTA) {
+            throw new IllegalStateException("Apenas processos com status EM_PAUTA podem ser apregoados. Status atual: " + processo.getStatus().getDescricao());
+        }
+
+        // Verifica se já existe outro processo em julgamento nesta reunião
+        boolean existeOutroEmJulgamento = reuniao.getProcessos().stream()
+                .anyMatch(p -> p.getStatus() == StatusProcesso.EM_JULGAMENTO && !p.getId().equals(processoId));
+
+        if (existeOutroEmJulgamento) {
+            throw new IllegalStateException("Já existe outro processo sendo julgado. Conclua o julgamento atual antes de apregoar outro processo.");
+        }
+
+        processo.setStatus(StatusProcesso.EM_JULGAMENTO);
+        processoRepository.save(processo);
+    }
+
+    /**
+     * Conclui o julgamento de um processo, calculando o resultado automaticamente.
+     *
+     * Lógica de cálculo:
+     * - Conta votos COM_RELATOR vs DIVERGENTE (ignora AUSENTE)
+     * - Se votos COM_RELATOR >= votos DIVERGENTE → resultado = parecer do relator
+     * - Caso contrário → resultado = inverso do parecer do relator
+     *
+     * @param reuniaoId ID da reunião
+     * @param processoId ID do processo
+     * @param votos Mapa de votos (professorId -> tipoVoto)
+     * @return Resultado do julgamento (DEFERIMENTO ou INDEFERIMENTO)
+     * @throws IllegalArgumentException se reunião ou processo não encontrados
+     * @throws IllegalStateException se processo não está EM_JULGAMENTO ou não tem parecer do relator
+     */
+    @Transactional
+    public br.edu.ifpb.pweb2.primeiraturmadostf.model.TipoDecisao concluirJulgamento(Long reuniaoId, Long processoId, Map<Long, String> votos) {
+        Reuniao reuniao = findById(reuniaoId);
+        if (reuniao == null) {
+            throw new IllegalArgumentException("Reunião não encontrada");
+        }
+
+        if (reuniao.getStatus() != StatusReuniao.EM_ANDAMENTO) {
+            throw new IllegalStateException("A reunião não está em andamento");
+        }
+
+        Processo processo = processoRepository.findById(processoId)
+                .orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
+
+        if (processo.getStatus() != StatusProcesso.EM_JULGAMENTO) {
+            throw new IllegalStateException("Processo não está em julgamento. Status atual: " + processo.getStatus().getDescricao());
+        }
+
+        if (processo.getDecisaoRelator() == null) {
+            throw new IllegalStateException("O processo não possui parecer do relator. Não é possível concluir o julgamento.");
+        }
+
+        // Remove votos anteriores deste processo nesta reunião
+        reuniao.getVotos().removeIf(v -> v.getProcesso().getId().equals(processoId));
+
+        // Registra os novos votos e conta
+        int votosComRelator = 0;
+        int votosDivergentes = 0;
+
+        for (Map.Entry<Long, String> entry : votos.entrySet()) {
+            Long professorId = entry.getKey();
+            String tipoVotoStr = entry.getValue();
+
+            Professor professor = professorRepository.findById(professorId)
+                    .orElseThrow(() -> new IllegalArgumentException("Professor não encontrado: " + professorId));
+
+            Voto voto;
+            if ("AUSENTE".equals(tipoVotoStr)) {
+                voto = new Voto(professor, processo, reuniao);
+                // Ausente não conta para o cálculo
+            } else {
+                TipoVoto tipoVoto = TipoVoto.valueOf(tipoVotoStr);
+                voto = new Voto(professor, tipoVoto, processo, reuniao);
+
+                if (tipoVoto == TipoVoto.COM_RELATOR) {
+                    votosComRelator++;
+                } else if (tipoVoto == TipoVoto.DIVERGENTE) {
+                    votosDivergentes++;
+                }
+            }
+
+            reuniao.getVotos().add(voto);
+        }
+
+        // Calcula o resultado: maioria simples
+        br.edu.ifpb.pweb2.primeiraturmadostf.model.TipoDecisao resultado;
+        if (votosComRelator >= votosDivergentes) {
+            // Maioria votou com o relator → resultado = parecer do relator
+            resultado = processo.getDecisaoRelator();
+        } else {
+            // Maioria votou divergente → resultado = inverso do parecer
+            resultado = processo.getDecisaoRelator().inverter();
+        }
+
+        // Atualiza o processo
+        processo.setResultadoJulgamento(resultado);
+        processo.setDataJulgamento(LocalDate.now());
+        processo.setStatus(StatusProcesso.JULGADO);
+        processoRepository.save(processo);
+
+        reuniaoRepository.save(reuniao);
+
+        return resultado;
+    }
+
+    /**
+     * Verifica se existe um processo em julgamento na reunião.
+     */
+    @Transactional(readOnly = true)
+    public Processo getProcessoEmJulgamento(Long reuniaoId) {
+        Reuniao reuniao = findById(reuniaoId);
+        if (reuniao == null) {
+            return null;
+        }
+
+        return reuniao.getProcessos().stream()
+                .filter(p -> p.getStatus() == StatusProcesso.EM_JULGAMENTO)
+                .findFirst()
+                .orElse(null);
     }
 }

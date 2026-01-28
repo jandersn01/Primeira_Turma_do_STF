@@ -21,6 +21,8 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.model.Processo;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Reuniao;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusReuniao;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusProcesso;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.TipoDecisao;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Voto;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ColegiadoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProcessoService;
@@ -252,6 +254,28 @@ public class ReuniaoController {
         return "reuniao/conduzir";
     }
 
+    /**
+     * Apregoa um processo para julgamento.
+     * Muda o status do processo de EM_PAUTA para EM_JULGAMENTO.
+     */
+    @PostMapping("/{reuniaoId}/processo/{processoId}/apregoar")
+    public String apregoarProcesso(
+            @PathVariable Long reuniaoId,
+            @PathVariable Long processoId,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            reuniaoService.apregoarProcesso(reuniaoId, processoId);
+            redirectAttributes.addFlashAttribute("mensagem", "Processo apregoado para julgamento!");
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("erro", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", "Erro ao apregoar processo: " + e.getMessage());
+        }
+
+        return "redirect:/reunioes/" + reuniaoId + "/conduzir?processoId=" + processoId;
+    }
+
     @PostMapping("/{reuniaoId}/votar")
     public String registrarVotos(
             @PathVariable Long reuniaoId,
@@ -274,12 +298,49 @@ public class ReuniaoController {
             }
 
             if ("retirar".equals(acao)) {
+                // Só pode retirar se não estiver JULGADO
+                if (processo.getStatus() == StatusProcesso.JULGADO) {
+                    redirectAttributes.addFlashAttribute("erro", "Não é possível retirar um processo já julgado.");
+                    return "redirect:/reunioes/" + reuniaoId + "/conduzir?processoId=" + processoId;
+                }
                 reuniaoService.retirarProcessoDaPauta(reuniaoId, processoId);
                 redirectAttributes.addFlashAttribute("mensagem", "Processo retirado da pauta.");
                 return "redirect:/reunioes/" + reuniaoId + "/conduzir";
             }
 
-            // Coleta os votos do formulario
+            if ("concluir".equals(acao)) {
+                // Verifica se processo está em julgamento
+                if (processo.getStatus() != StatusProcesso.EM_JULGAMENTO) {
+                    redirectAttributes.addFlashAttribute("erro", "Processo precisa estar apregoado (em julgamento) para ser concluído.");
+                    return "redirect:/reunioes/" + reuniaoId + "/conduzir?processoId=" + processoId;
+                }
+
+                // Coleta os votos do formulário
+                Map<Long, String> votos = new HashMap<>();
+                for (Professor membro : reuniao.getColegiado().getMembros()) {
+                    String votoValue = request.getParameter("voto_" + membro.getId());
+                    if (votoValue != null && !votoValue.isEmpty()) {
+                        votos.put(membro.getId(), votoValue);
+                    }
+                }
+
+                // Verifica se todos os membros votaram
+                if (votos.size() < reuniao.getColegiado().getMembros().size()) {
+                    redirectAttributes.addFlashAttribute("erro", "Todos os membros devem votar antes de concluir o julgamento.");
+                    // Salva os votos parciais mesmo assim
+                    reuniaoService.registrarVotos(reuniaoId, processoId, votos);
+                    return "redirect:/reunioes/" + reuniaoId + "/conduzir?processoId=" + processoId;
+                }
+
+                // Conclui o julgamento e calcula o resultado
+                TipoDecisao resultado = reuniaoService.concluirJulgamento(reuniaoId, processoId, votos);
+                redirectAttributes.addFlashAttribute("mensagem",
+                    "Julgamento concluído! Resultado: " + resultado.getTitulo());
+
+                return "redirect:/reunioes/" + reuniaoId + "/conduzir";
+            }
+
+            // Ação padrão: apenas salvar votos (sem concluir)
             Map<Long, String> votos = new HashMap<>();
             for (Professor membro : reuniao.getColegiado().getMembros()) {
                 String votoValue = request.getParameter("voto_" + membro.getId());
@@ -292,7 +353,7 @@ public class ReuniaoController {
             redirectAttributes.addFlashAttribute("mensagem", "Votos registrados com sucesso!");
 
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("erro", "Erro ao registrar votos: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("erro", "Erro ao processar votos: " + e.getMessage());
         }
 
         return "redirect:/reunioes/" + reuniaoId + "/conduzir?processoId=" + processoId;
