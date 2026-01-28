@@ -6,22 +6,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <title layout:title-pattern="$CONTENT_TITLE - Collegialis">Collegialis</title>
-    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body class="bg-light">
 
+<body class="bg-light">
 
     <nav class="navbar navbar-dark fixed-top d-lg-none p-2 shadow navbar-custom">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#">
+            <a class="navbar-brand fw-bold" th:href="@{/}">
                 <i class="bi bi-mortarboard-fill"></i> Collegialis
             </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#sidebarMenu">
                 <span class="navbar-toggler-icon"></span>
             </button>
         </div>
@@ -29,26 +28,19 @@
 
     <div class="container-fluid">
         <div class="row">
-            
-            
-            <div class="col-lg-2 sidebar-desktop offcanvas-lg offcanvas-start sidebar-custom" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
+            <div class="col-lg-2 sidebar-desktop offcanvas-lg offcanvas-start sidebar-custom" tabindex="-1" id="sidebarMenu">
                 
-                <!-- Cabeçalho do Menu (Apenas Mobile) -->
                 <div class="offcanvas-header text-white border-bottom border-white-50">
-                    <h5 class="offcanvas-title" id="sidebarMenuLabel">Collegialis</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu" aria-label="Close"></button>
+                    <h5 class="offcanvas-title">Collegialis</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu"></button>
                 </div>
 
-                <!-- Corpo do Menu -->
                 <div class="offcanvas-body d-flex flex-column p-0 pt-lg-3">
-                    
-                    <!-- Logo Desktop -->
-                    <a href="/" class="d-none d-lg-flex align-items-center mb-4 text-white text-decoration-none px-3">
+                    <a th:href="@{/}" class="d-none d-lg-flex align-items-center mb-4 text-white text-decoration-none px-3">
                         <i class="bi bi-mortarboard-fill fs-4 me-2"></i>
                         <span class="fs-4 fw-bold">Collegialis</span>
                     </a>
-                    
-                    <!-- Lista de Links -->
+
                     <ul class="nav nav-pills flex-column mb-auto px-2">
 
                         <li class="nav-item">
@@ -64,16 +56,8 @@
                             </a>
                             <div class="collapse ps-3" id="submenuAluno">
                                 <ul class="nav flex-column">
-                                    <li class="nav-item">
-                                        <a class="sidebar-link" th:href="@{/aluno/processo/form}">
-                                            <i class="bi bi-plus-circle"></i> Novo Processo
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="sidebar-link" th:href="@{/aluno/processo/list}">
-                                            <i class="bi bi-list-ul"></i> Meus Processos
-                                        </a>
-                                    </li>
+                                    <li><a class="sidebar-link" th:href="@{/aluno/processo/form}"><i class="bi bi-plus-circle"></i> Novo Processo</a></li>
+                                    <li><a class="sidebar-link" th:href="@{/aluno/processo/list}"><i class="bi bi-list-ul"></i> Meus Processos</a></li>
                                 </ul>
                             </div>
                         </li>
@@ -156,27 +140,19 @@
                             </a>
                         </div>
                     </div>
-
                 </div>
             </div>
 
- 
             <main class="col-lg-10 ms-sm-auto px-md-4 main-wrapper bg-white shadow-sm">
-                
-                <!-- Área de Conteúdo Injetada -->
                 <div class="py-4 px-2" layout:fragment="conteudo">
                     <p>Carregando...</p>
                 </div>
-
-                <!-- Footer do Conteúdo -->
-                <footer class="mt-auto py-3 text-center border-top footer-custom">
-                    <small>© 2023 Collegialis - Sistema Acadêmico</small>
+                <footer class="mt-auto py-3 text-center border-top">
+                    <small>© 2025 Collegialis - Sistema Acadêmico</small>
                 </footer>
-
             </main>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
