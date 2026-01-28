@@ -2,10 +2,13 @@ package br.edu.ifpb.pweb2.primeiraturmadostf.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Colegiado;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Processo;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusProcesso;
@@ -18,6 +21,16 @@ public interface ProcessoRepository extends JpaRepository<Processo, Long>, JpaSp
     List<Processo> findByRelatorAndStatus(Professor relator, StatusProcesso status);
 
     List<Processo> findByColegiadoIdAndStatus(Long colegiadoId, StatusProcesso status);
-}
 
+    Page<Processo> findByColegiado(
+            Colegiado colegiado,
+            Pageable pageable
+    );
+
+    Page<Processo> findByColegiadoAndStatus(
+            Colegiado colegiado,
+            StatusProcesso status,
+            Pageable pageable
+    );
+}
 
