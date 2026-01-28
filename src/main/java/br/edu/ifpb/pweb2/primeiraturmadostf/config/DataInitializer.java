@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Usuario;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.enums.Role;
+import br.edu.ifpb.pweb2.primeiraturmadostf.repository.AlunoRepository;
+import br.edu.ifpb.pweb2.primeiraturmadostf.repository.ProfessorRepository;
 import br.edu.ifpb.pweb2.primeiraturmadostf.repository.UsuarioRepository;
 
 @Component
@@ -16,11 +18,18 @@ public class DataInitializer implements CommandLineRunner {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
+    AlunoRepository alunoRepository;
+
+    @Autowired
+    ProfessorRepository professorRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
         criarUsuarioAdminSeNaoExistir();
+        //criarUsuariosParaRegistrosExistentes();
     }
 
     private void criarUsuarioAdminSeNaoExistir() {
@@ -41,5 +50,38 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("Senha: admin123");
             System.out.println("===========================================");
         }
+    }
+
+    private void criarUsuariosParaRegistrosExistentes() {
+        // Criar usuários para todos os Alunos que não possuem login
+        alunoRepository.findAll().forEach(aluno -> {
+            if (usuarioRepository.findByMatricula(aluno.getMatricula()).isEmpty()) {
+                Usuario user = new Usuario();
+                user.setMatricula(aluno.getMatricula());
+                user.setSenha(passwordEncoder.encode("123")); // Senha padrão
+                user.setRole(Role.ROLE_ALUNO);
+                user.setAluno(aluno);
+                usuarioRepository.save(user);
+            }
+        });
+
+        // Criar usuários para todos os Professores
+        professorRepository.findAll().forEach(prof -> {
+            if (usuarioRepository.findByMatricula(prof.getMatricula()).isEmpty()) {
+                Usuario user = new Usuario();
+                user.setMatricula(prof.getMatricula());
+                user.setSenha(passwordEncoder.encode("123"));
+
+                // Lógica: se o prof for coordenador no banco, ganha ROLE_COORDENADOR
+                if (prof.getCoordenador()) {
+                    user.setRole(Role.ROLE_COORDENADOR);
+                } else {
+                    user.setRole(Role.ROLE_PROFESSOR);
+                }
+
+                user.setProfessor(prof);
+                usuarioRepository.save(user);
+            }
+        });
     }
 }

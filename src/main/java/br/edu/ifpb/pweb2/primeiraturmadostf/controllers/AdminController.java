@@ -85,7 +85,7 @@ public class AdminController {
             return "professor/form";
         }
         
-        professorservice.save(professor);
+        professorservice.salvarComUsuario(professor);
         redirect.addFlashAttribute("mensagem", "Professor salvo com sucesso");
         return "redirect:/admin/professor/list";
     }
@@ -151,7 +151,7 @@ public class AdminController {
             return "aluno/form";
         }
         
-        alunoService.save(aluno);
+        alunoService.salvarComUsuario(aluno);
         redirect.addFlashAttribute("mensagem", "Aluno cadastrado com sucesso!");
         return "redirect:/admin/aluno/list";
     }

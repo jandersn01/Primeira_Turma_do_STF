@@ -12,7 +12,6 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.model.enums.Role;
 import br.edu.ifpb.pweb2.primeiraturmadostf.repository.ProfessorRepository;
 import br.edu.ifpb.pweb2.primeiraturmadostf.repository.UsuarioRepository;
 
-
 @Service
 @Transactional
 public class ProfessorService {
@@ -28,7 +27,29 @@ public class ProfessorService {
         this.passwordEncoder = passwordEncoder;
     }
 
-     public List<Professor> findAll() {
+    @Transactional
+    public Professor salvarComUsuario(Professor professor) {
+        Professor profSalvo = repository.save(professor);
+
+        Usuario novoUsuario = new Usuario();
+        novoUsuario.setMatricula(profSalvo.getMatricula());
+        novoUsuario.setSenha(passwordEncoder.encode("123"));
+
+        // Lógica de Role Dinâmica
+        if (Boolean.TRUE.equals(profSalvo.getCoordenador())) {
+            novoUsuario.setRole(Role.ROLE_COORDENADOR);
+        } else {
+            novoUsuario.setRole(Role.ROLE_PROFESSOR);
+        }
+
+        novoUsuario.setProfessor(profSalvo);
+        novoUsuario.setAtivo(true);
+
+        usuarioRepository.save(novoUsuario);
+        return profSalvo;
+    }
+
+    public List<Professor> findAll() {
         return this.repository.findAll();
     }
 
@@ -111,7 +132,7 @@ public class ProfessorService {
     }
 
     public List<Professor> findAllById(List<Long> list) {
-       return repository.findAllById(list);
+        return repository.findAllById(list);
     }
 
     public boolean existsByMatricula(String matricula) {
