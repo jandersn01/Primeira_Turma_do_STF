@@ -28,8 +28,9 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        criarUsuarioAdminSeNaoExistir();
+        //criarUsuarioAdminSeNaoExistir();
         //criarUsuariosParaRegistrosExistentes();
+        //corrigirSenhasESincronizarUsuarios();
     }
 
     private void criarUsuarioAdminSeNaoExistir() {
@@ -50,6 +51,46 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("Senha: admin123");
             System.out.println("===========================================");
         }
+    }
+
+    private void corrigirSenhasESincronizarUsuarios() {
+        // Processa Professores
+        professorRepository.findAll().forEach(prof -> {
+            // Se a senha no banco não for BCrypt, criptografa
+            if (!prof.getSenha().startsWith("$2a$")) {
+                prof.setSenha(passwordEncoder.encode(prof.getSenha()));
+                professorRepository.save(prof);
+            }
+
+            // Garante que o usuário existe e tem a mesma senha
+            Usuario user = usuarioRepository.findByMatricula(prof.getMatricula())
+                    .orElse(new Usuario());
+            
+            user.setMatricula(prof.getMatricula());
+            user.setSenha(prof.getSenha());
+            user.setRole(prof.getCoordenador() ? Role.ROLE_COORDENADOR : Role.ROLE_PROFESSOR);
+            user.setProfessor(prof);
+            user.setAtivo(true);
+            usuarioRepository.save(user);
+        });
+
+        // Processa Alunos
+        alunoRepository.findAll().forEach(aluno -> {
+            if (!aluno.getSenha().startsWith("$2a$")) {
+                aluno.setSenha(passwordEncoder.encode(aluno.getSenha()));
+                alunoRepository.save(aluno);
+            }
+
+            Usuario user = usuarioRepository.findByMatricula(aluno.getMatricula())
+                    .orElse(new Usuario());
+            
+            user.setMatricula(aluno.getMatricula());
+            user.setSenha(aluno.getSenha());
+            user.setRole(Role.ROLE_ALUNO);
+            user.setAluno(aluno);
+            user.setAtivo(true);
+            usuarioRepository.save(user);
+        });
     }
 
     private void criarUsuariosParaRegistrosExistentes() {

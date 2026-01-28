@@ -29,24 +29,42 @@ public class ProfessorService {
 
     @Transactional
     public Professor salvarComUsuario(Professor professor) {
+        // Define senha padrão "123" se for novo, ou usa a do objeto
+        String senhaPlana = (professor.getSenha() == null || professor.getSenha().isEmpty()) ? "123" : professor.getSenha();
+        
+        // Criptografa para a tabela Professor
+        professor.setSenha(passwordEncoder.encode(senhaPlana));
         Professor profSalvo = repository.save(professor);
 
-        Usuario novoUsuario = new Usuario();
-        novoUsuario.setMatricula(profSalvo.getMatricula());
-        novoUsuario.setSenha(passwordEncoder.encode("123"));
+        // Sincroniza com a tabela Usuario (usada pelo Security)
+        Usuario usuario = usuarioRepository.findByMatricula(profSalvo.getMatricula())
+                .orElse(new Usuario());
+        
+        usuario.setMatricula(profSalvo.getMatricula());
+        usuario.setSenha(profSalvo.getSenha()); // Usa o mesmo hash já gerado
+        usuario.setRole(Boolean.TRUE.equals(profSalvo.getCoordenador()) ? Role.ROLE_COORDENADOR : Role.ROLE_PROFESSOR);
+        usuario.setProfessor(profSalvo);
+        usuario.setAtivo(true);
 
-        // Lógica de Role Dinâmica
-        if (Boolean.TRUE.equals(profSalvo.getCoordenador())) {
-            novoUsuario.setRole(Role.ROLE_COORDENADOR);
-        } else {
-            novoUsuario.setRole(Role.ROLE_PROFESSOR);
-        }
-
-        novoUsuario.setProfessor(profSalvo);
-        novoUsuario.setAtivo(true);
-
-        usuarioRepository.save(novoUsuario);
+        usuarioRepository.save(usuario);
         return profSalvo;
+    }
+
+    public Professor save(Professor professor) {
+        // Aplica a mesma lógica de criptografia no método save geral
+        if (professor.getSenha() != null && !professor.getSenha().startsWith("$2a$")) {
+            professor.setSenha(passwordEncoder.encode(professor.getSenha()));
+        }
+        Professor salvo = repository.save(professor);
+        
+        // Atualiza o usuário vinculado
+        usuarioRepository.findByMatricula(salvo.getMatricula()).ifPresent(u -> {
+            u.setSenha(salvo.getSenha());
+            u.setRole(salvo.getCoordenador() ? Role.ROLE_COORDENADOR : Role.ROLE_PROFESSOR);
+            usuarioRepository.save(u);
+        });
+        
+        return salvo;
     }
 
     public List<Professor> findAll() {
@@ -63,7 +81,7 @@ public class ProfessorService {
                 .orElse(null);
     }
 
-    public Professor save(Professor professor) {
+    /* public Professor save(Professor professor) {
         Professor existente = this.findByMatricula(professor.getMatricula());
         if (existente != null && !existente.getId().equals(professor.getId())) {
             return null;
@@ -99,7 +117,7 @@ public class ProfessorService {
         }
 
         return professorSalvo;
-    }
+    } */
 
     public boolean remove(Long id) {
         Professor professor = this.findById(id);

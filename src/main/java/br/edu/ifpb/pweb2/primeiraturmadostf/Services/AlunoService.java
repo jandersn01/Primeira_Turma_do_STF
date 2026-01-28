@@ -107,18 +107,21 @@ public class AlunoService {
 
     @Transactional
     public Aluno salvarComUsuario(Aluno aluno) {
-        // 1. Salva o aluno primeiro
+        String senhaPlana = (aluno.getSenha() == null || aluno.getSenha().isEmpty()) ? "123" : aluno.getSenha();
+
+        aluno.setSenha(passwordEncoder.encode(senhaPlana));
         Aluno alunoSalvo = alunoRepository.save(aluno);
 
-        // 2. Cria o Usuário de acesso para este aluno
-        Usuario novoUsuario = new Usuario();
-        novoUsuario.setMatricula(alunoSalvo.getMatricula());
-        novoUsuario.setSenha(passwordEncoder.encode("123")); // Senha padrão inicial
-        novoUsuario.setRole(Role.ROLE_ALUNO);
-        novoUsuario.setAluno(alunoSalvo);
-        novoUsuario.setAtivo(true);
+        Usuario usuario = usuarioRepository.findByMatricula(alunoSalvo.getMatricula())
+                .orElse(new Usuario());
 
-        usuarioRepository.save(novoUsuario);
+        usuario.setMatricula(alunoSalvo.getMatricula());
+        usuario.setSenha(alunoSalvo.getSenha());
+        usuario.setRole(Role.ROLE_ALUNO);
+        usuario.setAluno(alunoSalvo);
+        usuario.setAtivo(true);
+
+        usuarioRepository.save(usuario);
         return alunoSalvo;
     }
 
