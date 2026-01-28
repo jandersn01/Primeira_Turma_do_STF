@@ -9,11 +9,11 @@
 <body>
 
     <div layout:fragment="conteudo">
-        <div class="card mt-4">
+        <div class="card mt-4 shadow-sm">
 
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0"><i class="bi bi-calendar-week"></i> Reuniões</h4>
-                <a th:href="@{/reunioes/form}" class="btn btn-outline-light btn-sm fw-bold">
+                <a th:if="${isProfessorView == null}" th:href="@{/reunioes/form}" class="btn btn-outline-light btn-sm fw-bold">
                     <i class="bi bi-plus-lg"></i> Nova Reunião
                 </a>
             </div>
@@ -25,197 +25,96 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
 
-                <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill"></i> <span th:text="${erro}"></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-
-                <div class="card mb-4 border-info bg-light">
-                    <div class="card-body py-2 d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-person-badge text-info fs-4 me-2"></i>
-                            <div>
-                                <span class="small text-uppercase text-muted fw-bold d-block">Visão do Professor (REQ
-                                    6)</span>
-                                <span th:if="${professorLogado}" class="fw-bold text-dark"
-                                    th:text="${professorLogado.nome}"></span>
-                                <span th:unless="${professorLogado}" class="text-muted fst-italic">Nenhum professor
-                                    selecionado</span>
-                            </div>
-                        </div>
-
-                        <form th:action="@{/reunioes}" method="get" class="d-flex align-items-center gap-2">
-                            <input type="hidden" name="status" th:if="${statusSelecionado}"
-                                th:value="${statusSelecionado}" />
-
-                            <select name="professorId" class="form-select form-select-sm" style="width: 250px;"
-                                onchange="this.form.submit()">
-                                <option value="">-- Selecione para ver Minhas Reuniões --</option>
-                                <option th:each="p : ${professores}" th:value="${p.id}" th:text="${p.nome}"
-                                    th:selected="${professorIdSelecionado == p.id}">
-                                </option>
-                            </select>
-                            <a th:if="${professorIdSelecionado}" th:href="@{/reunioes}"
-                                class="btn btn-sm btn-outline-secondary" title="Sair da visão pessoal">
-                                <i class="bi bi-x-lg"></i>
-                            </a>
-                        </form>
+                <div th:if="${professorLogado}" class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4">
+                    <i class="bi bi-person-badge-fill fs-4 me-3"></i>
+                    <div>
+                        <span class="small text-uppercase fw-bold d-block" th:text="${isProfessorView != null ? 'Minhas Reuniões' : 'Visão Coordenador'}">Perfil</span>
+                        <span class="fw-bold" th:text="${professorLogado.nome}">Nome</span>
                     </div>
                 </div>
 
-                <div class="card bg-white mb-4 border shadow-sm">
+                <div class="card bg-light mb-4 border-0 shadow-sm">
                     <div class="card-body py-3">
                         <form method="get" th:action="@{/reunioes}" class="row g-3 align-items-end">
-
-                            <input type="hidden" name="professorId" th:if="${professorIdSelecionado}"
-                                th:value="${professorIdSelecionado}" />
-
-                            <div class="col-md-5" th:if="${professorIdSelecionado == null}">
-                                <label for="colegiadoId" class="form-label small fw-bold text-secondary">Filtrar por
-                                    Colegiado (REQ 4)</label>
-                                <select class="form-select" id="colegiadoId" name="colegiadoId">
-                                    <option th:each="c : ${colegiados}" th:value="${c.id}"
-                                        th:text="${c.curso.nome + ' - ' + c.portaria}"
-                                        th:selected="${colegiadoIdSelecionado == c.id}">
-                                        Colegiado
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="status" class="form-label small fw-bold text-secondary">Filtrar por
-                                    Status</label>
+                            <div class="col-md-9">
+                                <label for="status" class="form-label small fw-bold text-secondary">Filtrar por Status</label>
                                 <select class="form-select" id="status" name="status">
-                                    <option value="">Todas</option>
-                                    <option
-                                        th:each="s : ${T(br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusReuniao).values()}"
-                                        th:value="${s}" th:text="${s.descricao}"
-                                        th:selected="${statusSelecionado != null and statusSelecionado == s}">
-                                        Status
+                                    <option value="">Todas as Reuniões</option>
+                                    <option th:each="s : ${T(br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusReuniao).values()}"
+                                            th:value="${s.name()}" 
+                                            th:text="${s.descricao}"
+                                            th:selected="${statusSelecionado != null and statusSelecionado.name() == s.name()}">
                                     </option>
                                 </select>
                             </div>
 
-                            <div class="col-md-3 d-flex gap-2">
-                                <button type="submit" class="btn btn-primary w-100">
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary w-100 fw-bold">
                                     <i class="bi bi-funnel"></i> Filtrar
                                 </button>
-
-                                <a th:if="${statusSelecionado != null}"
-                                    th:href="@{/reunioes(professorId=${professorIdSelecionado}, colegiadoId=${colegiadoIdSelecionado})}"
-                                    class="btn btn-outline-secondary">
-                                    <i class="bi bi-x-lg"></i>
-                                </a>
                             </div>
                         </form>
                     </div>
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover align-middle">
+                    <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
                                 <th>Data</th>
-                                <th>Colegiado</th>
+                                <th>Colegiado / Curso</th>
                                 <th>Status</th>
-                                <th class="text-center">Pauta</th>
+                                <th class="text-center">Itens em Pauta</th>
                                 <th class="text-end pe-3">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:if="${#lists.isEmpty(reunioes)}">
-                                <td colspan="5" class="text-center text-muted py-5">
-                                    <div class="d-flex flex-column align-items-center">
-                                        <i class="bi bi-calendar-x display-4 mb-2 opacity-50"></i>
-                                        <span>Nenhuma reunião encontrada.</span>
-                                        <span th:if="${professorIdSelecionado}" class="small text-muted mt-2">Você não é
-                                            membro de colegiados com reuniões agendadas.</span>
+                            <tr th:each="r : ${reunioes}">
+                                <td class="fw-bold" th:text="${#temporals.format(r.dataReuniao, 'dd/MM/yyyy')}"></td>
+                                <td>
+                                    <span class="fw-bold text-dark" th:text="${r.colegiado?.curso?.nome}">Curso</span><br>
+                                    <small class="text-muted" th:text="${r.colegiado?.portaria}"></small>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill" 
+                                          th:classappend="${r.status.name() == 'PROGRAMADA' ? 'bg-primary' : (r.status.name() == 'EM_ANDAMENTO' ? 'bg-warning text-dark' : 'bg-secondary')}"
+                                          th:text="${r.status.descricao}"></span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border" 
+                                          th:text="${(r.processos != null ? r.processos.size() : 0) + ' processo(s)'}"></span>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-info" 
+                                                th:onclick="|carregarDetalhes(${r.id})|" title="Ver Detalhes">
+                                            <i class="bi bi-eye-fill"></i> Detalhes
+                                        </button>
+
+                                        <th:block th:if="${isProfessorView == null}">
+                                            <form th:if="${r.status.name() == 'PROGRAMADA'}" th:action="@{/reunioes/{id}/iniciar(id=${r.id})}" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-success" title="Iniciar Sessão">
+                                                    <i class="bi bi-play-fill"></i>
+                                                </button>
+                                            </form>
+                                            
+                                            <a th:if="${r.status.name() == 'EM_ANDAMENTO'}" th:href="@{/reunioes/{id}/conduzir(id=${r.id})}" class="btn btn-warning" title="Conduzir">
+                                                <i class="bi bi-broadcast"></i>
+                                            </a>
+
+                                            <form th:action="@{/reunioes/delete/{id}(id=${r.id})}" method="post" onsubmit="return confirm('Deseja cancelar esta reunião?')">
+                                                <button type="submit" class="btn btn-outline-danger" title="Excluir">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </th:block>
                                     </div>
                                 </td>
                             </tr>
-
-                            <tr th:each="r : ${reunioes}">
-                                <td>
-                                    <div class="d-flex flex-column">
-                                        <span class="fw-bold fs-5"
-                                            th:text="${#temporals.format(r.dataReuniao, 'dd')}">01</span>
-                                        <span class="small text-uppercase text-muted"
-                                            th:text="${#temporals.format(r.dataReuniao, 'MMM/yyyy')}">JAN/2025</span>
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <div class="fw-bold text-dark" th:text="${r.colegiado?.curso?.nome}">Sistemas</div>
-                                    <small class="text-muted" th:text="${r.colegiado?.portaria}">Portaria 123</small>
-                                </td>
-
-                                <td>
-                                    <span class="badge rounded-pill"
-                                        th:classappend="${r.status.name() == 'PROGRAMADA' ? 'bg-primary' : 'bg-secondary'}"
-                                        th:text="${r.status.descricao}">
-                                        Programada
-                                    </span>
-                                </td>
-
-                                <td class="text-center">
-                                    <span class="badge bg-light text-dark border">
-                                        <i class="bi bi-file-earmark-text me-1"></i>
-                                        <span th:text="${r.processos != null ? r.processos.size() : 0} + ' Processos'">0
-                                            Processos</span>
-                                    </span>
-                                </td>
-
-                                <td class="text-end pe-3">
-                                    <div class="btn-group">
-
-                                        <form th:if="${r.status.name() == 'PROGRAMADA'}"
-                                              th:action="@{/reunioes/{id}/iniciar(id=${r.id})}"
-                                              method="post"
-                                              class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-success fw-bold">
-                                                <i class="bi bi-play-fill"></i> Iniciar
-                                            </button>
-                                        </form>
-
-                                        <a th:if="${r.status.name() == 'EM_ANDAMENTO'}"
-                                           th:href="@{/reunioes/{id}/conduzir(id=${r.id})}"
-                                           class="btn btn-sm btn-warning fw-bold">
-                                            <i class="bi bi-broadcast"></i> Conduzir
-                                        </a>
-
-                                        <button type="button"
-                                            class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split"
-                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                            <span class="visually-hidden">Opções</span>
-                                        </button>
-
-                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                            <li>
-                                                <button type="button" class="dropdown-item"
-                                                    th:onclick="'carregarDetalhes(' + ${r.id} + ')'">
-                                                    <i class="bi bi-eye me-2"></i> Ver Detalhes
-                                                </button>
-                                            </li>
-
-                                            <li th:if="${r.status.name() == 'ENCERRADA'}">
-                                                <a class="dropdown-item" th:href="@{/reunioes/{id}/ata(id=${r.id})}">
-                                                    <i class="bi bi-file-pdf me-2"></i> Visualizar Ata
-                                                </a>
-                                            </li>
-
-                                            <li th:if="${r.status.name() == 'PROGRAMADA'}">
-                                            <li>
-                                                <hr class="dropdown-divider">
-                                            </li>
-                                            <form th:action="@{/reunioes/delete/{id}(id=${r.id})}" method="post"
-                                                onsubmit="return confirm('Excluir esta reunião?');">
-                                                <button type="submit" class="dropdown-item text-danger">
-                                                    <i class="bi bi-trash me-2"></i> Cancelar Reunião
-                                                </button>
-                                            </form>
-                                            </li>
-                                        </ul>
-                                    </div>
+                            <tr th:if="${#lists.isEmpty(reunioes)}">
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-calendar-x fs-1 d-block mb-2 opacity-25"></i>
+                                    Nenhuma reunião encontrada.
                                 </td>
                             </tr>
                         </tbody>
@@ -234,25 +133,15 @@
         <script th:inline="javascript">
             function carregarDetalhes(id) {
                 const baseUrl = /*[[@{/reunioes/}]]*/ '/reunioes/';
-                const url = baseUrl + id + '/detalhes';
-
-                fetch(url)
-                    .then(response => {
-                        if (!response.ok) throw new Error('Erro ao carregar detalhes');
-                        return response.text();
-                    })
+                fetch(baseUrl + id + '/detalhes')
+                    .then(res => res.text())
                     .then(html => {
                         document.getElementById('conteudoModal').innerHTML = html;
-                        const modal = new bootstrap.Modal(document.getElementById('modalDetalhes'));
-                        modal.show();
+                        new bootstrap.Modal(document.getElementById('modalDetalhes')).show();
                     })
-                    .catch(error => {
-                        console.error(error);
-                        alert('Erro ao carregar detalhes: ' + error.message);
-                    });
+                    .catch(() => alert('Erro ao carregar detalhes da reunião.'));
             }
         </script>
-
     </div>
 </body>
 

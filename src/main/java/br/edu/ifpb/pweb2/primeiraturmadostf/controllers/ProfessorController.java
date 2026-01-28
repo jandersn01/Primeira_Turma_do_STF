@@ -12,15 +12,26 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Processo;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Reuniao;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusReuniao;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProcessoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProfessorService;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import br.edu.ifpb.pweb2.primeiraturmadostf.services.ColegiadoService;
+import br.edu.ifpb.pweb2.primeiraturmadostf.services.ReuniaoService;
+
 @Controller
 @RequestMapping("/professor")
 public class ProfessorController {
+
+    @Autowired
+    private ColegiadoService colegiadoService;
+
+    @Autowired
+    private ReuniaoService reuniaoService;
 
     @Autowired
     private ProcessoService processoService;
@@ -76,4 +87,5 @@ public class ProfessorController {
 
         return "professor/processo/list";
     }
+
 }

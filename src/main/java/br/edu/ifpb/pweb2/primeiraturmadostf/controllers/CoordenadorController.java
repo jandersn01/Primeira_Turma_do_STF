@@ -38,7 +38,10 @@ public class CoordenadorController {
     @Autowired
     private ProfessorService professorService;
 
-    private boolean isAdmin(UserDetails userDetails) {
+    /**
+     * Helper para verificar se o usuário logado possui a role ADMIN.
+     */
+    private boolean checkAdmin(UserDetails userDetails) {
         return userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(role -> role.equals("ROLE_ADMIN"));
@@ -54,43 +57,30 @@ public class CoordenadorController {
             @RequestParam(required = false) Long relatorId,
             @RequestParam(required = false, defaultValue = "desc") String ordenacao) {
 
-        // 1. Identifica as permissões
-        boolean isAdmin = userDetails.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
+        // 1. Identificação de permissões
+        boolean isAdmin = checkAdmin(userDetails);
         Professor coordenador = professorService.findByMatricula(userDetails.getUsername());
 
-        // 2. Validação de Segurança
+        // 2. Validação de Segurança: Acesso permitido apenas se for Admin ou se o Professor for Coordenador
         if (!isAdmin && (coordenador == null || !coordenador.getCoordenador())) {
             model.addAttribute("mensagem", "Acesso restrito a coordenadores.");
             return "coordenador/processo/list";
         }
 
-        // 3. Define quais colegiados o usuário pode gerenciar
+        // 3. Definição da lista de Colegiados gerenciáveis
         List<Colegiado> colegiados;
         if (isAdmin) {
-            colegiados = colegiadoService.findAll(); // Admin vê todos
-        boolean admin = isAdmin(userDetails);
-        Professor coordenador = professorService.findByMatricula(userDetails.getUsername());
-
-        if (!admin && (coordenador == null || !coordenador.getCoordenador())) {
-            model.addAttribute("mensagem", "Voce nao tem permissao de coordenador.");
-            return "coordenador/processo/list";
-        }
-
-        model.addAttribute("isAdmin", admin);
-
-        List<Colegiado> colegiados;
-        if (admin) {
-            colegiados = colegiadoService.findAll();
+            colegiados = colegiadoService.findAll(); // Admin vê tudo
         } else {
+            // Coordenador vê os colegiados aos quais pertence
             colegiados = new ArrayList<>(coordenador.getColegiados());
+            // Fallback caso a lista esteja vazia para não travar a tela
             if (colegiados.isEmpty()) {
                 colegiados = colegiadoService.findAll();
             }
         }
 
-        // 4. Seleciona o colegiado ativo para o filtro
+        // 4. Seleção do Colegiado para filtragem
         Colegiado colegiadoSelecionado = null;
         if (colegiadoId != null) {
             colegiadoSelecionado = colegiadoService.findById(colegiadoId);
@@ -99,16 +89,18 @@ public class CoordenadorController {
             colegiadoId = colegiadoSelecionado.getId();
         }
 
-        // 5. Busca os processos filtrados
+        // 5. Busca dos Processos com base nos filtros dinâmicos
         List<Processo> processos = new ArrayList<>();
         if (colegiadoSelecionado != null) {
             StatusProcesso statusEnum = null;
             if (status != null && !status.isEmpty()) {
                 try {
                     statusEnum = StatusProcesso.valueOf(status);
-                } catch (Exception e) {
+                } catch (IllegalArgumentException e) {
+                    // Status inválido ignorado
                 }
             }
+
             Aluno aluno = (alunoId != null) ? alunoService.findById(alunoId) : null;
             Professor relator = (relatorId != null) ? professorService.findById(relatorId) : null;
 
@@ -116,20 +108,19 @@ public class CoordenadorController {
                     colegiadoSelecionado, statusEnum, aluno, relator, ordenacao);
         }
 
-        // --- PARTE CRÍTICA: Carregar dados para os filtros do HTML ---
-        // Isso garante que os "Selects" da tela não fiquem vazios para o Admin
+        // 6. Atributos para a View (Filtros e Dados)
         model.addAttribute("processos", processos);
-        model.addAttribute("coordenador", coordenador); // Se for admin, vai null, e o HTML já trata isso
+        model.addAttribute("coordenador", coordenador);
         model.addAttribute("colegiados", colegiados);
         model.addAttribute("colegiadoSelecionado", colegiadoSelecionado);
         model.addAttribute("isAdmin", isAdmin);
 
-        // Listas globais para preencher os campos de busca/filtro
+        // Listas para os selects de filtro
         model.addAttribute("alunos", alunoService.findAll());
         model.addAttribute("professores", professorService.findAll());
         model.addAttribute("statusList", StatusProcesso.values());
 
-        // Preservação dos IDs selecionados para manter o estado da tela após o "Filtrar"
+        // Manutenção do estado dos filtros na tela (Preservação de IDs)
         model.addAttribute("colegiadoIdSelecionado", colegiadoId);
         model.addAttribute("statusSelecionado", status);
         model.addAttribute("alunoIdSelecionado", alunoId);
@@ -148,15 +139,15 @@ public class CoordenadorController {
 
         try {
             processoService.distribuirProcesso(processoId, relatorId);
-            attr.addFlashAttribute("mensagem", "Processo distribuido com sucesso!");
+            attr.addFlashAttribute("mensagem", "Processo distribuído com sucesso!");
         } catch (Exception e) {
             attr.addFlashAttribute("mensagemErro", "Erro ao distribuir: " + e.getMessage());
         }
 
+        // Redireciona mantendo o contexto do colegiado que estava sendo visualizado
         if (colegiadoId != null) {
             return "redirect:/coordenador/processo/list?colegiadoId=" + colegiadoId;
         }
         return "redirect:/coordenador/processo/list";
     }
-
 }

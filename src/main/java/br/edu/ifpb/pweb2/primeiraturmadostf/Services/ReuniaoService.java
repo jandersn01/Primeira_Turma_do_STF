@@ -60,6 +60,21 @@ public class ReuniaoService {
     }
 
     @Transactional(readOnly = true)
+    public List<Reuniao> listarReunioesPorMembro(Long professorId, StatusReuniao status) {
+        return reuniaoRepository.findByMembroIdAndStatus(professorId, status);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Reuniao> listarTodas(StatusReuniao status) {
+        if (status != null) {
+            return reuniaoRepository.findAll().stream()
+                    .filter(r -> r.getStatus() == status)
+                    .toList();
+        }
+        return reuniaoRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public List<Processo> listarProcessosDisponiveisParaReuniao(Long colegiadoId) {
         Colegiado colegiado = colegiadoRepository.findById(colegiadoId)
                 .orElseThrow(() -> new IllegalArgumentException("Colegiado não encontrado com id: " + colegiadoId));
@@ -76,20 +91,30 @@ public class ReuniaoService {
 
     @Transactional(readOnly = true)
     public List<Reuniao> listarReunioesDoColegiado(Long colegiadoId, StatusReuniao status) {
-        if (status != null) {
-            return reuniaoRepository.findByColegiadoIdAndStatus(colegiadoId, status);
-        } else {
+        // Se o status for nulo, busca todas as reuniões do colegiado sem filtrar por status
+        if (status == null) {
             return reuniaoRepository.findByColegiadoId(colegiadoId);
+        } else {
+            return reuniaoRepository.findByColegiadoIdAndStatus(colegiadoId, status);
         }
     }
 
     @Transactional(readOnly = true)
+    public List<Reuniao> listarTodasComFiltro(StatusReuniao status) {
+        if (status == null) {
+            return reuniaoRepository.findAll();
+        }
+        return reuniaoRepository.findAll().stream()
+                .filter(r -> r.getStatus() == status)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<Reuniao> listarReunioesDoProfessor(Long professorId, StatusReuniao status) {
-        if (status != null) {
-            return reuniaoRepository.findByColegiadoMembrosIdAndStatus(professorId, status);
-        } else {
+        if (status == null) {
             return reuniaoRepository.findByColegiadoMembrosId(professorId);
         }
+        return reuniaoRepository.findByColegiadoMembrosIdAndStatus(professorId, status);
     }
 
     public boolean existsSessaoEmAndamento() {
@@ -105,7 +130,7 @@ public class ReuniaoService {
 
         if (reuniao.getStatus() != StatusReuniao.PROGRAMADA) {
             throw new IllegalStateException("Apenas reunioes com status PROGRAMADA podem ser iniciadas. Status atual: "
-                + reuniao.getStatus().getDescricao());
+                    + reuniao.getStatus().getDescricao());
         }
 
         if (existsSessaoEmAndamento()) {
