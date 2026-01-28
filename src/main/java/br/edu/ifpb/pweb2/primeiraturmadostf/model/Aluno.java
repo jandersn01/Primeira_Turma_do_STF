@@ -52,7 +52,10 @@ public class Aluno {
     @JoinColumn(name = "id_curso", nullable = false)
     @NotNull(message = "O curso é obrigatório")
     private Curso curso;
-    
+
+    @OneToOne(mappedBy = "aluno")
+    private Usuario usuario;
+
     public Aluno() {}
     
     public Aluno(String matricula, String nome, String login, String senha) {
@@ -142,5 +145,13 @@ public class Aluno {
 
     public void setCurso(Curso curso) {
         this.curso = curso;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 }

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
-
+<html lang="pt-br"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,18 +42,16 @@
                     </a>
 
                     <ul class="nav nav-pills flex-column mb-auto px-2">
+
                         <li class="nav-item">
                             <a th:href="@{/home}" class="sidebar-link">
-                                <i class="bi bi-house-door"></i> Início
+                                <i class="bi bi-house-door"></i> Inicio
                             </a>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="sidebar-link dropdown-toggle text-white-50 small fw-bold text-uppercase px-3 mb-1"
-                               style="cursor: pointer;"
-                               data-bs-toggle="collapse" 
-                               data-bs-target="#submenuAluno" 
-                               aria-expanded="false">
+                        <!-- Menu Aluno - Apenas para ROLE_ALUNO -->
+                        <li class="nav-item" sec:authorize="hasRole('ALUNO')">
+                            <a class="sidebar-link dropdown-toggle text-white-50 small fw-bold text-uppercase px-3 mb-1" href="#submenuAluno" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="submenuAluno">
                                 <i class="bi bi-person"></i> Aluno
                             </a>
                             <div class="collapse ps-3" id="submenuAluno">
@@ -62,28 +62,26 @@
                             </div>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="sidebar-link dropdown-toggle text-white-50 small fw-bold text-uppercase px-3 mb-1"
-                               style="cursor: pointer;"
-                               data-bs-toggle="collapse" 
-                               data-bs-target="#submenuProfessor" 
-                               aria-expanded="false">
-                                <i class="bi bi-person-video3"></i> Professores
+                        <!-- Menu Professor - Para ROLE_PROFESSOR e ROLE_COORDENADOR -->
+                        <li class="nav-item" sec:authorize="hasAnyRole('PROFESSOR', 'COORDENADOR')">
+                            <a class="sidebar-link dropdown-toggle text-white-50 small fw-bold text-uppercase px-3 mb-1" href="#submenuProfessor" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="submenuProfessor">
+                                <i class="bi bi-person-badge"></i> Professor
                             </a>
                             <div class="collapse ps-3" id="submenuProfessor">
                                 <ul class="nav flex-column">
-                                    <li><a class="sidebar-link" th:href="@{/professor/processo/list}"><i class="bi bi-person-badge"></i> Relatoria</a></li>
+                                    <li class="nav-item">
+                                        <a class="sidebar-link" th:href="@{/professor/processo/list}">
+                                            <i class="bi bi-file-earmark-text"></i> Relatoria
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="sidebar-link dropdown-toggle text-white-50 small fw-bold text-uppercase px-3 mb-1"
-                               style="cursor: pointer;"
-                               data-bs-toggle="collapse" 
-                               data-bs-target="#submenuCoordenador" 
-                               aria-expanded="false">
-                                <i class="bi bi-briefcase"></i> Coordenação
+                        <!-- Menu Coordenador - Apenas para ROLE_COORDENADOR -->
+                        <li class="nav-item" sec:authorize="hasRole('COORDENADOR')">
+                            <a class="sidebar-link dropdown-toggle text-white-50 small fw-bold text-uppercase px-3 mb-1" href="#submenuCoordenador" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="submenuCoordenador">
+                                <i class="bi bi-person-workspace"></i> Coordenacao
                             </a>
                             <div class="collapse ps-3" id="submenuCoordenador">
                                 <ul class="nav flex-column">
@@ -93,13 +91,10 @@
                             </div>
                         </li>
 
-                        <li class="nav-item mt-3">
-                            <a class="sidebar-link dropdown-toggle text-white-50 small fw-bold text-uppercase px-3 mb-1"
-                               style="cursor: pointer;"
-                               data-bs-toggle="collapse" 
-                               data-bs-target="#submenuAdmin" 
-                               aria-expanded="false">
-                                <i class="bi bi-gear"></i> Administração
+                        <!-- Menu Admin - Apenas para ROLE_ADMIN -->
+                        <li class="nav-item mt-3" sec:authorize="hasRole('ADMIN')">
+                            <a class="sidebar-link dropdown-toggle text-white-50 small fw-bold text-uppercase px-3 mb-1" href="#submenuAdmin" data-bs-toggle="collapse" role="button" aria-expanded="false">
+                                <i class="bi bi-gear"></i> Administracao
                             </a>
                             <div class="collapse ps-3" id="submenuAdmin">
                                 <ul class="nav flex-column">
@@ -111,15 +106,30 @@
                                 </ul>
                             </div>
                         </li>
+
                     </ul>
 
+                    <!-- Rodape do Menu (User Info) -->
                     <div class="mt-auto p-3 border-top border-white-50">
-                        <div class="d-flex align-items-center text-white">
-                            <i class="bi bi-person-circle fs-3 me-2"></i>
-                            <div class="flex-grow-1">
-                                <div class="small fw-bold">Usuário Logado</div>
-                                <div class="small text-white-50" style="font-size: 0.75rem;">Sair</div>
+                        <!-- Logado -->
+                        <div sec:authorize="isAuthenticated()" class="d-flex align-items-center text-white">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-person-circle fs-3"></i>
                             </div>
+                            <div class="flex-grow-1 ms-2">
+                                <div class="small fw-bold" sec:authentication="name">Usuario</div>
+                                <form th:action="@{/logout}" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-link text-white-50 p-0" style="font-size: 0.75rem; text-decoration: none;">
+                                        <i class="bi bi-box-arrow-right"></i> Sair
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Nao Logado -->
+                        <div sec:authorize="!isAuthenticated()" class="text-center">
+                            <a th:href="@{/login}" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-box-arrow-in-right"></i> Entrar
+                            </a>
                         </div>
                     </div>
                 </div>
