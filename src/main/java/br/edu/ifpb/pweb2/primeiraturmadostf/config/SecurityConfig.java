@@ -50,7 +50,7 @@ public class SecurityConfig {
                 // Paginas publicas (login, logout, erros)
                 .requestMatchers("/login", "/logout", "/error", "/error/**").permitAll()
                 // Rotas de Reuniões (coordenador OU admin)
-                .requestMatchers("/reunioes/**").hasAnyRole("COORDENADOR", "ADMIN")
+                .requestMatchers("/reunioes/**").hasAnyRole("COORDENADOR","PROFESSOR", "ADMIN")
                 // Rotas do Aluno (Admin tambem tem acesso)
                 .requestMatchers("/aluno/**").hasAnyRole("ALUNO", "ADMIN")
                 // Rotas do Professor (Professor, Coordenador e Admin podem acessar)

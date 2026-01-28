@@ -69,39 +69,40 @@ public class ReuniaoController {
 
     @GetMapping
     public String listarReunioes(
-            Model model, 
-            @RequestParam(name = "status", required = false) StatusReuniao status,
-            @RequestParam(name = "colegiadoId", required = false) Long colegiadoId,
-            @RequestParam(name = "professorId", required = false) Long professorId) { // Simulação de Login
+            Model model,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(name = "status", required = false) String statusStr) {
 
-        List<Reuniao> reunioes = new ArrayList<>();
-        
-        // Carrega listas para os filtros
-        model.addAttribute("colegiados", colegiadoService.findAll());
-        model.addAttribute("professores", professorService.findAll());
+        // Converte a String do status para Enum com segurança para evitar erros de filtro
+        StatusReuniao status = null;
+        if (statusStr != null && !statusStr.isEmpty()) {
+            try {
+                status = StatusReuniao.valueOf(statusStr);
+            } catch (IllegalArgumentException e) {
+                status = null;
+            }
+        }
 
-        // Lógica de decisão da View (REQ 4 vs REQ 6)
-        if (professorId != null) {
-            // REQFUNC 6: Professor vê suas reuniões (onde é membro)
-            reunioes = reuniaoService.listarReunioesDoProfessor(professorId, status);
-            model.addAttribute("professorIdSelecionado", professorId);
-            // Busca o objeto professor para exibir o nome na tela
-            Professor professor = professorService.findById(professorId);
-            model.addAttribute("professorLogado", professor);
-        } else if (colegiadoId != null) {
-            // REQFUNC 4: Visão Geral de um Colegiado Específico
-            reunioes = reuniaoService.listarReunioesDoColegiado(colegiadoId, status);
-            model.addAttribute("colegiadoIdSelecionado", colegiadoId);
+        // Identifica o perfil do usuário logado
+        Professor professorLogado = professorService.findByMatricula(userDetails.getUsername());
+        boolean isCoordenadorOuAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_COORDENADOR") || a.getAuthority().equals("ROLE_ADMIN"));
+
+        List<Reuniao> reunioes;
+
+        // REQFUNC 4 e 6: Unificação da lógica de busca
+        if (isCoordenadorOuAdmin) {
+            // Coordenador/Admin vê tudo
+            reunioes = reuniaoService.listarTodasComFiltro(status);
         } else {
-            // Fallback: Se nada selecionado, carrega do colegiado 1 (comportamento antigo) ou lista vazia
-            // Vamos manter o comportamento padrão de listar do colegiado 1 para não quebrar fluxo do coordenador
-            Long defaultColegiadoId = 1L;
-            reunioes = reuniaoService.listarReunioesDoColegiado(defaultColegiadoId, status);
-            model.addAttribute("colegiadoIdSelecionado", defaultColegiadoId);
+            // Professor vê apenas reuniões onde é membro do colegiado
+            reunioes = reuniaoService.listarReunioesDoProfessor(professorLogado.getId(), status);
+            model.addAttribute("isProfessorView", true); // Flag para travar ações na View
         }
 
         model.addAttribute("reunioes", reunioes);
         model.addAttribute("statusSelecionado", status);
+        model.addAttribute("professorLogado", professorLogado);
 
         return "reuniao/list";
     }
@@ -184,7 +185,6 @@ public class ReuniaoController {
     }
 
     // ========== RF10: INICIAR SESSÃO ==========
-
     @PostMapping("/{id}/iniciar")
     public String iniciarSessao(
             @PathVariable Long id,

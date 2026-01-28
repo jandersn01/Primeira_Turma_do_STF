@@ -41,5 +41,8 @@ public interface ReuniaoRepository extends JpaRepository<Reuniao, Long> {
     @Query("SELECT COUNT(r) > 0 FROM Reuniao r WHERE r.status = :status")
     boolean existsByStatus(@Param("status") StatusReuniao status);
 
+    @Query("SELECT r FROM Reuniao r JOIN r.colegiado c JOIN c.membros m WHERE m.id = :professorId AND (:status IS NULL OR r.status = :status)")
+    List<Reuniao> findByMembroIdAndStatus(@Param("professorId") Long professorId, @Param("status") StatusReuniao status);
+
     boolean removeById(Long id);
 }
