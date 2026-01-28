@@ -21,9 +21,15 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProfessorService;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Reuniao;
+import br.edu.ifpb.pweb2.primeiraturmadostf.services.ReuniaoService;
+
 @Controller
 @RequestMapping("/coordenador")
 public class CoordenadorController {
+
+    @Autowired
+    private ReuniaoService reuniaoService;
 
     @Autowired
     private ProcessoService processoService;
@@ -71,14 +77,17 @@ public class CoordenadorController {
         if (colegiadoSelecionado != null) {
             StatusProcesso statusEnum = null;
             if (status != null && !status.isEmpty()) {
-                try { statusEnum = StatusProcesso.valueOf(status); } catch (Exception e) {}
+                try {
+                    statusEnum = StatusProcesso.valueOf(status);
+                } catch (Exception e) {
+                }
             }
 
             Aluno aluno = (alunoId != null) ? alunoService.findById(alunoId) : null;
             Professor relator = (relatorId != null) ? professorService.findById(relatorId) : null;
 
             processos = processoService.findByColegiadoWithFilters(
-                colegiadoSelecionado, statusEnum, aluno, relator, ordenacao);
+                    colegiadoSelecionado, statusEnum, aluno, relator, ordenacao);
         }
 
         model.addAttribute("processos", processos);
@@ -118,4 +127,6 @@ public class CoordenadorController {
         }
         return "redirect:/coordenador/processo/list";
     }
+
+   
 }

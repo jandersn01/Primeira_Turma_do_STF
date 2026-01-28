@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-br"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/base}">
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+
 <head>
     <title>Processos do Colegiado</title>
 </head>
+
 <body>
 
     <div layout:fragment="conteudo">
@@ -13,9 +13,9 @@
             <div class="card-header bg-primary text-white">
                 <h4 class="mb-0">Processos do Colegiado</h4>
             </div>
-            
+
             <div class="card-body">
-                
+
                 <!-- Mensagem quando não há coordenador cadastrado -->
                 <div th:if="${coordenador == null}" class="alert alert-warning">
                     <h5 class="alert-heading">
@@ -29,11 +29,11 @@
                         </a>
                     </p>
                 </div>
-                
+
                 <!-- Informações do Coordenador -->
                 <div th:if="${coordenador != null}" class="mb-3">
                     <p class="text-muted">
-                        <strong>Coordenador:</strong> 
+                        <strong>Coordenador:</strong>
                         <span th:text="${coordenador.nome}">Nome do Coordenador</span>
                     </p>
                 </div>
@@ -51,58 +51,52 @@
                                     <label for="colegiadoId" class="form-label">Colegiado</label>
                                     <select class="form-select" id="colegiadoId" name="colegiadoId">
                                         <option value="">Selecione um colegiado</option>
-                                        <option th:each="c : ${colegiados}" 
-                                                th:value="${c.id}" 
-                                                th:text="${c.curso?.nome + ' - ' + c.portaria}"
-                                                th:selected="${colegiadoIdSelecionado == c.id}">
+                                        <option th:each="c : ${colegiados}" th:value="${c.id}"
+                                            th:text="${c.curso?.nome + ' - ' + c.portaria}"
+                                            th:selected="${colegiadoIdSelecionado == c.id}">
                                             Colegiado
                                         </option>
                                     </select>
                                 </div>
-                                
+
                                 <!-- Filtro por Status -->
                                 <div class="col-md-3">
                                     <label for="status" class="form-label">Status</label>
                                     <select class="form-select" id="status" name="status">
                                         <option value="">Todos os status</option>
-                                        <option th:each="s : ${statusList}" 
-                                                th:value="${s.name()}" 
-                                                th:text="${s.descricao}"
-                                                th:selected="${statusSelecionado == s.name()}">
+                                        <option th:each="s : ${statusList}" th:value="${s.name()}"
+                                            th:text="${s.descricao}" th:selected="${statusSelecionado == s.name()}">
                                             Status
                                         </option>
                                     </select>
                                 </div>
-                                
+
                                 <!-- Filtro por Aluno Interessado -->
                                 <div class="col-md-3">
                                     <label for="alunoId" class="form-label">Aluno Interessado</label>
                                     <select class="form-select" id="alunoId" name="alunoId">
                                         <option value="">Todos os alunos</option>
-                                        <option th:each="a : ${alunos}" 
-                                                th:value="${a.id}" 
-                                                th:text="${a.nome + ' (' + a.matricula + ')'}"
-                                                th:selected="${alunoIdSelecionado == a.id}">
+                                        <option th:each="a : ${alunos}" th:value="${a.id}"
+                                            th:text="${a.nome + ' (' + a.matricula + ')'}"
+                                            th:selected="${alunoIdSelecionado == a.id}">
                                             Aluno
                                         </option>
                                     </select>
                                 </div>
-                                
+
                                 <!-- Filtro por Professor Relator -->
                                 <div class="col-md-3">
                                     <label for="relatorId" class="form-label">Professor Relator</label>
                                     <select class="form-select" id="relatorId" name="relatorId">
                                         <option value="">Todos os relatores</option>
-                                        <option th:each="p : ${professores}" 
-                                                th:value="${p.id}" 
-                                                th:text="${p.nome}"
-                                                th:selected="${relatorIdSelecionado == p.id}">
+                                        <option th:each="p : ${professores}" th:value="${p.id}" th:text="${p.nome}"
+                                            th:selected="${relatorIdSelecionado == p.id}">
                                             Professor
                                         </option>
                                     </select>
                                 </div>
                             </div>
-                            
+
                             <!-- Ordenação -->
                             <div class="row g-3 mt-2">
                                 <div class="col-md-3">
@@ -117,7 +111,7 @@
                                     </select>
                                 </div>
                             </div>
-                            
+
                             <div class="row mt-3">
                                 <div class="col-12">
                                     <button type="submit" class="btn btn-primary">
@@ -139,7 +133,8 @@
                 </div>
 
                 <!-- Mensagem quando não há processos (mas há colegiado) -->
-                <div th:if="${coordenador != null && colegiadoSelecionado != null && #lists.isEmpty(processos)}" class="alert alert-info">
+                <div th:if="${coordenador != null && colegiadoSelecionado != null && #lists.isEmpty(processos)}"
+                    class="alert alert-info">
                     <i class="bi bi-info-circle"></i>
                     Nenhum processo encontrado com os filtros selecionados.
                 </div>
@@ -176,77 +171,90 @@
                                     </td>
                                     <td>
                                         <span th:text="${processo.interessado.nome}">Nome</span><br>
-                                        <small class="text-muted" th:text="'(' + ${processo.interessado.matricula} + ')'">Matrícula</small>
+                                        <small class="text-muted"
+                                            th:text="'(' + ${processo.interessado.matricula} + ')'">Matrícula</small>
                                     </td>
                                     <td th:text="${processo.assunto.nome}">Assunto</td>
                                     <td>
-                                        <span class="badge bg-secondary" th:if="${processo.status.name() == 'CRIADO'}" th:text="${processo.status.descricao}"></span>
-                                        <span class="badge bg-info" th:if="${processo.status.name() == 'DISTRIBUIDO'}" th:text="${processo.status.descricao}"></span>
-                                        <span class="badge bg-warning" th:if="${processo.status.name() == 'EM_PAUTA'}" th:text="${processo.status.descricao}"></span>
-                                        <span class="badge bg-primary" th:if="${processo.status.name() == 'EM_JULGAMENTO'}" th:text="${processo.status.descricao}"></span>
-                                        <span class="badge bg-success" th:if="${processo.status.name() == 'JULGADO'}" th:text="${processo.status.descricao}"></span>
+                                        <span class="badge bg-secondary" th:if="${processo.status.name() == 'CRIADO'}"
+                                            th:text="${processo.status.descricao}"></span>
+                                        <span class="badge bg-info" th:if="${processo.status.name() == 'DISTRIBUIDO'}"
+                                            th:text="${processo.status.descricao}"></span>
+                                        <span class="badge bg-warning" th:if="${processo.status.name() == 'EM_PAUTA'}"
+                                            th:text="${processo.status.descricao}"></span>
+                                        <span class="badge bg-primary"
+                                            th:if="${processo.status.name() == 'EM_JULGAMENTO'}"
+                                            th:text="${processo.status.descricao}"></span>
+                                        <span class="badge bg-success" th:if="${processo.status.name() == 'JULGADO'}"
+                                            th:text="${processo.status.descricao}"></span>
                                     </td>
                                     <td th:text="${#temporals.format(processo.dataRecepcao, 'dd/MM/yyyy')}">Data</td>
                                     <td>
-                                        <span th:if="${processo.relator != null}" th:text="${processo.relator.nome}">Relator</span>
-                                        <span th:if="${processo.relator == null}" class="text-muted fst-italic">Aguardando</span>
+                                        <span th:if="${processo.relator != null}"
+                                            th:text="${processo.relator.nome}">Relator</span>
+                                        <span th:if="${processo.relator == null}"
+                                            class="text-muted fst-italic">Aguardando</span>
                                     </td>
 
                                     <td>
-                                        <button th:if="${processo.status.name() == 'CRIADO'}" 
-                                                type="button" 
-                                                class="btn btn-sm btn-outline-primary" 
-                                                data-bs-toggle="modal" 
-                                                th:data-bs-target="'#modalDistribuir' + ${processo.id}">
+                                        <button th:if="${processo.status.name() == 'CRIADO'}" type="button"
+                                            class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                            th:data-bs-target="'#modalDistribuir' + ${processo.id}">
                                             <i class="bi bi-person-check"></i> Distribuir
                                         </button>
 
-                                        <div th:if="${processo.status.name() == 'CRIADO'}" 
-                                            class="modal fade" 
-                                            th:id="'modalDistribuir' + ${processo.id}" 
-                                            tabindex="-1" 
-                                            aria-hidden="true">
+                                        <div th:if="${processo.status.name() == 'CRIADO'}" class="modal fade"
+                                            th:id="'modalDistribuir' + ${processo.id}" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog">
                                                 <div class="modal-content">
                                                     <form th:action="@{/coordenador/processo/distribuir}" method="post">
                                                         <div class="modal-header">
-                                                            <h5 class="modal-title">Distribuir Processo <span th:text="${processo.numero}"></span></h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            <h5 class="modal-title">Distribuir Processo <span
+                                                                    th:text="${processo.numero}"></span></h5>
+                                                            <button type="button" class="btn-close"
+                                                                data-bs-dismiss="modal" aria-label="Close"></button>
                                                         </div>
                                                         <div class="modal-body">
-                                                            <input type="hidden" name="processoId" th:value="${processo.id}" />
-                                                            <input type="hidden" name="colegiadoId" th:value="${colegiadoSelecionado.id}" />
-                                                            
+                                                            <input type="hidden" name="processoId"
+                                                                th:value="${processo.id}" />
+                                                            <input type="hidden" name="colegiadoId"
+                                                                th:value="${colegiadoSelecionado.id}" />
+
                                                             <div class="mb-3">
                                                                 <label class="form-label">Selecione o Relator:</label>
                                                                 <select name="relatorId" class="form-select" required>
-                                                                    <option value="">-- Selecione um Professor --</option>
-                                                                    <option th:each="membro : ${colegiadoSelecionado.membros}"
-                                                                            th:value="${membro.id}"
-                                                                            th:text="${membro.nome}">
+                                                                    <option value="">-- Selecione um Professor --
+                                                                    </option>
+                                                                    <option
+                                                                        th:each="membro : ${colegiadoSelecionado.membros}"
+                                                                        th:value="${membro.id}"
+                                                                        th:text="${membro.nome}">
                                                                     </option>
                                                                 </select>
-                                                                <div class="form-text">Listando apenas membros do colegiado atual.</div>
+                                                                <div class="form-text">Listando apenas membros do
+                                                                    colegiado atual.</div>
                                                             </div>
                                                         </div>
                                                         <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                            <button type="submit" class="btn btn-primary">Confirmar Distribuição</button>
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">Cancelar</button>
+                                                            <button type="submit" class="btn btn-primary">Confirmar
+                                                                Distribuição</button>
                                                         </div>
                                                     </form>
                                                 </div>
                                             </div>
                                         </div>
-                                        </td>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <!-- Informação sobre quantidade de processos -->
                     <div class="mt-3">
                         <p class="text-muted">
-                            <strong>Total de processos:</strong> 
+                            <strong>Total de processos:</strong>
                             <span th:text="${#lists.size(processos)}">0</span>
                         </p>
                     </div>
@@ -256,5 +264,5 @@
     </div>
 
 </body>
-</html>
 
+</html>
