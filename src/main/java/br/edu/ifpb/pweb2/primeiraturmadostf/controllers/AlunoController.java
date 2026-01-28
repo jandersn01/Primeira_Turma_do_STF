@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,6 +24,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Assunto;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Documento;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Processo;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusProcesso;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.AlunoService;
@@ -90,9 +93,15 @@ public class AlunoController {
     }
 
     @PostMapping("/processo/save")
-    public String postProcesso(@Valid @ModelAttribute("processo") Processo processo, BindingResult result, Model model, RedirectAttributes redirect,
+    public String postProcesso(
+            @Valid @ModelAttribute("processo") Processo processo,
+            BindingResult result,
+            Model model,
+            RedirectAttributes redirect,
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam(required = false) Long alunoId) {
+            @RequestParam(required = false) Long alunoId,
+            @RequestParam(name = "documento", required = false) MultipartFile documento,
+            @RequestParam(name = "descricaoDocumento", required = false) String descricaoDocumento) {
 
         boolean admin = isAdmin(userDetails);
         Aluno aluno = null;
@@ -107,7 +116,7 @@ public class AlunoController {
             redirect.addFlashAttribute("mensagem", "Erro: Aluno nao encontrado. Selecione um aluno.");
             return "redirect:/aluno/processo/form";
         }
-        
+
         if (processo.getAssunto() == null || processo.getAssunto().getId() == null) {
             result.rejectValue("assunto", "assunto.required", "Selecione um assunto válido");
         } else {
@@ -118,21 +127,36 @@ public class AlunoController {
                 processo.setAssunto(assunto);
             }
         }
-        
+
         if (result.hasErrors()) {
             model.addAttribute("assuntos", assuntoService.findAll());
             model.addAttribute("aluno", aluno);
             return "aluno/processo/form";
         }
-        
+
         processo.setInteressado(aluno);
         processo.setStatus(StatusProcesso.CRIADO);
-        
+
         try {
             Processo processoSalvo = processoService.save(processo);
-            
+
             if (processoSalvo != null) {
-                redirect.addFlashAttribute("mensagem", "Processo cadastrado com sucesso! Número: " + processoSalvo.getNumero());
+                String mensagemSucesso = "Processo cadastrado com sucesso! Número: " + processoSalvo.getNumero();
+
+                // Processa o upload do documento se foi enviado
+                if (documento != null && !documento.isEmpty()) {
+                    try {
+                        documentoService.uploadDocumento(documento, processoSalvo, descricaoDocumento);
+                        mensagemSucesso += " Documento anexado com sucesso.";
+                    } catch (IllegalArgumentException e) {
+                        // Erro de validação do arquivo (tipo ou tamanho)
+                        mensagemSucesso += " Porém, o documento não foi anexado: " + e.getMessage();
+                    } catch (Exception e) {
+                        mensagemSucesso += " Porém, houve erro ao anexar o documento: " + e.getMessage();
+                    }
+                }
+
+                redirect.addFlashAttribute("mensagem", mensagemSucesso);
             } else {
                 redirect.addFlashAttribute("mensagem", "Erro ao cadastrar o processo.");
             }
@@ -149,7 +173,7 @@ public class AlunoController {
             model.addAttribute("aluno", aluno);
             return "aluno/processo/form";
         }
-        
+
         return "redirect:/aluno/processo/form";
     }
 
@@ -191,10 +215,10 @@ public class AlunoController {
         }
 
         if (admin && aluno == null) {
-            // Admin sem filtro de aluno: mostrar todos os processos
-            processos = processoService.findAll();
+            // Admin sem filtro de aluno: mostrar todos os processos com filtros aplicados
+            processos = processoService.findWithFilters(null, statusEnum, assunto, ordenacao);
         } else if (aluno != null) {
-            processos = processoService.findByInteressadoWithFilters(aluno, statusEnum, assunto, ordenacao);
+            processos = processoService.findWithFilters(aluno, statusEnum, assunto, ordenacao);
         }
 
         for (Processo p : processos) {
@@ -221,29 +245,111 @@ public class AlunoController {
         return "aluno/processo/list";
     }
     
-    // ... (upload, download, delete mantidos iguais) ...
+    /**
+     * Upload de documento PDF para um processo.
+     * Apenas processos com status CRIADO aceitam upload.
+     * Arquivo deve ser PDF com no máximo 5MB.
+     */
     @PostMapping("/processo/{processoId}/documento/upload")
-    public String uploadDocumento(@PathVariable Long processoId, @RequestParam("arquivo") MultipartFile arquivo, @RequestParam(required = false) String descricao, RedirectAttributes redirect) {
-        // ... implementação mantida ...
+    public String uploadDocumento(
+            @PathVariable Long processoId,
+            @RequestParam("arquivo") MultipartFile arquivo,
+            @RequestParam(required = false) String descricao,
+            RedirectAttributes redirect) {
+
         try {
-             Processo processo = processoService.findById(processoId);
-             if(processo != null) documentoService.uploadDocumento(arquivo, processo, descricao);
-             redirect.addFlashAttribute("mensagem", "Documento enviado!");
-        } catch(Exception e) {
-             redirect.addFlashAttribute("mensagem", "Erro: " + e.getMessage());
+            Processo processo = processoService.findById(processoId);
+            if (processo == null) {
+                redirect.addFlashAttribute("mensagem", "Erro: Processo não encontrado.");
+                return "redirect:/aluno/processo/list";
+            }
+
+            // O DocumentoService valida o status do processo e o arquivo
+            documentoService.uploadDocumento(arquivo, processo, descricao);
+            redirect.addFlashAttribute("mensagem", "Documento enviado com sucesso!");
+
+        } catch (IllegalStateException e) {
+            // Erro de status do processo (não é CRIADO)
+            redirect.addFlashAttribute("mensagem", "Erro: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // Erro de validação do arquivo (tipo ou tamanho)
+            redirect.addFlashAttribute("mensagem", "Erro: " + e.getMessage());
+        } catch (Exception e) {
+            redirect.addFlashAttribute("mensagem", "Erro ao enviar documento: " + e.getMessage());
         }
+
         return "redirect:/aluno/processo/list";
     }
-    
+
+    /**
+     * Download de documento anexado a um processo.
+     */
     @GetMapping("/processo/{processoId}/documento/{documentoId}/download")
-    public ResponseEntity<Resource> downloadDocumento(@PathVariable Long processoId, @PathVariable Long documentoId) {
-        // ... implementação mantida ...
-        return ResponseEntity.notFound().build(); // Placeholder simplificado
+    public ResponseEntity<Resource> downloadDocumento(
+            @PathVariable Long processoId,
+            @PathVariable Long documentoId) {
+
+        try {
+            Processo processo = processoService.findById(processoId);
+            if (processo == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Documento documento = documentoService.findById(documentoId);
+            if (documento == null || !documento.getProcesso().getId().equals(processoId)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Resource resource = documentoService.carregarArquivoComoResource(documento);
+
+            String contentType = documento.getTipoMime();
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + documento.getNomeOriginal() + "\"")
+                    .body(resource);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
-    
+
+    /**
+     * Exclusão de documento de um processo.
+     * Apenas processos com status CRIADO permitem exclusão de documentos.
+     */
     @PostMapping("/processo/{processoId}/documento/{documentoId}/delete")
-    public String deletarDocumento(@PathVariable Long processoId, @PathVariable Long documentoId, RedirectAttributes redirect) {
-        // ... implementação mantida ...
+    public String deletarDocumento(
+            @PathVariable Long processoId,
+            @PathVariable Long documentoId,
+            RedirectAttributes redirect) {
+
+        try {
+            Processo processo = processoService.findById(processoId);
+            if (processo == null) {
+                redirect.addFlashAttribute("mensagem", "Erro: Processo não encontrado.");
+                return "redirect:/aluno/processo/list";
+            }
+
+            // O DocumentoService valida o status do processo
+            boolean removido = documentoService.removerDocumento(documentoId, processo);
+            if (removido) {
+                redirect.addFlashAttribute("mensagem", "Documento removido com sucesso!");
+            } else {
+                redirect.addFlashAttribute("mensagem", "Erro: Documento não encontrado.");
+            }
+
+        } catch (IllegalStateException e) {
+            // Erro de status do processo (não é CRIADO)
+            redirect.addFlashAttribute("mensagem", "Erro: " + e.getMessage());
+        } catch (Exception e) {
+            redirect.addFlashAttribute("mensagem", "Erro ao remover documento: " + e.getMessage());
+        }
+
         return "redirect:/aluno/processo/list";
     }
 }

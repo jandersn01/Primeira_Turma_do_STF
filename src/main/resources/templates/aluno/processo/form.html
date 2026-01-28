@@ -62,8 +62,8 @@
                     </p>
                 </div>
                 
-                <form th:action="@{/aluno/processo/save}" method="post" th:object="${processo}" th:if="${!#lists.isEmpty(assuntos)}">
-                    
+                <form th:action="@{/aluno/processo/save}" method="post" th:object="${processo}" th:if="${!#lists.isEmpty(assuntos)}" enctype="multipart/form-data">
+
                     <input type="hidden" th:field="*{id}" />
 
                     <div class="mb-3">
@@ -98,6 +98,18 @@
                             <span th:errors="*{textoRequerimento}">Erro no texto do requerimento</span>
                         </div>
                         <small class="form-text text-muted">Descreva sua solicitação de forma clara e objetiva (máximo 5000 caracteres)</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="documento" class="form-label">Documento de Apoio (opcional)</label>
+                        <input type="file" class="form-control" id="documento" name="documento" accept="application/pdf,.pdf">
+                        <small class="form-text text-muted">Anexe um documento PDF de apoio ao seu requerimento (máximo 5MB). Você também poderá anexar documentos após a criação do processo.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="descricaoDocumento" class="form-label">Descrição do Documento</label>
+                        <input type="text" class="form-control" id="descricaoDocumento" name="descricaoDocumento" placeholder="Ex: Histórico Escolar, Atestado Médico...">
+                        <small class="form-text text-muted">Descreva brevemente o documento anexado (opcional)</small>
                     </div>
 
                     <hr>

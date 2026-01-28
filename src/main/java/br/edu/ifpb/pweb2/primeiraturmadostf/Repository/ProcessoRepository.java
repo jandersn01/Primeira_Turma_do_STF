@@ -14,7 +14,7 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusProcesso;
 public interface ProcessoRepository extends JpaRepository<Processo, Long>, JpaSpecificationExecutor<Processo> {
 
     List<Processo> findByRelator(Professor relator);
-    
+
     List<Processo> findByRelatorAndStatus(Professor relator, StatusProcesso status);
 
     List<Processo> findByColegiadoIdAndStatus(Long colegiadoId, StatusProcesso status);
