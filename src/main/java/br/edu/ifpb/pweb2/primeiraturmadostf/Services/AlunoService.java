@@ -3,21 +3,29 @@ package br.edu.ifpb.pweb2.primeiraturmadostf.services;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Usuario;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.enums.Role;
 import br.edu.ifpb.pweb2.primeiraturmadostf.repository.AlunoRepository;
+import br.edu.ifpb.pweb2.primeiraturmadostf.repository.UsuarioRepository;
 
 @Service
 @Transactional
 public class AlunoService {
 
     private final AlunoRepository alunoRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AlunoService(AlunoRepository alunoRepository){
+    public AlunoService(AlunoRepository alunoRepository, UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
         this.alunoRepository = alunoRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
      public List<Aluno> findAll() {
@@ -38,19 +46,58 @@ public class AlunoService {
         Aluno existente = this.findByMatricula(aluno.getMatricula());
         if (existente != null && !existente.getId().equals(aluno.getId())) {
             return null;
-    }
-    return alunoRepository.save(aluno);
+        }
+
+        String senhaPlana = aluno.getSenha();
+        boolean isNovoAluno = (aluno.getId() == null);
+
+        // Salva o aluno primeiro
+        Aluno alunoSalvo = alunoRepository.save(aluno);
+
+        // Cria ou atualiza o usuário associado
+        if (isNovoAluno) {
+            Usuario usuario = new Usuario();
+            usuario.setMatricula(alunoSalvo.getMatricula());
+            usuario.setSenha(passwordEncoder.encode(senhaPlana));
+            usuario.setRole(Role.ROLE_ALUNO);
+            usuario.setAtivo(true);
+            usuario.setAluno(alunoSalvo);
+            usuarioRepository.save(usuario);
+        } else {
+            // Se está atualizando, verifica se a senha mudou (se não está já criptografada)
+            Usuario usuarioExistente = usuarioRepository.findByMatricula(alunoSalvo.getMatricula()).orElse(null);
+            if (usuarioExistente != null && senhaPlana != null && !senhaPlana.startsWith("$2a$")) {
+                usuarioExistente.setSenha(passwordEncoder.encode(senhaPlana));
+                usuarioRepository.save(usuarioExistente);
+            }
+        }
+
+        return alunoSalvo;
     }
 
     public boolean remove(Long id) {
         Aluno aluno = this.findById(id);
-        this.alunoRepository.delete(aluno);
+        if (aluno != null) {
+            // Remove o usuario associado primeiro
+            Usuario usuario = usuarioRepository.findByMatricula(aluno.getMatricula()).orElse(null);
+            if (usuario != null) {
+                usuarioRepository.delete(usuario);
+            }
+            this.alunoRepository.delete(aluno);
+        }
         return true;
     }
 
     public boolean removeByMatricula(String matricula) {
         Aluno aluno = this.findByMatricula(matricula);
-        this.alunoRepository.delete(aluno);
+        if (aluno != null) {
+            // Remove o usuário associado primeiro
+            Usuario usuario = usuarioRepository.findByMatricula(matricula).orElse(null);
+            if (usuario != null) {
+                usuarioRepository.delete(usuario);
+            }
+            this.alunoRepository.delete(aluno);
+        }
         return true;
     }
 

@@ -1,24 +1,103 @@
 <!DOCTYPE html>
-<html lang="en"
-    xmlns:th="http://www.thymeleaf.org"
-    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    layout:decorate="~{layout/base}">
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login - Collegialis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-light);
+        }
+        .login-card {
+            max-width: 420px;
+            width: 100%;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        .login-card .card-header {
+            padding: 2rem 1.5rem;
+            text-align: center;
+        }
+        .login-card .card-header i {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .login-card .card-body {
+            padding: 2rem 1.5rem;
+        }
+        .input-group-text {
+            background-color: var(--bg-secondary);
+            color: #ffffff;
+            border-color: var(--bg-secondary);
+        }
+        .form-control:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 0.2rem rgba(74, 111, 165, 0.25);
+        }
+    </style>
 </head>
 <body>
-    <div layout:fragment="conteudo">
-        <div class="card shadow-sm">
-            <div class="card-body text-center p-5">
-                <h1 class="display-4" style="color: var(--color-primary);">Bem-vindo ao Collegialis!</h1>
-                <p class="lead text-muted">Sistema de Controle de Processos Acadêmicos</p>
-                <hr class="my-4">
-                <p class="text-muted">Utilize o menu acima para navegar entre as funcionalidades.</p>
-                
-                <a class="btn btn-primary btn-lg" th:href="@{/home}" role="button">Começar</a>
+    <div class="login-container">
+        <div class="card login-card">
+            <div class="card-header">
+                <i class="bi bi-mortarboard-fill"></i>
+                <h4 class="mb-1">Collegialis</h4>
+                <small class="text-white-50">Sistema de Controle de Processos Academicos</small>
             </div>
+            <div class="card-body">
+                <!-- Mensagens de erro/sucesso -->
+                <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Matricula ou senha invalidos.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div th:if="${param.logout}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    Logout realizado com sucesso.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Formulario de Login -->
+                <form th:action="@{/login}" method="post">
+                    <div class="mb-3">
+                        <label for="matricula" class="form-label">Matricula</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                            <input type="text" class="form-control" id="matricula" name="matricula"
+                                   placeholder="Digite sua matricula" required autofocus>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="senha" class="form-label">Senha</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                            <input type="password" class="form-control" id="senha" name="senha"
+                                   placeholder="Digite sua senha" required>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+                <div class="text-center text-muted small">
+                    <p class="mb-0">IFPB - Instituto Federal da Paraiba</p>
+                    <p class="mb-0">Programacao para Web II</p>
+                </div>
+            </div>
+        </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
