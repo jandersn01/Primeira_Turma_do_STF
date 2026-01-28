@@ -19,23 +19,42 @@
                 </div>
 
                 <form th:action="@{/reunioes/save}" method="post" th:object="${reuniao}">
-                    
+
                     <input type="hidden" th:field="*{id}" />
 
                     <h5 class="text-secondary mb-3 border-bottom pb-2"><i class="bi bi-info-circle"></i> Dados da Sessão</h5>
-                    
+
                     <div class="row mb-4">
+                        <div class="col-md-5">
+                            <label for="colegiadoId" class="form-label fw-bold">Colegiado *</label>
+                            <select class="form-select" id="colegiadoId" name="colegiadoId" required
+                                    th:classappend="${erroColegiado} ? 'is-invalid'"
+                                    onchange="window.location.href='?colegiadoId=' + this.value">
+                                <option value="">Selecione um colegiado</option>
+                                <option th:each="c : ${colegiados}"
+                                        th:value="${c.id}"
+                                        th:text="${c.curso.nome + ' - ' + c.portaria}"
+                                        th:selected="${colegiadoIdSelecionado == c.id}">
+                                    Colegiado
+                                </option>
+                            </select>
+                            <div class="invalid-feedback" th:if="${erroColegiado}" th:text="${erroColegiado}"></div>
+                        </div>
                         <div class="col-md-4">
                             <label for="dataReuniao" class="form-label fw-bold">Data da Reunião *</label>
                             <input type="date" class="form-control" id="dataReuniao" th:field="*{dataReuniao}"
-                                   th:classappend="${#fields.hasErrors('dataReuniao')} ? 'is-invalid'" required/>
-                            <div class="invalid-feedback" th:if="${#fields.hasErrors('dataReuniao')}" th:errors="*{dataReuniao}"></div>
+                                   th:classappend="${erroData} ? 'is-invalid'" required/>
+                            <div class="invalid-feedback" th:if="${erroData}" th:text="${erroData}"></div>
                         </div>
                     </div>
 
                     <h5 class="text-secondary mb-3 border-bottom pb-2">
                         <i class="bi bi-collection"></i> Definição de Pauta
                     </h5>
+
+                    <div th:if="${erroProcessos}" class="alert alert-danger">
+                        <i class="bi bi-exclamation-circle"></i> <span th:text="${erroProcessos}"></span>
+                    </div>
 
                     <div th:if="${#lists.isEmpty(processosDisponiveis)}" class="alert alert-warning">
                         <h6 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Atenção</h6>

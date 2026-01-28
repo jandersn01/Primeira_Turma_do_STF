@@ -168,14 +168,23 @@
                                 <td class="text-end pe-3">
                                     <div class="btn-group">
 
-                                        <a th:if="${r.status.name() == 'PROGRAMADA'}"
-                                            th:href="@{/reunioes/{id}/iniciar(id=${r.id})}"
-                                            class="btn btn-sm btn-success fw-bold">
-                                            <i class="bi bi-play-fill"></i> Iniciar
+                                        <form th:if="${r.status.name() == 'PROGRAMADA'}"
+                                              th:action="@{/reunioes/{id}/iniciar(id=${r.id})}"
+                                              method="post"
+                                              class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-success fw-bold">
+                                                <i class="bi bi-play-fill"></i> Iniciar
+                                            </button>
+                                        </form>
+
+                                        <a th:if="${r.status.name() == 'EM_ANDAMENTO'}"
+                                           th:href="@{/reunioes/{id}/conduzir(id=${r.id})}"
+                                           class="btn btn-sm btn-warning fw-bold">
+                                            <i class="bi bi-broadcast"></i> Conduzir
                                         </a>
 
                                         <button type="button"
-                                            class="btn btn-sm btn-success dropdown-toggle dropdown-toggle-split"
+                                            class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split"
                                             data-bs-toggle="dropdown" aria-expanded="false">
                                             <span class="visually-hidden">Opções</span>
                                         </button>

@@ -3,6 +3,8 @@ package br.edu.ifpb.pweb2.primeiraturmadostf.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Colegiado;
@@ -11,23 +13,33 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusReuniao;
 
 @Repository
 public interface ReuniaoRepository extends JpaRepository<Reuniao, Long> {
-    
+
     List<Reuniao> findByColegiado(Colegiado colegiado);
 
-    // Busca todas as reuniões de um colegiado específico
     List<Reuniao> findByColegiadoId(Long colegiadoId);
-    
+
     Reuniao findReuniaoById(Long id);
 
-    // Busca reuniões de um colegiado filtrando pelo status
+    @Query("SELECT r FROM Reuniao r " +
+           "LEFT JOIN FETCH r.colegiado c " +
+           "LEFT JOIN FETCH c.membros " +
+           "LEFT JOIN FETCH r.processos p " +
+           "LEFT JOIN FETCH p.interessado " +
+           "LEFT JOIN FETCH p.assunto " +
+           "LEFT JOIN FETCH p.relator " +
+           "LEFT JOIN FETCH r.votos v " +
+           "LEFT JOIN FETCH v.professor " +
+           "WHERE r.id = :id")
+    Reuniao findReuniaoComDetalhesById(@Param("id") Long id);
+
     List<Reuniao> findByColegiadoIdAndStatus(Long colegiadoId, StatusReuniao status);
 
-    // Busca reuniões dos colegiados onde o professor é membro, filtrando por status
     List<Reuniao> findByColegiadoMembrosIdAndStatus(Long professorId, StatusReuniao status);
-    
+
     List<Reuniao> findByColegiadoMembrosId(Long professorId);
 
-    public boolean removeById(Long id);
-    
-}
+    @Query("SELECT COUNT(r) > 0 FROM Reuniao r WHERE r.status = :status")
+    boolean existsByStatus(@Param("status") StatusReuniao status);
 
+    boolean removeById(Long id);
+}

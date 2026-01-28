@@ -1,6 +1,7 @@
 package br.edu.ifpb.pweb2.primeiraturmadostf.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -21,15 +22,9 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProfessorService;
 import java.util.ArrayList;
 import java.util.List;
 
-import br.edu.ifpb.pweb2.primeiraturmadostf.model.Reuniao;
-import br.edu.ifpb.pweb2.primeiraturmadostf.services.ReuniaoService;
-
 @Controller
 @RequestMapping("/coordenador")
 public class CoordenadorController {
-
-    @Autowired
-    private ReuniaoService reuniaoService;
 
     @Autowired
     private ProcessoService processoService;
@@ -43,6 +38,12 @@ public class CoordenadorController {
     @Autowired
     private ProfessorService professorService;
 
+    private boolean isAdmin(UserDetails userDetails) {
+        return userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN"));
+    }
+
     @GetMapping("/processo/list")
     public String listarProcessosColegiado(
             Model model,
@@ -53,16 +54,24 @@ public class CoordenadorController {
             @RequestParam(required = false) Long relatorId,
             @RequestParam(required = false, defaultValue = "desc") String ordenacao) {
 
+        boolean admin = isAdmin(userDetails);
         Professor coordenador = professorService.findByMatricula(userDetails.getUsername());
 
-        if (coordenador == null || !coordenador.getCoordenador()) {
+        if (!admin && (coordenador == null || !coordenador.getCoordenador())) {
             model.addAttribute("mensagem", "Voce nao tem permissao de coordenador.");
             return "coordenador/processo/list";
         }
 
-        List<Colegiado> colegiados = new ArrayList<>(coordenador.getColegiados());
-        if (colegiados.isEmpty()) {
+        model.addAttribute("isAdmin", admin);
+
+        List<Colegiado> colegiados;
+        if (admin) {
             colegiados = colegiadoService.findAll();
+        } else {
+            colegiados = new ArrayList<>(coordenador.getColegiados());
+            if (colegiados.isEmpty()) {
+                colegiados = colegiadoService.findAll();
+            }
         }
 
         Colegiado colegiadoSelecionado = null;
@@ -127,6 +136,4 @@ public class CoordenadorController {
         }
         return "redirect:/coordenador/processo/list";
     }
-
-   
 }
