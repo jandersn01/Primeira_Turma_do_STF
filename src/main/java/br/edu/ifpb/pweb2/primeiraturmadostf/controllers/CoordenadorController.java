@@ -13,14 +13,11 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Colegiado;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Processo;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
-import br.edu.ifpb.pweb2.primeiraturmadostf.model.Reuniao;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusProcesso;
-import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusReuniao;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.AlunoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ColegiadoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProcessoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProfessorService;
-import br.edu.ifpb.pweb2.primeiraturmadostf.services.ReuniaoService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,9 +37,6 @@ public class CoordenadorController {
 
     @Autowired
     private ProfessorService professorService;
-
-    @Autowired
-    private ReuniaoService reuniaoService;
 
     private boolean isAdmin(UserDetails userDetails) {
         return userDetails.getAuthorities().stream()
@@ -141,44 +135,5 @@ public class CoordenadorController {
             return "redirect:/coordenador/processo/list?colegiadoId=" + colegiadoId;
         }
         return "redirect:/coordenador/processo/list";
-    }
-
-    // ========== ENDPOINTS DE REUNIAO (RF10) ==========
-
-    @PostMapping("/reuniao/iniciar")
-    public String iniciarSessao(
-            @RequestParam("reuniaoId") Long reuniaoId,
-            @AuthenticationPrincipal UserDetails userDetails,
-            RedirectAttributes attr) {
-
-        try {
-            Reuniao reuniao = reuniaoService.iniciarSessao(reuniaoId, userDetails.getUsername());
-            attr.addFlashAttribute("mensagem", "Sessao iniciada com sucesso!");
-            return "redirect:/reunioes/" + reuniaoId + "/conduzir";
-        } catch (IllegalStateException e) {
-            attr.addFlashAttribute("mensagemErro", e.getMessage());
-        } catch (Exception e) {
-            attr.addFlashAttribute("mensagemErro", "Erro ao iniciar sessao: " + e.getMessage());
-        }
-
-        return "redirect:/reunioes";
-    }
-
-    @PostMapping("/reuniao/encerrar")
-    public String encerrarSessao(
-            @RequestParam("reuniaoId") Long reuniaoId,
-            @AuthenticationPrincipal UserDetails userDetails,
-            RedirectAttributes attr) {
-
-        try {
-            reuniaoService.encerrarSessao(reuniaoId, userDetails.getUsername());
-            attr.addFlashAttribute("mensagem", "Sessao encerrada com sucesso!");
-        } catch (IllegalStateException e) {
-            attr.addFlashAttribute("mensagemErro", e.getMessage());
-        } catch (Exception e) {
-            attr.addFlashAttribute("mensagemErro", "Erro ao encerrar sessao: " + e.getMessage());
-        }
-
-        return "redirect:/reunioes";
     }
 }

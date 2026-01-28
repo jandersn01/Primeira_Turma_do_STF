@@ -20,6 +20,18 @@ public interface ReuniaoRepository extends JpaRepository<Reuniao, Long> {
 
     Reuniao findReuniaoById(Long id);
 
+    @Query("SELECT r FROM Reuniao r " +
+           "LEFT JOIN FETCH r.colegiado c " +
+           "LEFT JOIN FETCH c.membros " +
+           "LEFT JOIN FETCH r.processos p " +
+           "LEFT JOIN FETCH p.interessado " +
+           "LEFT JOIN FETCH p.assunto " +
+           "LEFT JOIN FETCH p.relator " +
+           "LEFT JOIN FETCH r.votos v " +
+           "LEFT JOIN FETCH v.professor " +
+           "WHERE r.id = :id")
+    Reuniao findReuniaoComDetalhesById(@Param("id") Long id);
+
     List<Reuniao> findByColegiadoIdAndStatus(Long colegiadoId, StatusReuniao status);
 
     List<Reuniao> findByColegiadoMembrosIdAndStatus(Long professorId, StatusReuniao status);
