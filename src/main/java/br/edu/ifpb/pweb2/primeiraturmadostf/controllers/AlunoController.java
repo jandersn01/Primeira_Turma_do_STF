@@ -30,6 +30,8 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.services.DocumentoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProcessoService;
 import jakarta.validation.Valid;
 
+import org.springframework.security.core.GrantedAuthority;
+
 @Controller
 @RequestMapping("/aluno")
 public class AlunoController {
@@ -42,13 +44,35 @@ public class AlunoController {
 
     @Autowired
     private AlunoService alunoService;
-    
+
     @Autowired
     private DocumentoService documentoService;
 
+    private boolean isAdmin(UserDetails userDetails) {
+        return userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN"));
+    }
+
     @GetMapping("/processo/form")
-    public String getFormProcesso(Model model, Processo processo, @AuthenticationPrincipal UserDetails userDetails) {
-        Aluno aluno = alunoService.findByMatricula(userDetails.getUsername());
+    public String getFormProcesso(Model model, Processo processo,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) Long alunoId) {
+
+        boolean admin = isAdmin(userDetails);
+        Aluno aluno = null;
+
+        if (admin) {
+            // Admin pode selecionar qualquer aluno
+            if (alunoId != null) {
+                aluno = alunoService.findById(alunoId);
+            }
+            model.addAttribute("todosAlunos", alunoService.findAll());
+            model.addAttribute("isAdmin", true);
+        } else {
+            aluno = alunoService.findByMatricula(userDetails.getUsername());
+            model.addAttribute("isAdmin", false);
+        }
 
         if (processo == null) {
             processo = new Processo();
@@ -58,7 +82,7 @@ public class AlunoController {
         model.addAttribute("assuntos", assuntoService.findAll());
         model.addAttribute("aluno", aluno);
 
-        if (aluno == null) {
+        if (aluno == null && !admin) {
             model.addAttribute("mensagem", "Aluno nao encontrado.");
         }
 
@@ -66,11 +90,21 @@ public class AlunoController {
     }
 
     @PostMapping("/processo/save")
-    public String postProcesso(@Valid @ModelAttribute("processo") Processo processo, BindingResult result, Model model, RedirectAttributes redirect, @AuthenticationPrincipal UserDetails userDetails) {
-        Aluno aluno = alunoService.findByMatricula(userDetails.getUsername());
+    public String postProcesso(@Valid @ModelAttribute("processo") Processo processo, BindingResult result, Model model, RedirectAttributes redirect,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) Long alunoId) {
+
+        boolean admin = isAdmin(userDetails);
+        Aluno aluno = null;
+
+        if (admin && alunoId != null) {
+            aluno = alunoService.findById(alunoId);
+        } else if (!admin) {
+            aluno = alunoService.findByMatricula(userDetails.getUsername());
+        }
 
         if (aluno == null) {
-            redirect.addFlashAttribute("mensagem", "Erro: Aluno nao encontrado.");
+            redirect.addFlashAttribute("mensagem", "Erro: Aluno nao encontrado. Selecione um aluno.");
             return "redirect:/aluno/processo/form";
         }
         
@@ -126,31 +160,48 @@ public class AlunoController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long assuntoId,
+            @RequestParam(required = false) Long alunoId,
             @RequestParam(required = false, defaultValue = "desc") String ordenacao) {
 
-        Aluno aluno = alunoService.findByMatricula(userDetails.getUsername());
+        boolean admin = isAdmin(userDetails);
+        Aluno aluno = null;
+
+        if (admin) {
+            // Admin pode filtrar por aluno ou ver todos
+            if (alunoId != null) {
+                aluno = alunoService.findById(alunoId);
+            }
+            model.addAttribute("todosAlunos", alunoService.findAll());
+            model.addAttribute("isAdmin", true);
+        } else {
+            aluno = alunoService.findByMatricula(userDetails.getUsername());
+            model.addAttribute("isAdmin", false);
+        }
 
         java.util.List<Processo> processos = new java.util.ArrayList<>();
 
-        if (aluno != null) {
-            StatusProcesso statusEnum = null;
-            if (status != null && !status.isEmpty()) {
-                try { statusEnum = StatusProcesso.valueOf(status); } catch (Exception e) {}
-            }
+        StatusProcesso statusEnum = null;
+        if (status != null && !status.isEmpty()) {
+            try { statusEnum = StatusProcesso.valueOf(status); } catch (Exception e) {}
+        }
 
-            Assunto assunto = null;
-            if (assuntoId != null) {
-                assunto = assuntoService.findById(assuntoId);
-            }
+        Assunto assunto = null;
+        if (assuntoId != null) {
+            assunto = assuntoService.findById(assuntoId);
+        }
 
+        if (admin && aluno == null) {
+            // Admin sem filtro de aluno: mostrar todos os processos
+            processos = processoService.findAll();
+        } else if (aluno != null) {
             processos = processoService.findByInteressadoWithFilters(aluno, statusEnum, assunto, ordenacao);
+        }
 
-            for (Processo p : processos) {
-                try {
-                    p.setDocumentos(new java.util.HashSet<>(documentoService.findByProcesso(p)));
-                    if (p.getAssunto() != null) p.getAssunto().getNome();
-                } catch (Exception e) {}
-            }
+        for (Processo p : processos) {
+            try {
+                p.setDocumentos(new java.util.HashSet<>(documentoService.findByProcesso(p)));
+                if (p.getAssunto() != null) p.getAssunto().getNome();
+            } catch (Exception e) {}
         }
 
         model.addAttribute("processos", processos);
@@ -160,9 +211,10 @@ public class AlunoController {
 
         model.addAttribute("statusSelecionado", status);
         model.addAttribute("assuntoSelecionado", assuntoId);
+        model.addAttribute("alunoIdSelecionado", alunoId);
         model.addAttribute("ordenacaoSelecionada", ordenacao);
 
-        if (aluno == null) {
+        if (aluno == null && !admin) {
             model.addAttribute("mensagem", "Aluno nao encontrado.");
         }
 

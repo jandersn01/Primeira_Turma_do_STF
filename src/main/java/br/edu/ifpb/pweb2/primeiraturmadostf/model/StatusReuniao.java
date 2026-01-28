@@ -1,8 +1,9 @@
 package br.edu.ifpb.pweb2.primeiraturmadostf.model;
 
 public enum StatusReuniao {
-    ENCERRADA("Encerrada"),
-    PROGRAMADA("Programada");
+    PROGRAMADA("Programada"),
+    EM_ANDAMENTO("Em Andamento"),
+    ENCERRADA("Encerrada");
 
     private final String descricao;
 
@@ -13,5 +14,4 @@ public enum StatusReuniao {
     public String getDescricao() {
         return descricao;
     }
-
 }
