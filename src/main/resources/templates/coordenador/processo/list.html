@@ -54,7 +54,6 @@
                                         </option>
                                     </select>
                                 </div>
-
                                 <div class="col-md-2">
                                     <label for="status" class="form-label small fw-bold text-uppercase">Status</label>
                                     <select class="form-select form-select-sm" id="status" name="status">
@@ -64,17 +63,15 @@
                                         </option>
                                     </select>
                                 </div>
-
                                 <div class="col-md-3">
                                     <label for="alunoId" class="form-label small fw-bold text-uppercase">Interessado</label>
                                     <select class="form-select form-select-sm" id="alunoId" name="alunoId">
                                         <option value="">Todos os alunos</option>
-                                        <option th:each="a : ${alunos}" th:value="${a.id}"
-                                            th:text="${a.nome}" th:selected="${alunoIdSelecionado == a.id}">
+                                        <option th:each="a : ${alunos}" th:value="${a.id}" th:text="${a.nome}"
+                                            th:selected="${alunoIdSelecionado == a.id}">
                                         </option>
                                     </select>
                                 </div>
-
                                 <div class="col-md-3">
                                     <label for="relatorId" class="form-label small fw-bold text-uppercase">Relator</label>
                                     <select class="form-select form-select-sm" id="relatorId" name="relatorId">
@@ -85,29 +82,20 @@
                                     </select>
                                 </div>
                             </div>
-
                             <div class="row mt-3">
                                 <div class="col-12 d-flex gap-2">
-                                    <button type="submit" class="btn btn-sm btn-primary px-4">
-                                        <i class="bi bi-search me-1"></i> Filtrar
-                                    </button>
-                                    <a th:href="@{/coordenador/processo/list}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-eraser me-1"></i> Limpar
-                                    </a>
+                                    <button type="submit" class="btn btn-sm btn-primary px-4">Filtrar</button>
+                                    <a th:href="@{/coordenador/processo/list}" class="btn btn-sm btn-outline-secondary">Limpar</a>
                                 </div>
                             </div>
                         </form>
                     </div>
                 </div>
 
-                <div th:if="${(coordenador != null or isAdmin) and colegiadoSelecionado != null}">
+                <div th:if="${pagina != null and colegiadoSelecionado != null}">
+                    <div th:if="${pagina.totalElements == 0}" class="alert alert-info">Nenhum processo encontrado.</div>
                     
-                    <div th:if="${#lists.isEmpty(processos)}" class="alert alert-info border-0 shadow-sm">
-                        <i class="bi bi-info-circle me-2"></i>Nenhum processo encontrado para os filtros aplicados no colegiado 
-                        <strong th:text="${colegiadoSelecionado.curso.nome}"></strong>.
-                    </div>
-
-                    <div th:if="${!#lists.isEmpty(processos)}" class="table-responsive shadow-sm rounded">
+                    <div th:if="${pagina.totalElements > 0}" class="table-responsive shadow-sm rounded">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-dark">
                                 <tr>
@@ -120,7 +108,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="processo : ${processos}">
+                                <tr th:each="processo : ${pagina.content}">
                                     <td class="fw-bold text-primary" th:text="${processo.numero}"></td>
                                     <td>
                                         <div th:text="${processo.interessado.nome}"></div>
@@ -128,50 +116,28 @@
                                     </td>
                                     <td th:text="${processo.assunto.nome}"></td>
                                     <td class="text-center">
-                                        <span class="badge" 
-                                              th:classappend="${processo.status.name() == 'JULGADO' ? 'bg-success' : (processo.status.name() == 'CRIADO' ? 'bg-secondary' : 'bg-info')}"
-                                              th:text="${processo.status.descricao}"></span>
+                                        <span class="badge" th:classappend="${processo.status.name() == 'JULGADO' ? 'bg-success' : (processo.status.name() == 'CRIADO' ? 'bg-secondary' : 'bg-info')}" th:text="${processo.status.descricao}"></span>
                                     </td>
                                     <td>
-                                        <span th:text="${processo.relator?.nome ?: 'Não Distribuído'}"
-                                              th:classappend="${processo.relator == null ? 'text-muted fst-italic' : ''}"></span>
+                                        <span th:text="${processo.relator?.nome ?: 'Não Distribuído'}" th:classappend="${processo.relator == null ? 'text-muted fst-italic' : ''}"></span>
                                     </td>
                                     <td class="text-end px-4">
-                                        <button th:if="${processo.status.name() == 'CRIADO'}" 
-                                                class="btn btn-sm btn-outline-primary fw-bold"
-                                                data-bs-toggle="modal" th:data-bs-target="'#modalDistribuir' + ${processo.id}">
-                                            <i class="bi bi-person-plus-fill"></i> Distribuir
-                                        </button>
+                                        <button th:if="${processo.status.name() == 'CRIADO'}" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" th:data-bs-target="'#modalDistribuir' + ${processo.id}">Distribuir</button>
                                         
-                                        <span th:if="${processo.status.name() != 'CRIADO'}" class="text-muted small">Sem ações</span>
-
-                                        <div class="modal fade text-start" th:id="'modalDistribuir' + ${processo.id}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal fade text-start" th:id="'modalDistribuir' + ${processo.id}" tabindex="-1">
                                             <div class="modal-dialog">
                                                 <div class="modal-content">
                                                     <form th:action="@{/coordenador/processo/distribuir}" method="post">
-                                                        <div class="modal-header bg-light">
-                                                            <h5 class="modal-title">Designar Relator</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                        </div>
+                                                        <div class="modal-header"><h5>Designar Relator</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                                                         <div class="modal-body">
-                                                            <p class="small text-muted">Processo: <strong th:text="${processo.numero}"></strong></p>
                                                             <input type="hidden" name="processoId" th:value="${processo.id}" />
                                                             <input type="hidden" name="colegiadoId" th:value="${colegiadoSelecionado.id}" />
-
-                                                            <div class="mb-3 text-start">
-                                                                <label class="form-label fw-bold">Professor Relator:</label>
-                                                                <select name="relatorId" class="form-select" required>
-                                                                    <option value="">-- Escolha um membro do colegiado --</option>
-                                                                    <option th:each="membro : ${colegiadoSelecionado.membros}"
-                                                                            th:value="${membro.id}" th:text="${membro.nome}">
-                                                                    </option>
-                                                                </select>
-                                                            </div>
+                                                            <select name="relatorId" class="form-select" required>
+                                                                <option value="">-- Selecione um Professor --</option>
+                                                                <option th:each="membro : ${colegiadoSelecionado.membros}" th:value="${membro.id}" th:text="${membro.nome}"></option>
+                                                            </select>
                                                         </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                                                            <button type="submit" class="btn btn-sm btn-primary">Confirmar</button>
-                                                        </div>
+                                                        <div class="modal-footer"><button type="submit" class="btn btn-primary">Confirmar</button></div>
                                                     </form>
                                                 </div>
                                             </div>
@@ -180,13 +146,22 @@
                                 </tr>
                             </tbody>
                         </table>
+
+                        <nav th:if="${pagina.totalPages > 1}" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item" th:classappend="${pagina.first} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/coordenador/processo/list(page=${pagina.number-1}, colegiadoId=${colegiadoIdSelecionado}, status=${statusSelecionado}, alunoId=${alunoIdSelecionado}, relatorId=${relatorIdSelecionado})}">Anterior</a>
+                                </li>
+                                <li class="page-item" th:each="i : ${#numbers.sequence(0, pagina.totalPages - 1)}" th:classappend="${i == pagina.number} ? 'active'">
+                                    <a class="page-link" th:href="@{/coordenador/processo/list(page=${i}, colegiadoId=${colegiadoIdSelecionado}, status=${statusSelecionado}, alunoId=${alunoIdSelecionado}, relatorId=${relatorIdSelecionado})}" th:text="${i + 1}"></a>
+                                </li>
+                                <li class="page-item" th:classappend="${pagina.last} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/coordenador/processo/list(page=${pagina.number+1}, colegiadoId=${colegiadoIdSelecionado}, status=${statusSelecionado}, alunoId=${alunoIdSelecionado}, relatorId=${relatorIdSelecionado})}">Próximo</a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
-
-                <div th:if="${(coordenador != null or isAdmin) and colegiadoSelecionado == null}" class="alert alert-info">
-                    <i class="bi bi-arrow-up-circle me-2"></i> Selecione um colegiado acima para visualizar os processos.
-                </div>
-
             </div>
         </div>
     </div>

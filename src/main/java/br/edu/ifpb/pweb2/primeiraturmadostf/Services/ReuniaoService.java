@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable; // IMPORT CORRETO
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -97,6 +99,10 @@ public class ReuniaoService {
         } else {
             return reuniaoRepository.findByColegiadoIdAndStatus(colegiadoId, status);
         }
+    }
+
+    public Page<Reuniao> listarReunioesPorMembroPaginado(Long professorId, StatusReuniao status, Pageable pageable) {
+        return reuniaoRepository.findByMembroIdAndStatus(professorId, status, pageable);
     }
 
     @Transactional(readOnly = true)
@@ -242,5 +248,20 @@ public class ReuniaoService {
         processoRepository.save(processo);
 
         reuniaoRepository.save(reuniao);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Reuniao> listarTodasPaginadas(StatusReuniao status, Pageable pageable) {
+        if (status == null) {
+            return reuniaoRepository.findAll(pageable);
+        }
+        // Utiliza o método que já existe no seu repositório mas com Pageable
+        return reuniaoRepository.findAllComFiltro(status, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Reuniao> listarReunioesDoProfessorPaginadas(Long professorId, StatusReuniao status, Pageable pageable) {
+        // Utiliza a query que já existe no seu repositório ajustada para paginação
+        return reuniaoRepository.findByMembroIdAndStatus(professorId, status, pageable);
     }
 }

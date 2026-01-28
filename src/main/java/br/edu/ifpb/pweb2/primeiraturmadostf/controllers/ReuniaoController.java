@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable; // IMPORT CORRETO
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -71,9 +74,9 @@ public class ReuniaoController {
     public String listarReunioes(
             Model model,
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam(name = "status", required = false) String statusStr) {
+            @RequestParam(name = "status", required = false) String statusStr,
+            @PageableDefault(size = 10) Pageable pageable) {
 
-        // Converte a String do status para Enum com segurança para evitar erros de filtro
         StatusReuniao status = null;
         if (statusStr != null && !statusStr.isEmpty()) {
             try {
@@ -83,24 +86,21 @@ public class ReuniaoController {
             }
         }
 
-        // Identifica o perfil do usuário logado
         Professor professorLogado = professorService.findByMatricula(userDetails.getUsername());
         boolean isCoordenadorOuAdmin = userDetails.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_COORDENADOR") || a.getAuthority().equals("ROLE_ADMIN"));
 
-        List<Reuniao> reunioes;
-
-        // REQFUNC 4 e 6: Unificação da lógica de busca
+        Page<Reuniao> paginaReunioes;
         if (isCoordenadorOuAdmin) {
-            // Coordenador/Admin vê tudo
-            reunioes = reuniaoService.listarTodasComFiltro(status);
+            paginaReunioes = reuniaoService.listarTodasPaginadas(status, pageable);
         } else {
-            // Professor vê apenas reuniões onde é membro do colegiado
-            reunioes = reuniaoService.listarReunioesDoProfessor(professorLogado.getId(), status);
-            model.addAttribute("isProfessorView", true); // Flag para travar ações na View
+            paginaReunioes = reuniaoService.listarReunioesDoProfessorPaginadas(professorLogado.getId(), status, pageable);
+            model.addAttribute("isProfessorView", true); // Garante que o HTML saiba que é visão de professor
         }
 
-        model.addAttribute("reunioes", reunioes);
+        model.addAttribute("pagina", paginaReunioes);
+        model.addAttribute("reunioes", paginaReunioes.getContent());
+
         model.addAttribute("statusSelecionado", status);
         model.addAttribute("professorLogado", professorLogado);
 
