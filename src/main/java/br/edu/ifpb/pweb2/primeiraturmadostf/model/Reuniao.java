@@ -2,6 +2,7 @@ package br.edu.ifpb.pweb2.primeiraturmadostf.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,22 +15,34 @@ import java.util.Set;
     }
 )
 public class Reuniao {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(name = "data_reuniao", nullable = false)
     private LocalDate dataReuniao;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private StatusReuniao status = StatusReuniao.PROGRAMADA;
-    
+
     @Lob
     @Column(columnDefinition = "TEXT")
     private String ata;
-    
+
+    @Column(name = "data_inicio_sessao")
+    private LocalDateTime dataInicioSessao;
+
+    @Column(name = "usuario_inicio_sessao", length = 50)
+    private String usuarioInicioSessao;
+
+    @Column(name = "data_encerramento_sessao")
+    private LocalDateTime dataEncerramentoSessao;
+
+    @Column(name = "usuario_encerramento_sessao", length = 50)
+    private String usuarioEncerramentoSessao;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "colegiado_id", nullable = false)
     private Colegiado colegiado;
@@ -109,8 +122,39 @@ public class Reuniao {
     public void setVotos(Set<Voto> votos) {
         this.votos = votos;
     }
-    
-    
+
+    public LocalDateTime getDataInicioSessao() {
+        return dataInicioSessao;
+    }
+
+    public void setDataInicioSessao(LocalDateTime dataInicioSessao) {
+        this.dataInicioSessao = dataInicioSessao;
+    }
+
+    public String getUsuarioInicioSessao() {
+        return usuarioInicioSessao;
+    }
+
+    public void setUsuarioInicioSessao(String usuarioInicioSessao) {
+        this.usuarioInicioSessao = usuarioInicioSessao;
+    }
+
+    public LocalDateTime getDataEncerramentoSessao() {
+        return dataEncerramentoSessao;
+    }
+
+    public void setDataEncerramentoSessao(LocalDateTime dataEncerramentoSessao) {
+        this.dataEncerramentoSessao = dataEncerramentoSessao;
+    }
+
+    public String getUsuarioEncerramentoSessao() {
+        return usuarioEncerramentoSessao;
+    }
+
+    public void setUsuarioEncerramentoSessao(String usuarioEncerramentoSessao) {
+        this.usuarioEncerramentoSessao = usuarioEncerramentoSessao;
+    }
+
     @Override
     public String toString() {
         return "Reuniao{id=" + id + ", data=" + dataReuniao + ", status=" + status + "}";

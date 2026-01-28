@@ -51,14 +51,14 @@ public class SecurityConfig {
                 // Paginas publicas (login, logout, erros)
                 .requestMatchers("/login", "/logout", "/error", "/error/**").permitAll()
 
-                // Rotas do Aluno
-                .requestMatchers("/aluno/**").hasRole("ALUNO")
+                // Rotas do Aluno (Admin tambem tem acesso)
+                .requestMatchers("/aluno/**").hasAnyRole("ALUNO", "ADMIN")
 
-                // Rotas do Professor (Professor e Coordenador podem acessar)
-                .requestMatchers("/professor/**").hasAnyRole("PROFESSOR", "COORDENADOR")
+                // Rotas do Professor (Professor, Coordenador e Admin podem acessar)
+                .requestMatchers("/professor/**").hasAnyRole("PROFESSOR", "COORDENADOR", "ADMIN")
 
-                // Rotas do Coordenador
-                .requestMatchers("/coordenador/**").hasRole("COORDENADOR")
+                // Rotas do Coordenador (Admin tambem tem acesso)
+                .requestMatchers("/coordenador/**").hasAnyRole("COORDENADOR", "ADMIN")
 
                 // Rotas de Administração
                 .requestMatchers("/admin/**").hasRole("ADMIN")

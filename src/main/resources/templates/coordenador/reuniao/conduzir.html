@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Conduzir Sessao</title>
+</head>
+<body>
+
+    <div layout:fragment="conteudo">
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0">
+                        <i class="bi bi-camera-video-fill"></i> Sessao em Andamento
+                    </h4>
+                    <small class="text-white-50">
+                        Colegiado: <span th:text="${reuniao.colegiado.curso.nome}">Curso</span>
+                        - Data: <span th:text="${#temporals.format(reuniao.dataReuniao, 'dd/MM/yyyy')}">01/01/2024</span>
+                    </small>
+                </div>
+                <div>
+                    <span class="badge bg-warning fs-6">
+                        <i class="bi bi-broadcast"></i> EM ANDAMENTO
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-body">
+
+                <!-- Mensagens de sucesso/erro -->
+                <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <span th:text="${mensagem}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div th:if="${mensagemErro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <span th:text="${mensagemErro}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Informacoes da Sessao -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-primary">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informacoes da Sessao</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Reuniao ID:</strong> <span th:text="${reuniao.id}">#1</span></p>
+                                <p><strong>Data:</strong> <span th:text="${#temporals.format(reuniao.dataReuniao, 'dd/MM/yyyy')}">01/01/2024</span></p>
+                                <p><strong>Colegiado:</strong> <span th:text="${reuniao.colegiado.curso.nome}">Curso</span></p>
+                                <p><strong>Portaria:</strong> <span th:text="${reuniao.colegiado.portaria}">Portaria</span></p>
+                                <p><strong>Coordenador:</strong> <span th:text="${coordenador.nome}">Nome</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card border-info">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="bi bi-people"></i> Membros do Colegiado</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush">
+                                    <li th:each="membro : ${membros}" class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span th:text="${membro.nome}">Nome do Membro</span>
+                                        <span th:if="${membro.coordenador}" class="badge bg-primary">Coordenador</span>
+                                    </li>
+                                </ul>
+                                <div th:if="${#sets.isEmpty(membros)}" class="text-muted">
+                                    Nenhum membro cadastrado.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Processos na Pauta -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="bi bi-list-check"></i> Processos na Pauta
+                            <span class="badge bg-secondary ms-2" th:text="${#sets.size(processos)}">0</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${#sets.isEmpty(processos)}" class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Nenhum processo na pauta desta reuniao.
+                        </div>
+
+                        <div th:unless="${#sets.isEmpty(processos)}" class="table-responsive">
+                            <table class="table table-striped table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Numero</th>
+                                        <th>Interessado</th>
+                                        <th>Assunto</th>
+                                        <th>Relator</th>
+                                        <th>Status</th>
+                                        <th>Acoes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="processo : ${processos}">
+                                        <td>
+                                            <strong th:text="${processo.numero}">2024/001</strong>
+                                        </td>
+                                        <td>
+                                            <span th:text="${processo.interessado.nome}">Nome do Aluno</span>
+                                            <br>
+                                            <small class="text-muted" th:text="'(' + ${processo.interessado.matricula} + ')'"></small>
+                                        </td>
+                                        <td th:text="${processo.assunto.nome}">Assunto</td>
+                                        <td>
+                                            <span th:if="${processo.relator != null}" th:text="${processo.relator.nome}">Relator</span>
+                                            <span th:if="${processo.relator == null}" class="text-muted">-</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary" th:if="${processo.status.name() == 'CRIADO'}" th:text="${processo.status.descricao}"></span>
+                                            <span class="badge bg-info" th:if="${processo.status.name() == 'DISTRIBUIDO'}" th:text="${processo.status.descricao}"></span>
+                                            <span class="badge bg-warning" th:if="${processo.status.name() == 'EM_PAUTA'}" th:text="${processo.status.descricao}"></span>
+                                            <span class="badge bg-primary" th:if="${processo.status.name() == 'EM_JULGAMENTO'}" th:text="${processo.status.descricao}"></span>
+                                            <span class="badge bg-success" th:if="${processo.status.name() == 'JULGADO'}" th:text="${processo.status.descricao}"></span>
+                                        </td>
+                                        <td>
+                                            <!-- Aqui podem ser adicionados botoes para julgar processo -->
+                                            <button class="btn btn-sm btn-outline-primary" disabled title="Funcionalidade em desenvolvimento">
+                                                <i class="bi bi-gavel"></i> Julgar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acoes da Sessao -->
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-gear"></i> Acoes da Sessao</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex gap-2">
+                            <a th:href="@{/coordenador/reuniao/list}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Voltar para Lista
+                            </a>
+
+                            <form th:action="@{/coordenador/reuniao/encerrar}" method="post" class="d-inline">
+                                <input type="hidden" name="reuniaoId" th:value="${reuniao.id}" />
+                                <button type="submit" class="btn btn-danger"
+                                        onclick="return confirm('Deseja realmente encerrar esta sessao?');">
+                                    <i class="bi bi-stop-fill"></i> Encerrar Sessao
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
