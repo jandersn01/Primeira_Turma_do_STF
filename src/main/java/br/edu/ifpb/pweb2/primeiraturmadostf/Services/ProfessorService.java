@@ -12,7 +12,6 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.model.enums.Role;
 import br.edu.ifpb.pweb2.primeiraturmadostf.repository.ProfessorRepository;
 import br.edu.ifpb.pweb2.primeiraturmadostf.repository.UsuarioRepository;
 
-
 @Service
 @Transactional
 public class ProfessorService {
@@ -28,7 +27,47 @@ public class ProfessorService {
         this.passwordEncoder = passwordEncoder;
     }
 
-     public List<Professor> findAll() {
+    @Transactional
+    public Professor salvarComUsuario(Professor professor) {
+        // Define senha padrão "123" se for novo, ou usa a do objeto
+        String senhaPlana = (professor.getSenha() == null || professor.getSenha().isEmpty()) ? "123" : professor.getSenha();
+        
+        // Criptografa para a tabela Professor
+        professor.setSenha(passwordEncoder.encode(senhaPlana));
+        Professor profSalvo = repository.save(professor);
+
+        // Sincroniza com a tabela Usuario (usada pelo Security)
+        Usuario usuario = usuarioRepository.findByMatricula(profSalvo.getMatricula())
+                .orElse(new Usuario());
+        
+        usuario.setMatricula(profSalvo.getMatricula());
+        usuario.setSenha(profSalvo.getSenha()); // Usa o mesmo hash já gerado
+        usuario.setRole(Boolean.TRUE.equals(profSalvo.getCoordenador()) ? Role.ROLE_COORDENADOR : Role.ROLE_PROFESSOR);
+        usuario.setProfessor(profSalvo);
+        usuario.setAtivo(true);
+
+        usuarioRepository.save(usuario);
+        return profSalvo;
+    }
+
+    public Professor save(Professor professor) {
+        // Aplica a mesma lógica de criptografia no método save geral
+        if (professor.getSenha() != null && !professor.getSenha().startsWith("$2a$")) {
+            professor.setSenha(passwordEncoder.encode(professor.getSenha()));
+        }
+        Professor salvo = repository.save(professor);
+        
+        // Atualiza o usuário vinculado
+        usuarioRepository.findByMatricula(salvo.getMatricula()).ifPresent(u -> {
+            u.setSenha(salvo.getSenha());
+            u.setRole(salvo.getCoordenador() ? Role.ROLE_COORDENADOR : Role.ROLE_PROFESSOR);
+            usuarioRepository.save(u);
+        });
+        
+        return salvo;
+    }
+
+    public List<Professor> findAll() {
         return this.repository.findAll();
     }
 
@@ -42,7 +81,7 @@ public class ProfessorService {
                 .orElse(null);
     }
 
-    public Professor save(Professor professor) {
+    /* public Professor save(Professor professor) {
         Professor existente = this.findByMatricula(professor.getMatricula());
         if (existente != null && !existente.getId().equals(professor.getId())) {
             return null;
@@ -78,7 +117,7 @@ public class ProfessorService {
         }
 
         return professorSalvo;
-    }
+    } */
 
     public boolean remove(Long id) {
         Professor professor = this.findById(id);
@@ -111,7 +150,7 @@ public class ProfessorService {
     }
 
     public List<Professor> findAllById(List<Long> list) {
-       return repository.findAllById(list);
+        return repository.findAllById(list);
     }
 
     public boolean existsByMatricula(String matricula) {

@@ -28,7 +28,7 @@ public class AlunoService {
         this.passwordEncoder = passwordEncoder;
     }
 
-     public List<Aluno> findAll() {
+    public List<Aluno> findAll() {
         return this.alunoRepository.findAll();
     }
 
@@ -105,11 +105,29 @@ public class AlunoService {
         return this.findByMatricula(matricula) != null;
     }
 
+    @Transactional
+    public Aluno salvarComUsuario(Aluno aluno) {
+        String senhaPlana = (aluno.getSenha() == null || aluno.getSenha().isEmpty()) ? "123" : aluno.getSenha();
+
+        aluno.setSenha(passwordEncoder.encode(senhaPlana));
+        Aluno alunoSalvo = alunoRepository.save(aluno);
+
+        Usuario usuario = usuarioRepository.findByMatricula(alunoSalvo.getMatricula())
+                .orElse(new Usuario());
+
+        usuario.setMatricula(alunoSalvo.getMatricula());
+        usuario.setSenha(alunoSalvo.getSenha());
+        usuario.setRole(Role.ROLE_ALUNO);
+        usuario.setAluno(alunoSalvo);
+        usuario.setAtivo(true);
+
+        usuarioRepository.save(usuario);
+        return alunoSalvo;
+    }
+
     public boolean existsByMatriculaAndNotId(String matricula, Long id) {
         Aluno aluno = this.findByMatricula(matricula);
         return aluno != null && !aluno.getId().equals(id);
     }
 
 }
-
-
