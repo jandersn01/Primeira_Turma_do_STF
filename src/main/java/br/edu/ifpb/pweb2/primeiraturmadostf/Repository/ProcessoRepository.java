@@ -17,6 +17,7 @@ public interface ProcessoRepository extends JpaRepository<Processo, Long>, JpaSp
     
     List<Processo> findByRelatorAndStatus(Professor relator, StatusProcesso status);
 
+    List<Processo> findByColegiadoIdAndStatus(Long colegiadoId, StatusProcesso status);
 }
 
 

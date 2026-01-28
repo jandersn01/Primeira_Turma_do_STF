@@ -1,6 +1,7 @@
 package br.edu.ifpb.pweb2.primeiraturmadostf.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -23,8 +24,6 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.services.ReuniaoService;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.springframework.security.core.GrantedAuthority;
 
 @Controller
 @RequestMapping("/coordenador")
@@ -64,7 +63,6 @@ public class CoordenadorController {
         boolean admin = isAdmin(userDetails);
         Professor coordenador = professorService.findByMatricula(userDetails.getUsername());
 
-        // Admin tem acesso mesmo sem ser coordenador
         if (!admin && (coordenador == null || !coordenador.getCoordenador())) {
             model.addAttribute("mensagem", "Voce nao tem permissao de coordenador.");
             return "coordenador/processo/list";
@@ -74,7 +72,6 @@ public class CoordenadorController {
 
         List<Colegiado> colegiados;
         if (admin) {
-            // Admin ve todos os colegiados
             colegiados = colegiadoService.findAll();
         } else {
             colegiados = new ArrayList<>(coordenador.getColegiados());
@@ -95,14 +92,17 @@ public class CoordenadorController {
         if (colegiadoSelecionado != null) {
             StatusProcesso statusEnum = null;
             if (status != null && !status.isEmpty()) {
-                try { statusEnum = StatusProcesso.valueOf(status); } catch (Exception e) {}
+                try {
+                    statusEnum = StatusProcesso.valueOf(status);
+                } catch (Exception e) {
+                }
             }
 
             Aluno aluno = (alunoId != null) ? alunoService.findById(alunoId) : null;
             Professor relator = (relatorId != null) ? professorService.findById(relatorId) : null;
 
             processos = processoService.findByColegiadoWithFilters(
-                colegiadoSelecionado, statusEnum, aluno, relator, ordenacao);
+                    colegiadoSelecionado, statusEnum, aluno, relator, ordenacao);
         }
 
         model.addAttribute("processos", processos);
@@ -143,61 +143,7 @@ public class CoordenadorController {
         return "redirect:/coordenador/processo/list";
     }
 
-    // ========== ENDPOINTS DE REUNIAO ==========
-
-    @GetMapping("/reuniao/list")
-    public String listarReunioes(
-            Model model,
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam(required = false) Long colegiadoId) {
-
-        boolean admin = isAdmin(userDetails);
-        Professor coordenador = professorService.findByMatricula(userDetails.getUsername());
-
-        // Admin tem acesso mesmo sem ser coordenador
-        if (!admin && (coordenador == null || !coordenador.getCoordenador())) {
-            model.addAttribute("mensagemErro", "Voce nao tem permissao de coordenador.");
-            return "coordenador/reuniao/list";
-        }
-
-        model.addAttribute("isAdmin", admin);
-
-        List<Colegiado> colegiados;
-        if (admin) {
-            colegiados = colegiadoService.findAll();
-        } else {
-            colegiados = new ArrayList<>(coordenador.getColegiados());
-            if (colegiados.isEmpty()) {
-                colegiados = colegiadoService.findAll();
-            }
-        }
-
-        Colegiado colegiadoSelecionado = null;
-        if (colegiadoId != null) {
-            colegiadoSelecionado = colegiadoService.findById(colegiadoId);
-        } else if (!colegiados.isEmpty()) {
-            colegiadoSelecionado = colegiados.get(0);
-            colegiadoId = colegiadoSelecionado.getId();
-        }
-
-        List<Reuniao> reunioes = new ArrayList<>();
-        if (colegiadoSelecionado != null) {
-            reunioes = reuniaoService.findByColegiado(colegiadoSelecionado);
-        }
-
-        // Verifica se existe sessao em andamento
-        boolean existeSessaoEmAndamento = reuniaoService.existsSessaoEmAndamento();
-
-        model.addAttribute("coordenador", coordenador);
-        model.addAttribute("colegiados", colegiados);
-        model.addAttribute("colegiadoSelecionado", colegiadoSelecionado);
-        model.addAttribute("colegiadoIdSelecionado", colegiadoId);
-        model.addAttribute("reunioes", reunioes);
-        model.addAttribute("existeSessaoEmAndamento", existeSessaoEmAndamento);
-        model.addAttribute("statusList", StatusReuniao.values());
-
-        return "coordenador/reuniao/list";
-    }
+    // ========== ENDPOINTS DE REUNIAO (RF10) ==========
 
     @PostMapping("/reuniao/iniciar")
     public String iniciarSessao(
@@ -208,50 +154,14 @@ public class CoordenadorController {
         try {
             Reuniao reuniao = reuniaoService.iniciarSessao(reuniaoId, userDetails.getUsername());
             attr.addFlashAttribute("mensagem", "Sessao iniciada com sucesso!");
-            return "redirect:/coordenador/reuniao/" + reuniaoId + "/conduzir";
+            return "redirect:/reunioes/" + reuniaoId + "/conduzir";
         } catch (IllegalStateException e) {
             attr.addFlashAttribute("mensagemErro", e.getMessage());
         } catch (Exception e) {
             attr.addFlashAttribute("mensagemErro", "Erro ao iniciar sessao: " + e.getMessage());
         }
 
-        return "redirect:/coordenador/reuniao/list";
-    }
-
-    @GetMapping("/reuniao/{id}/conduzir")
-    public String conduzirSessao(
-            @PathVariable("id") Long reuniaoId,
-            Model model,
-            @AuthenticationPrincipal UserDetails userDetails,
-            RedirectAttributes attr) {
-
-        boolean admin = isAdmin(userDetails);
-        Professor coordenador = professorService.findByMatricula(userDetails.getUsername());
-
-        // Admin tem acesso mesmo sem ser coordenador
-        if (!admin && (coordenador == null || !coordenador.getCoordenador())) {
-            attr.addFlashAttribute("mensagemErro", "Voce nao tem permissao de coordenador.");
-            return "redirect:/coordenador/reuniao/list";
-        }
-
-        Reuniao reuniao = reuniaoService.findById(reuniaoId);
-        if (reuniao == null) {
-            attr.addFlashAttribute("mensagemErro", "Reuniao nao encontrada.");
-            return "redirect:/coordenador/reuniao/list";
-        }
-
-        if (reuniao.getStatus() != StatusReuniao.EM_ANDAMENTO) {
-            attr.addFlashAttribute("mensagemErro", "Esta reuniao nao esta em andamento.");
-            return "redirect:/coordenador/reuniao/list";
-        }
-
-        model.addAttribute("isAdmin", admin);
-        model.addAttribute("coordenador", coordenador);
-        model.addAttribute("reuniao", reuniao);
-        model.addAttribute("processos", reuniao.getProcessos());
-        model.addAttribute("membros", reuniao.getColegiado().getMembros());
-
-        return "coordenador/reuniao/conduzir";
+        return "redirect:/reunioes";
     }
 
     @PostMapping("/reuniao/encerrar")
@@ -269,6 +179,6 @@ public class CoordenadorController {
             attr.addFlashAttribute("mensagemErro", "Erro ao encerrar sessao: " + e.getMessage());
         }
 
-        return "redirect:/coordenador/reuniao/list";
+        return "redirect:/reunioes";
     }
 }

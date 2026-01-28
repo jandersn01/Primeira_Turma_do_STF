@@ -1,0 +1,60 @@
+<div th:fragment="detalhesModalContent">
+    <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+            <i class="bi bi-info-circle-fill me-2"></i> 
+            Detalhes da Reunião - <span th:text="${#temporals.format(reuniao.dataReuniao, 'dd/MM/yyyy')}"></span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+        <div class="row mb-4">
+            <div class="col-md-6 border-end">
+                <label class="small fw-bold text-secondary text-uppercase">Colegiado / Portaria</label>
+                <p class="mb-0 fw-bold" th:text="${reuniao.colegiado.curso.nome}"></p>
+                <span class="badge bg-light text-dark border" th:text="${reuniao.colegiado.portaria}"></span>
+            </div>
+            <div class="col-md-6 ps-4">
+                <label class="small fw-bold text-secondary text-uppercase">Membros Convocados</label>
+                <div class="d-flex flex-wrap gap-1 mt-1">
+                    <span th:each="membro : ${reuniao.colegiado.membros}" 
+                          class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                        <i class="bi bi-person"></i> <span th:text="${membro.nome}"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <h6 class="border-bottom pb-2 mb-3 text-primary"><i class="bi bi-file-earmark-text me-2"></i>Processos e Interessados</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Número</th>
+                        <th>Interessado (Aluno)</th>
+                        <th>Relator</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${reuniao.processos}">
+                        <td class="fw-bold text-primary" th:text="${p.numero}"></td>
+                        <td th:text="${p.interessado.nome}"></td>
+                        <td th:text="${p.relator?.nome ?: 'Não definido'}"></td>
+                        <td>
+                            <span class="badge bg-info-subtle text-info border border-info-subtle" 
+                                  th:text="${p.status.descricao}"></span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        <a th:if="${reuniao.status.name() == 'PROGRAMADA'}" 
+           th:href="@{/reunioes/{id}/iniciar(id=${reuniao.id})}" 
+           class="btn btn-success fw-bold px-4">
+            <i class="bi bi-play-fill"></i> Iniciar Sessão
+        </a>
+    </div>
+</div>

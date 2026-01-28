@@ -16,17 +16,18 @@ public interface ReuniaoRepository extends JpaRepository<Reuniao, Long> {
 
     List<Reuniao> findByColegiado(Colegiado colegiado);
 
-    List<Reuniao> findByColegiadoOrderByDataReuniaoDesc(Colegiado colegiado);
+    List<Reuniao> findByColegiadoId(Long colegiadoId);
 
-    List<Reuniao> findByStatus(StatusReuniao status);
+    Reuniao findReuniaoById(Long id);
 
-    @Query("SELECT r FROM Reuniao r WHERE r.status = :status")
-    List<Reuniao> findAllByStatus(@Param("status") StatusReuniao status);
+    List<Reuniao> findByColegiadoIdAndStatus(Long colegiadoId, StatusReuniao status);
+
+    List<Reuniao> findByColegiadoMembrosIdAndStatus(Long professorId, StatusReuniao status);
+
+    List<Reuniao> findByColegiadoMembrosId(Long professorId);
 
     @Query("SELECT COUNT(r) > 0 FROM Reuniao r WHERE r.status = :status")
     boolean existsByStatus(@Param("status") StatusReuniao status);
 
-    @Query("SELECT r FROM Reuniao r WHERE r.colegiado = :colegiado AND r.status = :status")
-    List<Reuniao> findByColegiadoAndStatus(@Param("colegiado") Colegiado colegiado, @Param("status") StatusReuniao status);
+    boolean removeById(Long id);
 }
-
