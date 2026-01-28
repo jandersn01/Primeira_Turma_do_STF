@@ -22,6 +22,12 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProfessorService;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+
 @Controller
 @RequestMapping("/coordenador")
 public class CoordenadorController {
@@ -52,35 +58,39 @@ public class CoordenadorController {
             Model model,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) Long colegiadoId,
-            @RequestParam(required = false) String status,
+            @RequestParam(required = false) StatusProcesso status, // O Spring converte String para Enum automaticamente
             @RequestParam(required = false) Long alunoId,
             @RequestParam(required = false) Long relatorId,
-            @RequestParam(required = false, defaultValue = "desc") String ordenacao) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-        // 1. Identificação de permissões
-        boolean isAdmin = checkAdmin(userDetails);
+        // 1. Identificação de permissões e do usuário logado
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
         Professor coordenador = professorService.findByMatricula(userDetails.getUsername());
 
-        // 2. Validação de Segurança: Acesso permitido apenas se for Admin ou se o Professor for Coordenador
+        // 2. Validação de Segurança
         if (!isAdmin && (coordenador == null || !coordenador.getCoordenador())) {
-            model.addAttribute("mensagem", "Acesso restrito a coordenadores.");
+            model.addAttribute("mensagem", "Acesso restrito a coordenadores ou administradores.");
             return "coordenador/processo/list";
         }
 
-        // 3. Definição da lista de Colegiados gerenciáveis
+        // 3. Configuração da Paginação e Ordenação
+        Pageable pageable = PageRequest.of(page, size, Sort.by("numero").descending());
+
+        // 4. Definição da lista de Colegiados (Admin vê todos, Coordenador vê os dele)
         List<Colegiado> colegiados;
         if (isAdmin) {
-            colegiados = colegiadoService.findAll(); // Admin vê tudo
+            colegiados = colegiadoService.findAll();
         } else {
-            // Coordenador vê os colegiados aos quais pertence
             colegiados = new ArrayList<>(coordenador.getColegiados());
-            // Fallback caso a lista esteja vazia para não travar a tela
             if (colegiados.isEmpty()) {
                 colegiados = colegiadoService.findAll();
             }
         }
 
-        // 4. Seleção do Colegiado para filtragem
+        // 5. Determinar o Colegiado selecionado
         Colegiado colegiadoSelecionado = null;
         if (colegiadoId != null) {
             colegiadoSelecionado = colegiadoService.findById(colegiadoId);
@@ -89,43 +99,38 @@ public class CoordenadorController {
             colegiadoId = colegiadoSelecionado.getId();
         }
 
-        // 5. Busca dos Processos com base nos filtros dinâmicos
-        List<Processo> processos = new ArrayList<>();
+        // 6. Execução da busca paginada com filtros
+        Page<Processo> pagina;
         if (colegiadoSelecionado != null) {
-            StatusProcesso statusEnum = null;
-            if (status != null && !status.isEmpty()) {
-                try {
-                    statusEnum = StatusProcesso.valueOf(status);
-                } catch (IllegalArgumentException e) {
-                    // Status inválido ignorado
-                }
-            }
-
+            // Busca os objetos completos para o filtro
             Aluno aluno = (alunoId != null) ? alunoService.findById(alunoId) : null;
             Professor relator = (relatorId != null) ? professorService.findById(relatorId) : null;
 
-            processos = processoService.findByColegiadoWithFilters(
-                    colegiadoSelecionado, statusEnum, aluno, relator, ordenacao);
+            // Aqui usamos o seu service que já lida com todos os filtros de forma paginada
+            pagina = processoService.findByColegiadoWithFiltersPaginado(
+                    colegiadoSelecionado, status, aluno, relator, pageable);
+        } else {
+            pagina = Page.empty(pageable);
         }
 
-        // 6. Atributos para a View (Filtros e Dados)
-        model.addAttribute("processos", processos);
+        // 7. Atributos para a View
+        model.addAttribute("pagina", pagina);
+        model.addAttribute("processos", pagina.getContent()); // Para manter compatibilidade com seu HTML atual
         model.addAttribute("coordenador", coordenador);
         model.addAttribute("colegiados", colegiados);
         model.addAttribute("colegiadoSelecionado", colegiadoSelecionado);
         model.addAttribute("isAdmin", isAdmin);
 
-        // Listas para os selects de filtro
+        // Listas para preencher os <select> dos filtros (essencial para o Admin ver as opções)
         model.addAttribute("alunos", alunoService.findAll());
         model.addAttribute("professores", professorService.findAll());
         model.addAttribute("statusList", StatusProcesso.values());
 
-        // Manutenção do estado dos filtros na tela (Preservação de IDs)
+        // Preservação do estado dos filtros nos campos da tela
         model.addAttribute("colegiadoIdSelecionado", colegiadoId);
         model.addAttribute("statusSelecionado", status);
         model.addAttribute("alunoIdSelecionado", alunoId);
         model.addAttribute("relatorIdSelecionado", relatorId);
-        model.addAttribute("ordenacaoSelecionada", ordenacao);
 
         return "coordenador/processo/list";
     }
