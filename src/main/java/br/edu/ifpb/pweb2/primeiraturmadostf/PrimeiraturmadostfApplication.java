@@ -9,14 +9,10 @@ public class PrimeiraturmadostfApplication {
 
 	public static void main(String[] args) {
 		// Carrega variáveis do arquivo .env
-		Dotenv dotenv = Dotenv.configure()
-				.ignoreIfMissing() 
-				.load();
-		
-		// Adiciona as variáveis do .env ao System.getenv()
-		dotenv.entries().forEach(entry -> {
-			System.setProperty(entry.getKey(), entry.getValue());
-		});
+		Dotenv.configure()
+          .systemProperties() // Isso faz o Spring "enxergar" as variáveis antes de validar o banco
+          .ignoreIfMissing() 
+          .load();
 		
 		SpringApplication.run(PrimeiraturmadostfApplication.class, args);
 	}
