@@ -14,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.*;
 
@@ -65,6 +66,9 @@ public class Professor {
     // Relacionamento: Professor é relator de vários processos
     @OneToMany(mappedBy = "relator")
     private Set<Processo> processosRelator = new HashSet<>();
+
+    @OneToOne(mappedBy = "professor")
+    private Usuario usuario;
     
     /*  Relacionamento: Professor vota em vários processos
     @OneToMany(mappedBy = "professor")
@@ -208,5 +212,13 @@ public class Professor {
 
     public void setCurso(Curso curso) {
         this.curso = curso;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 }
