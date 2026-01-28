@@ -43,30 +43,26 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .authenticationProvider(authenticationProvider())
-            .authorizeHttpRequests(auth -> auth
+                .authenticationProvider(authenticationProvider())
+                .authorizeHttpRequests(auth -> auth
                 // Recursos estáticos - permitir todos
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-
                 // Paginas publicas (login, logout, erros)
                 .requestMatchers("/login", "/logout", "/error", "/error/**").permitAll()
-
+                // Rotas de Reuniões (coordenador OU admin)
+                .requestMatchers("/reunioes/**").hasAnyRole("COORDENADOR", "ADMIN")
                 // Rotas do Aluno (Admin tambem tem acesso)
                 .requestMatchers("/aluno/**").hasAnyRole("ALUNO", "ADMIN")
-
                 // Rotas do Professor (Professor, Coordenador e Admin podem acessar)
                 .requestMatchers("/professor/**").hasAnyRole("PROFESSOR", "COORDENADOR", "ADMIN")
-
                 // Rotas do Coordenador (Admin tambem tem acesso)
                 .requestMatchers("/coordenador/**").hasAnyRole("COORDENADOR", "ADMIN")
-
                 // Rotas de Administração
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-
                 // Qualquer outra requisição precisa estar autenticado
                 .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
+                )
+                .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
                 .defaultSuccessUrl("/home", true)
@@ -74,17 +70,17 @@ public class SecurityConfig {
                 .usernameParameter("matricula")
                 .passwordParameter("senha")
                 .permitAll()
-            )
-            .logout(logout -> logout
+                )
+                .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout=true")
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
                 .permitAll()
-            )
-            .exceptionHandling(ex -> ex
+                )
+                .exceptionHandling(ex -> ex
                 .accessDeniedPage("/error/403")
-            );
+                );
 
         return http.build();
     }
