@@ -9,73 +9,86 @@
 <body>
 
 <div layout:fragment="conteudo">
-    <div class="card mt-4">
+    <div class="card mt-4 shadow-sm">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h4 class="mb-0">Cursos Cadastrados</h4>
-            <a th:href="@{/admin/curso/form}" class="btn btn-light btn-sm">Novo Curso</a>
+            <a th:href="@{/admin/curso/form}" class="btn btn-light btn-sm fw-bold">Novo Curso</a>
         </div>
 
         <div class="card-body">
 
-            <!-- Mensagem de sucesso -->
             <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
                 <span th:text="${mensagem}"></span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
 
-            <table class="table table-striped table-hover align-middle">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>Código</th>
-                    <th>Ações</th>
-                </tr>
-                </thead>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Código</th>
+                        <th>Ações</th>
+                    </tr>
+                    </thead>
 
-                <tbody>
+                    <tbody>
+                    <tr th:each="curso : ${cursos}">
+                        <td th:text="${curso.id}"></td>
 
-                <tr th:each="curso : ${listaCursos}">
-                    <td th:text="${curso.id}"></td>
-
-                    <td>
-                        <a th:href="@{/admin/curso/id/{id}(id=${curso.id})}"
-                           th:text="${curso.nome}"
-                           class="text-decoration-none">
-                        </a>
-                    </td>
-
-                    <td th:text="${curso.codigo}"></td>
-
-                    <td>
-                        <div class="d-flex gap-2">
-
+                        <td>
                             <a th:href="@{/admin/curso/id/{id}(id=${curso.id})}"
-                               class="btn btn-sm btn-outline-primary">
-                                Editar
+                               th:text="${curso.nome}"
+                               class="text-decoration-none fw-bold">
                             </a>
+                        </td>
 
-                            <form th:action="@{/admin/curso/delete/{id}(id=${curso.id})}"
-                                  method="post"
-                                  style="display: inline;"
-                                  onsubmit="return confirm('Tem certeza que deseja excluir este curso?');">
-                                <input type="hidden" name="_method" value="delete">
-                                <button class="btn btn-sm btn-outline-danger">Excluir</button>
-                            </form>
+                        <td th:text="${curso.codigo}"></td>
 
-                        </div>
-                    </td>
-                </tr>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a th:href="@{/admin/curso/id/{id}(id=${curso.id})}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    Editar
+                                </a>
 
-                <!-- Linha quando não há cursos -->
-                <tr th:if="${#lists.isEmpty(listaCursos)}">
-                    <td colspan="4" class="text-center text-muted py-3">
-                        Nenhum curso cadastrado no sistema.
-                    </td>
-                </tr>
+                                <form th:action="@{/admin/curso/delete/{id}(id=${curso.id})}"
+                                      method="post"
+                                      style="display: inline;"
+                                      onsubmit="return confirm('Tem certeza que deseja excluir este curso?');">
+                                    <input type="hidden" name="_method" value="delete">
+                                    <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
 
-                </tbody>
-            </table>
+                    <tr th:if="${#lists.isEmpty(cursos)}">
+                        <td colspan="4" class="text-center text-muted py-3">
+                            Nenhum curso cadastrado no sistema.
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <nav th:if="${navPage != null and navPage.totalPages > 1}" aria-label="Navegação de página" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" th:classappend="${navPage.currentPage == 1} ? 'disabled'">
+                        <a class="page-link" th:href="@{/admin/curso/list(page=${navPage.currentPage - 1})}">Anterior</a>
+                    </li>
+
+                    <li th:each="pageNum : ${#numbers.sequence(1, navPage.totalPages)}" 
+                        class="page-item" th:classappend="${pageNum == navPage.currentPage} ? 'active'">
+                        <a class="page-link" th:href="@{/admin/curso/list(page=${pageNum})}" th:text="${pageNum}"></a>
+                    </li>
+
+                    <li class="page-item" th:classappend="${navPage.currentPage == navPage.totalPages} ? 'disabled'">
+                        <a class="page-link" th:href="@{/admin/curso/list(page=${navPage.currentPage + 1})}">Próximo</a>
+                    </li>
+                </ul>
+            </nav>
 
         </div>
     </div>

@@ -2,6 +2,8 @@ package br.edu.ifpb.pweb2.primeiraturmadostf.services;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,4 +64,7 @@ private final AssuntoRepository assuntoRepository;
         return assunto != null && !assunto.getId().equals(id);
     }
 
+    public Page<Assunto> findAll(Pageable paging) {
+        return assuntoRepository.findAll(paging);
+    }
 }

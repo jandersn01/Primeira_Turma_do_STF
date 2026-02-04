@@ -35,13 +35,11 @@ public class Processo {
     @Column(name = "data_parecer")
     private LocalDate dataParecer;
     
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String parecer; // Voto fundamentado do relator
     
     @NotBlank(message = "Texto do requerimento é obrigatório")
     @Size(max = 5000, message = "Texto do requerimento deve ter no máximo 5000 caracteres")
-    @Lob
     @Column(name = "texto_requerimento", columnDefinition = "TEXT", nullable = false)
     private String textoRequerimento; // Texto do requerimento do aluno
     
@@ -53,7 +51,14 @@ public class Processo {
     @Enumerated(EnumType.STRING)
     @Column(name = "decisao_relator", length = 20)
     private TipoDecisao decisaoRelator;
-    
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "resultado_julgamento", length = 20)
+    private TipoDecisao resultadoJulgamento; // Resultado final após votação do colegiado
+
+    @Column(name = "data_julgamento")
+    private LocalDate dataJulgamento;
+
     // Relacionamentos
     
     @NotNull(message = "Assunto é obrigatório")
@@ -170,7 +175,23 @@ public class Processo {
     public void setDecisaoRelator(TipoDecisao decisaoRelator) {
         this.decisaoRelator = decisaoRelator;
     }
-    
+
+    public TipoDecisao getResultadoJulgamento() {
+        return resultadoJulgamento;
+    }
+
+    public void setResultadoJulgamento(TipoDecisao resultadoJulgamento) {
+        this.resultadoJulgamento = resultadoJulgamento;
+    }
+
+    public LocalDate getDataJulgamento() {
+        return dataJulgamento;
+    }
+
+    public void setDataJulgamento(LocalDate dataJulgamento) {
+        this.dataJulgamento = dataJulgamento;
+    }
+
     public Assunto getAssunto() {
         return assunto;
     }

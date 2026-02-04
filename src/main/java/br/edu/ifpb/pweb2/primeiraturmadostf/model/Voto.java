@@ -26,9 +26,12 @@ public class Voto {
     
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private TipoVoto tipo; // COM_RELATOR ou DIVERGENTE
-    
-  
+    private TipoVoto tipo; // COM_RELATOR ou DIVERGENTE (usado pelo coordenador)
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private TipoDecisao decisao; // DEFERIMENTO ou INDEFERIMENTO (voto direto do professor)
+
     @Column(nullable = false)
     private Boolean ausente = false;
     
@@ -95,7 +98,15 @@ public class Voto {
     public void setTipo(TipoVoto tipo) {
         this.tipo = tipo;
     }
-    
+
+    public TipoDecisao getDecisao() {
+        return decisao;
+    }
+
+    public void setDecisao(TipoDecisao decisao) {
+        this.decisao = decisao;
+    }
+
     public Boolean getAusente() {
         return ausente;
     }

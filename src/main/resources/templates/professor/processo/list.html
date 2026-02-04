@@ -15,36 +15,17 @@
             </div>
             
             <div class="card-body">
-                
-                <!-- === BLOCO DE SIMULAÇÃO DE LOGIN (ADICIONADO) === -->
-                <!-- Permite selecionar qual professor está "logado" -->
-                <div class="card mb-4 border-primary bg-light">
-                    <div class="card-body py-2 d-flex align-items-center justify-content-between">
+
+                <!-- Info do Professor Logado -->
+                <div th:if="${professor}" class="card mb-4 border-primary bg-light">
+                    <div class="card-body py-2 d-flex align-items-center">
                         <div>
-                            <i class="bi bi-person-workspace text-primary"></i> 
-                            <strong>Simular Acesso:</strong>
+                            <i class="bi bi-person-workspace text-primary"></i>
+                            <strong>Professor:</strong>
+                            <span th:text="${professor.nome}" class="fw-bold">Nome do Professor</span>
+                            <span class="text-muted small" th:text="'(Mat: ' + ${professor.matricula} + ')'"></span>
                         </div>
-                        
-                        <form th:action="@{/professor/processo/list}" method="get" class="d-flex align-items-center gap-2 flex-grow-1 ms-3">
-                            <select name="professorId" class="form-select form-select-sm" onchange="this.form.submit()">
-                                <option th:each="p : ${todosProfessores}" 
-                                        th:value="${p.id}" 
-                                        th:text="${p.nome + ' (Mat: ' + p.matricula + ')'}"
-                                        th:selected="${professor != null && p.id == professor.id}">
-                                </option>
-                            </select>
-                        </form>
                     </div>
-                </div>
-                <!-- ================================================ -->
-                
-                <!-- Informações do Professor Atual -->
-                <div th:if="${professor}" class="mb-3">
-                    <p class="text-muted">
-                        <strong>Professor Logado:</strong> 
-                        <span th:text="${professor.nome}">Nome do Professor</span>
-                        <span class="ms-2 text-secondary" th:text="'(' + ${professor.matricula} + ')'">(Matrícula)</span>
-                    </p>
                 </div>
 
                 <!-- Mensagem se nenhum professor estiver selecionado (fallback) -->
@@ -78,28 +59,39 @@
                                 </td>
                                 <td th:text="${processo.assunto.nome}">Assunto do Processo</td>
                                 <td>
-                                    <span class="badge bg-secondary" 
+                                    <span class="badge bg-secondary"
                                           th:if="${processo.status.name() == 'CRIADO'}"
                                           th:text="${processo.status.descricao}">Criado</span>
-                                    <span class="badge bg-info text-dark" 
+                                    <span class="badge bg-info text-dark"
                                           th:if="${processo.status.name() == 'DISTRIBUIDO'}"
-                                          th:text="${processo.status.descricao}">Distribuído</span>
-                                    <span class="badge bg-warning text-dark" 
+                                          th:text="${processo.status.descricao}">Distribuido</span>
+                                    <span class="badge bg-primary"
+                                          th:if="${processo.status.name() == 'DISPONIVEL'}"
+                                          th:text="${processo.status.descricao}">Disponivel</span>
+                                    <span class="badge bg-warning text-dark"
                                           th:if="${processo.status.name() == 'EM_PAUTA'}"
                                           th:text="${processo.status.descricao}">Em Pauta</span>
-                                    <span class="badge bg-primary" 
+                                    <span class="badge bg-warning"
                                           th:if="${processo.status.name() == 'EM_JULGAMENTO'}"
                                           th:text="${processo.status.descricao}">Em Julgamento</span>
-                                    <span class="badge bg-success" 
+                                    <span class="badge bg-success"
                                           th:if="${processo.status.name() == 'JULGADO'}"
                                           th:text="${processo.status.descricao}">Julgado</span>
                                 </td>
                                 <td th:text="${#temporals.format(processo.dataRecepcao, 'dd/MM/yyyy')}">01/01/2024</td>
                                 <td th:text="${processo.interessado.nome}">Nome do Aluno</td>
                                 <td>
-                                    <a th:href="@{/professor/processo/{id}(id=${processo.id})}" 
+                                    <!-- Botao para emitir parecer (apenas se DISTRIBUIDO) -->
+                                    <a th:if="${processo.status.name() == 'DISTRIBUIDO'}"
+                                       th:href="@{/professor/processo/{id}(id=${processo.id})}"
+                                       class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil-square"></i> Emitir Parecer
+                                    </a>
+                                    <!-- Botao para ver detalhes (outros status) -->
+                                    <a th:unless="${processo.status.name() == 'DISTRIBUIDO'}"
+                                       th:href="@{/professor/processo/{id}(id=${processo.id})}"
                                        class="btn btn-sm btn-outline-primary">
-                                        Ver Detalhes
+                                        <i class="bi bi-eye"></i> Ver Detalhes
                                     </a>
                                 </td>
                             </tr>

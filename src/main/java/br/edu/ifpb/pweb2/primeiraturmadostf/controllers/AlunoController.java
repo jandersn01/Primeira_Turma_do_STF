@@ -1,7 +1,16 @@
 package br.edu.ifpb.pweb2.primeiraturmadostf.controllers;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,25 +19,21 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.transaction.annotation.Transactional;
-
-import jakarta.validation.Valid;
 
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Aluno;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Assunto;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.Documento;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Processo;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusProcesso;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.AlunoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.AssuntoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.DocumentoService;
 import br.edu.ifpb.pweb2.primeiraturmadostf.services.ProcessoService;
+import jakarta.validation.Valid;
 
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List; // Import necessário
+import org.springframework.security.core.GrantedAuthority;
 
 @Controller
 @RequestMapping("/aluno")
@@ -42,41 +47,76 @@ public class AlunoController {
 
     @Autowired
     private AlunoService alunoService;
-    
+
     @Autowired
     private DocumentoService documentoService;
 
+    private boolean isAdmin(UserDetails userDetails) {
+        return userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN"));
+    }
+
     @GetMapping("/processo/form")
-    public String getFormProcesso(Model model, Processo processo) {
-        // Busca o primeiro aluno apenas como fallback inicial para o formulário
-        Aluno aluno = alunoService.findAll().stream().findFirst().orElse(null);
-        
+    public String getFormProcesso(Model model, Processo processo,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) Long alunoId) {
+
+        boolean admin = isAdmin(userDetails);
+        Aluno aluno = null;
+
+        if (admin) {
+            // Admin pode selecionar qualquer aluno
+            if (alunoId != null) {
+                aluno = alunoService.findById(alunoId);
+            }
+            model.addAttribute("todosAlunos", alunoService.findAll());
+            model.addAttribute("isAdmin", true);
+        } else {
+            aluno = alunoService.findByMatricula(userDetails.getUsername());
+            model.addAttribute("isAdmin", false);
+        }
+
         if (processo == null) {
             processo = new Processo();
         }
-        
+
         model.addAttribute("processo", processo);
         model.addAttribute("assuntos", assuntoService.findAll());
         model.addAttribute("aluno", aluno);
-        
-        // Se não houver aluno, apenas adiciona mensagem (sem redirecionar)
-        if (aluno == null) {
-            model.addAttribute("mensagem", "Nenhum aluno cadastrado no sistema.");
+
+        if (aluno == null && !admin) {
+            model.addAttribute("mensagem", "Aluno nao encontrado.");
         }
-        
+
         return "aluno/processo/form";
     }
 
     @PostMapping("/processo/save")
-    public String postProcesso(@Valid @ModelAttribute("processo") Processo processo, BindingResult result, Model model, RedirectAttributes redirect) {
-        // Lógica simplificada de pegar o primeiro aluno (Ideal seria vir do form ou sessão)
-        Aluno aluno = alunoService.findAll().stream().findFirst().orElse(null);
-        
-        if (aluno == null) {
-            redirect.addFlashAttribute("mensagem", "Erro: Nenhum aluno cadastrado.");
-            return "redirect:/admin/aluno/form";
+    public String postProcesso(
+            @Valid @ModelAttribute("processo") Processo processo,
+            BindingResult result,
+            Model model,
+            RedirectAttributes redirect,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) Long alunoId,
+            @RequestParam(name = "documento", required = false) MultipartFile documento,
+            @RequestParam(name = "descricaoDocumento", required = false) String descricaoDocumento) {
+
+        boolean admin = isAdmin(userDetails);
+        Aluno aluno = null;
+
+        if (admin && alunoId != null) {
+            aluno = alunoService.findById(alunoId);
+        } else if (!admin) {
+            aluno = alunoService.findByMatricula(userDetails.getUsername());
         }
-        
+
+        if (aluno == null) {
+            redirect.addFlashAttribute("mensagem", "Erro: Aluno nao encontrado. Selecione um aluno.");
+            return "redirect:/aluno/processo/form";
+        }
+
         if (processo.getAssunto() == null || processo.getAssunto().getId() == null) {
             result.rejectValue("assunto", "assunto.required", "Selecione um assunto válido");
         } else {
@@ -87,21 +127,36 @@ public class AlunoController {
                 processo.setAssunto(assunto);
             }
         }
-        
+
         if (result.hasErrors()) {
             model.addAttribute("assuntos", assuntoService.findAll());
             model.addAttribute("aluno", aluno);
             return "aluno/processo/form";
         }
-        
+
         processo.setInteressado(aluno);
         processo.setStatus(StatusProcesso.CRIADO);
-        
+
         try {
             Processo processoSalvo = processoService.save(processo);
-            
+
             if (processoSalvo != null) {
-                redirect.addFlashAttribute("mensagem", "Processo cadastrado com sucesso! Número: " + processoSalvo.getNumero());
+                String mensagemSucesso = "Processo cadastrado com sucesso! Número: " + processoSalvo.getNumero();
+
+                // Processa o upload do documento se foi enviado
+                if (documento != null && !documento.isEmpty()) {
+                    try {
+                        documentoService.uploadDocumento(documento, processoSalvo, descricaoDocumento);
+                        mensagemSucesso += " Documento anexado com sucesso.";
+                    } catch (IllegalArgumentException e) {
+                        // Erro de validação do arquivo (tipo ou tamanho)
+                        mensagemSucesso += " Porém, o documento não foi anexado: " + e.getMessage();
+                    } catch (Exception e) {
+                        mensagemSucesso += " Porém, houve erro ao anexar o documento: " + e.getMessage();
+                    }
+                }
+
+                redirect.addFlashAttribute("mensagem", mensagemSucesso);
             } else {
                 redirect.addFlashAttribute("mensagem", "Erro ao cadastrar o processo.");
             }
@@ -118,104 +173,183 @@ public class AlunoController {
             model.addAttribute("aluno", aluno);
             return "aluno/processo/form";
         }
-        
+
         return "redirect:/aluno/processo/form";
     }
 
-    // --- MÉTODO ALTERADO PARA SIMULAÇÃO DE ACESSO ---
     @GetMapping("/processo/list")
     @Transactional(readOnly = true)
     public String listarProcessos(
             Model model,
-            @RequestParam(required = false) Long alunoId, // Parâmetro para simular login
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long assuntoId,
+            @RequestParam(required = false) Long alunoId,
             @RequestParam(required = false, defaultValue = "desc") String ordenacao) {
-        
-        // 1. Buscar todos os alunos para o dropdown de "Trocar Usuário"
-        List<Aluno> todosAlunos = alunoService.findAll();
-        
-        // 2. Definir o Aluno "Logado"
+
+        boolean admin = isAdmin(userDetails);
         Aluno aluno = null;
-        if (alunoId != null) {
-            aluno = alunoService.findById(alunoId);
+
+        if (admin) {
+            // Admin pode filtrar por aluno ou ver todos
+            if (alunoId != null) {
+                aluno = alunoService.findById(alunoId);
+            }
+            model.addAttribute("todosAlunos", alunoService.findAll());
+            model.addAttribute("isAdmin", true);
+        } else {
+            aluno = alunoService.findByMatricula(userDetails.getUsername());
+            model.addAttribute("isAdmin", false);
         }
-        
-        // Fallback: Se não veio ID, pega o primeiro da lista
-        if (aluno == null && !todosAlunos.isEmpty()) {
-            aluno = todosAlunos.get(0);
-        }
-        
+
         java.util.List<Processo> processos = new java.util.ArrayList<>();
-        
-        if (aluno != null) {
-            // Filtros
-            StatusProcesso statusEnum = null;
-            if (status != null && !status.isEmpty()) {
-                try { statusEnum = StatusProcesso.valueOf(status); } catch (Exception e) {}
-            }
-            
-            Assunto assunto = null;
-            if (assuntoId != null) {
-                assunto = assuntoService.findById(assuntoId);
-            }
-            
-            // Buscar processos
-            processos = processoService.findByInteressadoWithFilters(aluno, statusEnum, assunto, ordenacao);
-            
-            // Carregar documentos (Lazy loading fix)
-            for (Processo p : processos) {
-                try {
-                    p.setDocumentos(new java.util.HashSet<>(documentoService.findByProcesso(p)));
-                    if (p.getAssunto() != null) p.getAssunto().getNome();
-                } catch (Exception e) {}
-            }
+
+        StatusProcesso statusEnum = null;
+        if (status != null && !status.isEmpty()) {
+            try { statusEnum = StatusProcesso.valueOf(status); } catch (Exception e) {}
         }
-        
-        // 3. Adicionar atributos ao model
+
+        Assunto assunto = null;
+        if (assuntoId != null) {
+            assunto = assuntoService.findById(assuntoId);
+        }
+
+        if (admin && aluno == null) {
+            // Admin sem filtro de aluno: mostrar todos os processos com filtros aplicados
+            processos = processoService.findWithFilters(null, statusEnum, assunto, ordenacao);
+        } else if (aluno != null) {
+            processos = processoService.findWithFilters(aluno, statusEnum, assunto, ordenacao);
+        }
+
+        for (Processo p : processos) {
+            try {
+                p.setDocumentos(new java.util.HashSet<>(documentoService.findByProcesso(p)));
+                if (p.getAssunto() != null) p.getAssunto().getNome();
+            } catch (Exception e) {}
+        }
+
         model.addAttribute("processos", processos);
-        model.addAttribute("aluno", aluno); // Aluno atual (simulado)
-        model.addAttribute("todosAlunos", todosAlunos); // Lista para o dropdown
-        
+        model.addAttribute("aluno", aluno);
         model.addAttribute("assuntos", assuntoService.findAll());
         model.addAttribute("statusList", StatusProcesso.values());
-        
-        // Manter filtros
+
         model.addAttribute("statusSelecionado", status);
         model.addAttribute("assuntoSelecionado", assuntoId);
+        model.addAttribute("alunoIdSelecionado", alunoId);
         model.addAttribute("ordenacaoSelecionada", ordenacao);
-        model.addAttribute("alunoIdSelecionado", aluno != null ? aluno.getId() : null);
-        
-        if (aluno == null) {
-            model.addAttribute("mensagem", "Nenhum aluno cadastrado no sistema.");
+
+        if (aluno == null && !admin) {
+            model.addAttribute("mensagem", "Aluno nao encontrado.");
         }
-        
+
         return "aluno/processo/list";
     }
     
-    // ... (upload, download, delete mantidos iguais) ...
+    /**
+     * Upload de documento PDF para um processo.
+     * Apenas processos com status CRIADO aceitam upload.
+     * Arquivo deve ser PDF com no máximo 5MB.
+     */
     @PostMapping("/processo/{processoId}/documento/upload")
-    public String uploadDocumento(@PathVariable Long processoId, @RequestParam("arquivo") MultipartFile arquivo, @RequestParam(required = false) String descricao, RedirectAttributes redirect) {
-        // ... implementação mantida ...
+    public String uploadDocumento(
+            @PathVariable Long processoId,
+            @RequestParam("arquivo") MultipartFile arquivo,
+            @RequestParam(required = false) String descricao,
+            RedirectAttributes redirect) {
+
         try {
-             Processo processo = processoService.findById(processoId);
-             if(processo != null) documentoService.uploadDocumento(arquivo, processo, descricao);
-             redirect.addFlashAttribute("mensagem", "Documento enviado!");
-        } catch(Exception e) {
-             redirect.addFlashAttribute("mensagem", "Erro: " + e.getMessage());
+            Processo processo = processoService.findById(processoId);
+            if (processo == null) {
+                redirect.addFlashAttribute("mensagem", "Erro: Processo não encontrado.");
+                return "redirect:/aluno/processo/list";
+            }
+
+            // O DocumentoService valida o status do processo e o arquivo
+            documentoService.uploadDocumento(arquivo, processo, descricao);
+            redirect.addFlashAttribute("mensagem", "Documento enviado com sucesso!");
+
+        } catch (IllegalStateException e) {
+            // Erro de status do processo (não é CRIADO)
+            redirect.addFlashAttribute("mensagem", "Erro: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // Erro de validação do arquivo (tipo ou tamanho)
+            redirect.addFlashAttribute("mensagem", "Erro: " + e.getMessage());
+        } catch (Exception e) {
+            redirect.addFlashAttribute("mensagem", "Erro ao enviar documento: " + e.getMessage());
         }
+
         return "redirect:/aluno/processo/list";
     }
-    
+
+    /**
+     * Download de documento anexado a um processo.
+     */
     @GetMapping("/processo/{processoId}/documento/{documentoId}/download")
-    public ResponseEntity<Resource> downloadDocumento(@PathVariable Long processoId, @PathVariable Long documentoId) {
-        // ... implementação mantida ...
-        return ResponseEntity.notFound().build(); // Placeholder simplificado
+    public ResponseEntity<Resource> downloadDocumento(
+            @PathVariable Long processoId,
+            @PathVariable Long documentoId) {
+
+        try {
+            Processo processo = processoService.findById(processoId);
+            if (processo == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Documento documento = documentoService.findById(documentoId);
+            if (documento == null || !documento.getProcesso().getId().equals(processoId)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Resource resource = documentoService.carregarArquivoComoResource(documento);
+
+            String contentType = documento.getTipoMime();
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + documento.getNomeOriginal() + "\"")
+                    .body(resource);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
-    
+
+    /**
+     * Exclusão de documento de um processo.
+     * Apenas processos com status CRIADO permitem exclusão de documentos.
+     */
     @PostMapping("/processo/{processoId}/documento/{documentoId}/delete")
-    public String deletarDocumento(@PathVariable Long processoId, @PathVariable Long documentoId, RedirectAttributes redirect) {
-        // ... implementação mantida ...
+    public String deletarDocumento(
+            @PathVariable Long processoId,
+            @PathVariable Long documentoId,
+            RedirectAttributes redirect) {
+
+        try {
+            Processo processo = processoService.findById(processoId);
+            if (processo == null) {
+                redirect.addFlashAttribute("mensagem", "Erro: Processo não encontrado.");
+                return "redirect:/aluno/processo/list";
+            }
+
+            // O DocumentoService valida o status do processo
+            boolean removido = documentoService.removerDocumento(documentoId, processo);
+            if (removido) {
+                redirect.addFlashAttribute("mensagem", "Documento removido com sucesso!");
+            } else {
+                redirect.addFlashAttribute("mensagem", "Erro: Documento não encontrado.");
+            }
+
+        } catch (IllegalStateException e) {
+            // Erro de status do processo (não é CRIADO)
+            redirect.addFlashAttribute("mensagem", "Erro: " + e.getMessage());
+        } catch (Exception e) {
+            redirect.addFlashAttribute("mensagem", "Erro ao remover documento: " + e.getMessage());
+        }
+
         return "redirect:/aluno/processo/list";
     }
 }

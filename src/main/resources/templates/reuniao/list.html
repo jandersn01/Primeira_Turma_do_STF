@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+
+<head>
+    <title>Gerenciar Reuniões</title>
+</head>
+
+<body>
+
+    <div layout:fragment="conteudo">
+        <div class="card mt-4 shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="bi bi-calendar-week"></i> Reuniões</h4>
+                <a th:if="${isProfessorView == null}" th:href="@{/reunioes/form}" class="btn btn-outline-light btn-sm fw-bold">Nova Reunião</a>
+            </div>
+
+            <div class="card-body">
+                <form method="get" th:action="@{/reunioes}" class="row g-3 align-items-end mb-4">
+                    <div class="col-md-9">
+                        <label for="status" class="form-label small fw-bold text-secondary">Filtrar por Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">Todas as Reuniões</option>
+                            <option th:each="s : ${T(br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusReuniao).values()}"
+                                th:value="${s.name()}" th:text="${s.descricao}"
+                                th:selected="${statusSelecionado != null and statusSelecionado.name() == s.name()}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">Filtrar</button>
+                    </div>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data</th>
+                                <th>Colegiado / Curso</th>
+                                <th>Status</th>
+                                <th class="text-center">Itens em Pauta</th>
+                                <th class="text-end pe-3">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="r : ${pagina.content}">
+                                <td class="fw-bold" th:text="${#temporals.format(r.dataReuniao, 'dd/MM/yyyy')}"></td>
+                                <td>
+                                    <span class="fw-bold text-dark" th:text="${r.colegiado?.curso?.nome}"></span><br>
+                                    <small class="text-muted" th:text="${r.colegiado?.portaria}"></small>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill" th:classappend="${r.status.name() == 'PROGRAMADA' ? 'bg-primary' : (r.status.name() == 'EM_ANDAMENTO' ? 'bg-warning text-dark' : 'bg-secondary')}" th:text="${r.status.descricao}"></span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border" th:text="${r.processos.size() + ' processo(s)'}"></span>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-info" th:onclick="|carregarDetalhes(${r.id})|">Detalhes</button>
+                                        <!-- Acoes do Coordenador -->
+                                        <th:block th:if="${isProfessorView == null}">
+                                            <form th:if="${r.status.name() == 'PROGRAMADA'}" th:action="@{/reunioes/{id}/iniciar(id=${r.id})}" method="post"><button type="submit" class="btn btn-success">Iniciar</button></form>
+                                            <a th:if="${r.status.name() == 'EM_ANDAMENTO'}" th:href="@{/reunioes/{id}/conduzir(id=${r.id})}" class="btn btn-warning">Conduzir</a>
+                                        </th:block>
+                                        <!-- Ação do Professor: Participar da sessão em andamento -->
+                                        <th:block th:if="${isProfessorView != null}">
+                                            <a th:if="${r.status.name() == 'EM_ANDAMENTO'}" th:href="@{/reunioes/{id}/participar(id=${r.id})}" class="btn btn-success">
+                                                <i class="bi bi-box-arrow-in-right"></i> Participar
+                                            </a>
+                                        </th:block>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${pagina.totalElements == 0}">
+                                <td colspan="5" class="text-center py-5 text-muted">Nenhuma reunião encontrada.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <nav th:if="${pagina.totalPages > 1}" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item" th:classappend="${pagina.first} ? 'disabled'">
+                                <a class="page-link" th:href="@{/reunioes(page=${pagina.number-1}, status=${statusSelecionado})}">Anterior</a>
+                            </li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, pagina.totalPages - 1)}" th:classappend="${i == pagina.number} ? 'active'">
+                                <a class="page-link" th:href="@{/reunioes(page=${i}, status=${statusSelecionado})}" th:text="${i + 1}"></a>
+                            </li>
+                            <li class="page-item" th:classappend="${pagina.last} ? 'disabled'">
+                                <a class="page-link" th:href="@{/reunioes(page=${pagina.number+1}, status=${statusSelecionado})}">Próximo</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

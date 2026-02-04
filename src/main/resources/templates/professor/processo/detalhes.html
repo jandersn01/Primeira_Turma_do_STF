@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Detalhes do Processo</title>
+    <style>
+        /* Radio buttons estilizados como cards */
+        .decisao-options {
+            display: flex;
+            gap: 1rem;
+        }
+        .decisao-option {
+            flex: 1;
+        }
+        .decisao-option input[type="radio"] {
+            display: none;
+        }
+        .decisao-option label {
+            display: block;
+            border: 2px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .decisao-option label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .decisao-option.deferimento label {
+            border-color: #28a745;
+        }
+        .decisao-option.deferimento input:checked + label {
+            background-color: rgba(40, 167, 69, 0.15);
+            border-width: 3px;
+        }
+        .decisao-option.indeferimento label {
+            border-color: #dc3545;
+        }
+        .decisao-option.indeferimento input:checked + label {
+            background-color: rgba(220, 53, 69, 0.15);
+            border-width: 3px;
+        }
+        .documento-item {
+            padding: 0.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div layout:fragment="conteudo">
+
+        <!-- Mensagens -->
+        <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            <span th:text="${mensagem}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <span th:text="${erro}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Cabecalho -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    Processo <span th:text="${processo.numero}">2024/001</span>
+                </h4>
+                <small class="text-muted">Detalhes e parecer do relator</small>
+            </div>
+            <a th:href="@{/professor/processo/list}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+        </div>
+
+        <div class="row">
+            <!-- Coluna Principal - Informacoes do Processo -->
+            <div class="col-lg-8">
+
+                <!-- Informacoes do Processo -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle me-2"></i> Informacoes do Processo
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tr>
+                                        <th class="text-muted" style="width: 40%;">Numero:</th>
+                                        <td class="fw-bold" th:text="${processo.numero}">2024/001</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-muted">Status:</th>
+                                        <td>
+                                            <span class="badge"
+                                                  th:classappend="${processo.status.name() == 'CRIADO' ? 'bg-secondary' :
+                                                                   processo.status.name() == 'DISTRIBUIDO' ? 'bg-info' :
+                                                                   processo.status.name() == 'DISPONIVEL' ? 'bg-primary' :
+                                                                   processo.status.name() == 'EM_PAUTA' ? 'bg-warning text-dark' :
+                                                                   processo.status.name() == 'EM_JULGAMENTO' ? 'bg-primary' : 'bg-success'}"
+                                                  th:text="${processo.status.descricao}">Status</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-muted">Data Recepcao:</th>
+                                        <td th:text="${#temporals.format(processo.dataRecepcao, 'dd/MM/yyyy')}">01/01/2024</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-muted">Data Distribuicao:</th>
+                                        <td th:text="${processo.dataDistribuicao != null ? #temporals.format(processo.dataDistribuicao, 'dd/MM/yyyy') : '-'}">01/01/2024</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tr>
+                                        <th class="text-muted" style="width: 40%;">Assunto:</th>
+                                        <td th:text="${processo.assunto.nome}">Dispensa de disciplina</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-muted">Interessado:</th>
+                                        <td th:text="${processo.interessado.nome}">Nome do Aluno</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-muted">Matricula:</th>
+                                        <td th:text="${processo.interessado.matricula}">2024001</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-muted">Curso:</th>
+                                        <td th:text="${processo.interessado.curso != null ? processo.interessado.curso.nome : '-'}">Curso</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Texto do Requerimento -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="bi bi-file-text me-2"></i> Texto do Requerimento
+                    </div>
+                    <div class="card-body">
+                        <p th:text="${processo.textoRequerimento}" style="white-space: pre-wrap;">Texto do requerimento do aluno...</p>
+                    </div>
+                </div>
+
+                <!-- Documentos Anexados -->
+                <div class="card mb-4" th:if="${processo.documentos != null and !processo.documentos.isEmpty()}">
+                    <div class="card-header">
+                        <i class="bi bi-paperclip me-2"></i> Documentos Anexados
+                    </div>
+                    <div class="card-body">
+                        <div th:each="doc : ${processo.documentos}" class="documento-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-file-pdf text-danger me-2"></i>
+                                <span th:text="${doc.nomeOriginal}">documento.pdf</span>
+                                <small class="text-muted ms-2" th:text="${doc.tamanhoFormatado}">1.2 MB</small>
+                            </div>
+                            <a th:href="@{/documentos/{id}/download(id=${doc.id})}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-download"></i> Baixar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Coluna Lateral - Parecer -->
+            <div class="col-lg-4">
+
+                <!-- Se ja tem parecer registrado -->
+                <div th:if="${processo.decisaoRelator != null}" class="card border-success">
+                    <div class="card-header bg-success text-white">
+                        <i class="bi bi-check-circle me-2"></i> Parecer Registrado
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <span class="badge fs-5"
+                                  th:classappend="${processo.decisaoRelator.name() == 'DEFERIMENTO' ? 'bg-success' : 'bg-danger'}"
+                                  th:text="${processo.decisaoRelator.titulo}">Deferido</span>
+                        </div>
+
+                        <p class="text-muted small mb-1">Data do parecer:</p>
+                        <p class="mb-3" th:text="${processo.dataParecer != null ? #temporals.format(processo.dataParecer, 'dd/MM/yyyy') : '-'}">01/01/2024</p>
+
+                        <p class="text-muted small mb-1">Fundamentacao:</p>
+                        <p th:text="${processo.parecer}" style="white-space: pre-wrap;" class="border rounded p-2 bg-light">Texto do parecer...</p>
+                    </div>
+                </div>
+
+                <!-- Se pode emitir parecer -->
+                <div th:if="${podeEmitirParecer}" class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-pencil-square me-2"></i> Emitir Parecer
+                    </div>
+                    <div class="card-body">
+
+                        <div class="alert alert-info py-2 mb-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <small>Como relator, voce deve analisar o requerimento e emitir seu parecer.</small>
+                        </div>
+
+                        <form th:action="@{/professor/processo/{id}/parecer(id=${processo.id})}"
+                              method="post" id="formParecer">
+
+                            <!-- Decisao -->
+                            <label class="form-label fw-bold">Sua decisao: <span class="text-danger">*</span></label>
+                            <div class="decisao-options mb-3">
+                                <div class="decisao-option deferimento">
+                                    <input type="radio" name="decisao" id="decisaoDeferimento" value="DEFERIMENTO" required>
+                                    <label for="decisaoDeferimento">
+                                        <i class="bi bi-check-circle display-6 text-success"></i>
+                                        <p class="mb-0 mt-2 fw-bold">Deferimento</p>
+                                    </label>
+                                </div>
+                                <div class="decisao-option indeferimento">
+                                    <input type="radio" name="decisao" id="decisaoIndeferimento" value="INDEFERIMENTO" required>
+                                    <label for="decisaoIndeferimento">
+                                        <i class="bi bi-x-circle display-6 text-danger"></i>
+                                        <p class="mb-0 mt-2 fw-bold">Indeferimento</p>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Fundamentacao -->
+                            <div class="mb-3">
+                                <label for="parecer" class="form-label fw-bold">Fundamentacao: <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="parecer" name="parecer" rows="5"
+                                          placeholder="Fundamente sua decisao explicando os motivos do deferimento ou indeferimento do pedido. (minimo 20 caracteres)"
+                                          required minlength="20"></textarea>
+                                <div class="form-text">
+                                    Minimo 20 caracteres
+                                </div>
+                            </div>
+
+                            <!-- Botao -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg me-1"></i> Emitir Parecer
+                                </button>
+                            </div>
+
+                            <div class="alert alert-warning mt-3 py-2">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                <small><strong>Atencao:</strong> Apos emitir o parecer, nao sera possivel alterar.</small>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Se nao pode emitir parecer (processo em outro status) -->
+                <div th:if="${!podeEmitirParecer and processo.decisaoRelator == null}" class="card">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle me-2"></i> Parecer
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-secondary mb-0">
+                            <i class="bi bi-clock me-1"></i>
+                            <span th:if="${processo.status.name() == 'CRIADO'}">
+                                O processo ainda nao foi distribuido para um relator.
+                            </span>
+                            <span th:if="${processo.status.name() != 'CRIADO' and processo.status.name() != 'DISTRIBUIDO'}">
+                                O processo ja esta em fase de julgamento. Nao e possivel emitir parecer.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resultado do Julgamento (se ja foi julgado) -->
+                <div th:if="${processo.status.name() == 'JULGADO'}" class="card mt-3 border-info">
+                    <div class="card-header bg-info text-white">
+                        <i class="bi bi-gavel me-2"></i> Resultado do Julgamento
+                    </div>
+                    <div class="card-body text-center">
+                        <span class="badge fs-5"
+                              th:classappend="${processo.resultadoJulgamento != null and processo.resultadoJulgamento.name() == 'DEFERIMENTO' ? 'bg-success' : 'bg-danger'}"
+                              th:text="${processo.resultadoJulgamento != null ? processo.resultadoJulgamento.titulo : '-'}">Resultado</span>
+                        <p class="text-muted small mt-2 mb-0" th:if="${processo.dataJulgamento != null}">
+                            Julgado em <span th:text="${#temporals.format(processo.dataJulgamento, 'dd/MM/yyyy')}"></span>
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.model.Curso;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Processo;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusProcesso;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.TipoDecisao;
 import br.edu.ifpb.pweb2.primeiraturmadostf.repository.ProcessoRepository;
 import br.edu.ifpb.pweb2.primeiraturmadostf.repository.specification.ProcessoSpecifications;
 
@@ -53,18 +56,17 @@ public class ProcessoService {
         return this.processoRepository.findByRelatorAndStatus(relator, status);
     }
 
-
     public Processo save(Processo processo) {
         // Se o processo não tem número, gerar automaticamente
         if (processo.getNumero() == null || processo.getNumero().isEmpty()) {
             processo.setNumero(gerarNumeroProcesso());
         }
-        
+
         // Se não tem data de recepção, definir como hoje
         if (processo.getDataRecepcao() == null) {
             processo.setDataRecepcao(LocalDate.now());
         }
-        
+
         // Se não tem status, definir como CRIADO
         if (processo.getStatus() == null) {
             processo.setStatus(StatusProcesso.CRIADO);
@@ -74,11 +76,11 @@ public class ProcessoService {
         if (processo.getColegiado() == null && processo.getInteressado() != null) {
             Aluno aluno = processo.getInteressado();
             Curso curso = aluno.getCurso();
-            
+
             if (curso != null) {
                 // Busca o colegiado ativo daquele curso
                 Colegiado colegiado = colegiadoService.findAtivoPorCurso(curso);
-                
+
                 if (colegiado != null) {
                     processo.setColegiado(colegiado);
                 } else {
@@ -86,23 +88,23 @@ public class ProcessoService {
                 }
             }
         }
-        
+
         return processoRepository.save(processo);
     }
-    
+
     /**
-     * Gera um número de processo no formato: ANO/SEQUENCIAL
-     * Exemplo: 2024/001, 2024/002, etc.
+     * Gera um número de processo no formato: ANO/SEQUENCIAL Exemplo: 2024/001,
+     * 2024/002, etc.
      */
     private String gerarNumeroProcesso() {
         int anoAtual = LocalDate.now().getYear();
         String prefixo = String.valueOf(anoAtual);
-        
+
         // Buscar o último processo do ano atual
         List<Processo> processosDoAno = processoRepository.findAll().stream()
                 .filter(p -> p.getNumero() != null && p.getNumero().startsWith(prefixo + "/"))
                 .toList();
-        
+
         // Encontrar o maior sequencial
         int maiorSequencial = 0;
         for (Processo p : processosDoAno) {
@@ -118,10 +120,18 @@ public class ProcessoService {
                 // Ignorar números com formato inválido
             }
         }
-        
+
         // Incrementar e formatar
         int novoSequencial = maiorSequencial + 1;
         return String.format("%s/%03d", prefixo, novoSequencial);
+    }
+
+    public Page<Processo> findByColegiadoWithFiltersPaginado(
+            Colegiado colegiado, StatusProcesso status, Aluno aluno,
+            Professor relator, Pageable pageable) {
+        Specification<Processo> spec = ProcessoSpecifications.buildSpecificationForColegiado(
+                colegiado, status, aluno, relator);
+        return processoRepository.findAll(spec, pageable); // Aqui o Spring Data faz o Limit/Offset
     }
 
     public boolean remove(Long id) {
@@ -134,8 +144,33 @@ public class ProcessoService {
     }
 
     /**
+     * Busca processos com filtros opcionais e ordenação.
+     *
+     * @param aluno Aluno interessado (opcional, null para todos)
+     * @param status Status do processo (opcional, null para todos)
+     * @param assunto Assunto do processo (opcional, null para todos)
+     * @param ordenacao "asc" para crescente, "desc" para decrescente, null para
+     * crescente (padrão)
+     * @return Lista de processos filtrados e ordenados
+     */
+    public List<Processo> findWithFilters(
+            Aluno aluno, StatusProcesso status, Assunto assunto, String ordenacao) {
+
+        // Construir specification com filtros dinâmicos
+        Specification<Processo> spec = ProcessoSpecifications.buildSpecification(
+            aluno, status, assunto);
+
+        // Definir ordenação (padrão: crescente por data de recepção)
+        Sort sort = (ordenacao != null && ordenacao.equalsIgnoreCase("desc"))
+            ? Sort.by("dataRecepcao").descending()
+            : Sort.by("dataRecepcao").ascending();
+
+        return processoRepository.findAll(spec, sort);
+    }
+
+    /**
      * Busca processos de um aluno com filtros opcionais e ordenação.
-     * 
+     *
      * @param aluno Aluno interessado (obrigatório)
      * @param status Status do processo (opcional, null para todos)
      * @param assunto Assunto do processo (opcional, null para todos)
@@ -144,69 +179,116 @@ public class ProcessoService {
      */
     public List<Processo> findByInteressadoWithFilters(
             Aluno aluno, StatusProcesso status, Assunto assunto, String ordenacao) {
-        
-        // Construir specification com filtros dinâmicos
-        Specification<Processo> spec = ProcessoSpecifications.buildSpecification(
-            aluno, status, assunto);
-        
-        // Definir ordenação (padrão: crescente por data de recepção)
-        Sort sort = (ordenacao != null && ordenacao.equalsIgnoreCase("desc")) 
-            ? Sort.by("dataRecepcao").descending()
-            : Sort.by("dataRecepcao").ascending();
-        
-        return processoRepository.findAll(spec, sort);
+
+        return findWithFilters(aluno, status, assunto, ordenacao);
     }
     
     /**
-     * Busca processos de um colegiado com filtros opcionais e ordenação.
-     * Os processos são encontrados através das reuniões do colegiado.
-     * 
+     * Busca processos de um colegiado com filtros opcionais e ordenação. Os
+     * processos são encontrados através das reuniões do colegiado.
+     *
      * @param colegiado Colegiado (obrigatório)
      * @param status Status do processo (opcional, null para todos)
      * @param aluno Aluno interessado (opcional, null para todos)
      * @param relator Professor relator (opcional, null para todos)
-     * @param ordenacao "asc" para crescente, "desc" para decrescente, null para crescente (padrão)
+     * @param ordenacao "asc" para crescente, "desc" para decrescente, null para
+     * crescente (padrão)
      * @return Lista de processos filtrados e ordenados
      */
     public List<Processo> findByColegiadoWithFilters(
-            Colegiado colegiado, StatusProcesso status, Aluno aluno, 
+            Colegiado colegiado, StatusProcesso status, Aluno aluno,
             Professor relator, String ordenacao) {
-        
+
         // Construir specification com filtros dinâmicos
         Specification<Processo> spec = ProcessoSpecifications.buildSpecificationForColegiado(
-            colegiado, status, aluno, relator);
-        
+                colegiado, status, aluno, relator);
+
         // Definir ordenação (padrão: crescente por data de recepção)
-        Sort sort = (ordenacao != null && ordenacao.equalsIgnoreCase("desc")) 
-            ? Sort.by("dataRecepcao").descending()
-            : Sort.by("dataRecepcao").ascending();
-        
+        Sort sort = (ordenacao != null && ordenacao.equalsIgnoreCase("desc"))
+                ? Sort.by("dataRecepcao").descending()
+                : Sort.by("dataRecepcao").ascending();
+
         return processoRepository.findAll(spec, sort);
     }
 
     public void distribuirProcesso(Long processoId, Long relatorId) {
-    Processo processo = findById(processoId);
-    
-    if (processo == null) {
-        throw new IllegalArgumentException("Processo não encontrado");
+        Processo processo = findById(processoId);
+
+        if (processo == null) {
+            throw new IllegalArgumentException("Processo não encontrado");
+        }
+
+        if (processo.getStatus() != StatusProcesso.CRIADO) {
+            throw new IllegalStateException("O processo não está no estado CRIADO e não pode ser distribuído.");
+        }
+
+        Professor relator = professorService.findById(relatorId);
+        if (relator == null) {
+            throw new IllegalArgumentException("Professor relator não encontrado");
+        }
+
+        // Atualização dos campos
+        processo.setRelator(relator);
+        processo.setStatus(StatusProcesso.DISTRIBUIDO);
+        processo.setDataDistribuicao(LocalDate.now());
+
+        processoRepository.save(processo);
     }
 
-    if (processo.getStatus() != StatusProcesso.CRIADO) {
-        throw new IllegalStateException("O processo não está no estado CRIADO e não pode ser distribuído.");
+    /**
+     * Registra o parecer do relator em um processo.
+     * O relator informa sua decisão (DEFERIMENTO ou INDEFERIMENTO) e uma fundamentação.
+     * Após o registro, o processo passa para o status DISPONIVEL.
+     *
+     * @param processoId ID do processo
+     * @param relatorId ID do professor relator
+     * @param decisao Decisão do relator (DEFERIMENTO ou INDEFERIMENTO)
+     * @param parecer Texto de fundamentação do parecer
+     * @throws IllegalArgumentException se processo ou professor não encontrados
+     * @throws IllegalStateException se processo não está DISTRIBUIDO, professor não é o relator,
+     *         ou parecer já foi registrado
+     */
+    public Processo registrarParecer(Long processoId, Long relatorId, TipoDecisao decisao, String parecer) {
+        Processo processo = findById(processoId);
+        if (processo == null) {
+            throw new IllegalArgumentException("Processo não encontrado");
+        }
+
+        Professor professor = professorService.findById(relatorId);
+        if (professor == null) {
+            throw new IllegalArgumentException("Professor não encontrado");
+        }
+
+        // Verifica se o professor é o relator do processo
+        if (processo.getRelator() == null || !processo.getRelator().getId().equals(relatorId)) {
+            throw new IllegalStateException("Você não é o relator deste processo");
+        }
+
+        // Verifica se o processo está no status correto
+        if (processo.getStatus() != StatusProcesso.DISTRIBUIDO) {
+            throw new IllegalStateException("O processo não está no status DISTRIBUÍDO. Status atual: " + processo.getStatus().getDescricao());
+        }
+
+        // Verifica se já tem parecer
+        if (processo.getDecisaoRelator() != null) {
+            throw new IllegalStateException("Este processo já possui parecer registrado");
+        }
+
+        // Valida o parecer
+        if (parecer == null || parecer.trim().isEmpty()) {
+            throw new IllegalArgumentException("A fundamentação do parecer é obrigatória");
+        }
+        if (parecer.trim().length() < 20) {
+            throw new IllegalArgumentException("A fundamentação deve ter no mínimo 20 caracteres");
+        }
+
+        // Registra o parecer
+        processo.setDecisaoRelator(decisao);
+        processo.setParecer(parecer.trim());
+        processo.setDataParecer(LocalDate.now());
+        processo.setStatus(StatusProcesso.DISPONIVEL);
+
+        return processoRepository.save(processo);
     }
 
-    Professor relator = professorService.findById(relatorId);
-    if (relator == null) {
-        throw new IllegalArgumentException("Professor relator não encontrado");
-    }
-
-    // Atualização dos campos
-    processo.setRelator(relator);
-    processo.setStatus(StatusProcesso.DISTRIBUIDO);
-    processo.setDataDistribuicao(LocalDate.now());
-
-    processoRepository.save(processo);
 }
-
-}
-

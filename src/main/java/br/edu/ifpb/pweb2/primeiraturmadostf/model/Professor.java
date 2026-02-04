@@ -3,6 +3,7 @@ package br.edu.ifpb.pweb2.primeiraturmadostf.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import br.edu.ifpb.pweb2.primeiraturmadostf.anotations.Matricula;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.*;
 
@@ -41,8 +43,7 @@ public class Professor {
     private String fone;
     
     @NotBlank(message = "Matrícula é obrigatória")
-    @Size(min = 3, max = 50, message = "Matrícula deve ter entre 3 e 50 caracteres")
-    @Pattern(regexp = "^[a-zA-Z0-9]+$", message = "Matrícula deve conter apenas letras e números")
+    @Matricula(message="Matrícula inválida")
     @Column(nullable = false, unique = true, length = 50)
     private String matricula;
     
@@ -65,6 +66,9 @@ public class Professor {
     // Relacionamento: Professor é relator de vários processos
     @OneToMany(mappedBy = "relator")
     private Set<Processo> processosRelator = new HashSet<>();
+
+    @OneToOne(mappedBy = "professor")
+    private Usuario usuario;
     
     /*  Relacionamento: Professor vota em vários processos
     @OneToMany(mappedBy = "professor")
@@ -208,5 +212,13 @@ public class Professor {
 
     public void setCurso(Curso curso) {
         this.curso = curso;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 }

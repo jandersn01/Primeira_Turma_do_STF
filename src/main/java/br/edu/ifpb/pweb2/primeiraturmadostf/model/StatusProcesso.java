@@ -3,6 +3,7 @@ package br.edu.ifpb.pweb2.primeiraturmadostf.model;
 public enum StatusProcesso {
     CRIADO("Criado"),
     DISTRIBUIDO("Distribuído ao relator"),
+    DISPONIVEL("Disponível para pauta"),  // Relator já emitiu parecer
     EM_PAUTA("Em pauta"),
     EM_JULGAMENTO("Em julgamento"),
     JULGADO("Julgado");

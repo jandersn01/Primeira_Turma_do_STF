@@ -9,92 +9,153 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.model.Processo;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusProcesso;
 
+import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Classe utilitária para construir Specifications dinâmicas para consultas de Processo.
  * Permite criar queries flexíveis combinando filtros opcionais.
  */
 public class ProcessoSpecifications {
-    
+
     /**
      * Filtra processos por aluno interessado.
-     * Se o aluno for null, retorna null (não aplica filtro).
+     * Se o aluno for null, não aplica filtro (retorna conjunction).
      */
     public static Specification<Processo> byInteressado(Aluno aluno) {
-        return (root, query, cb) -> 
-            aluno != null ? cb.equal(root.get("interessado"), aluno) : null;
+        return (root, query, cb) -> {
+            if (aluno == null) {
+                return cb.conjunction(); // sempre verdadeiro, não filtra
+            }
+            return cb.equal(root.get("interessado"), aluno);
+        };
     }
-    
+
     /**
      * Filtra processos por status.
-     * Se o status for null, retorna null (não aplica filtro).
+     * Se o status for null, não aplica filtro (retorna conjunction).
      */
     public static Specification<Processo> byStatus(StatusProcesso status) {
-        return (root, query, cb) -> 
-            status != null ? cb.equal(root.get("status"), status) : null;
+        return (root, query, cb) -> {
+            if (status == null) {
+                return cb.conjunction(); // sempre verdadeiro, não filtra
+            }
+            return cb.equal(root.get("status"), status);
+        };
     }
-    
+
     /**
      * Filtra processos por assunto.
-     * Se o assunto for null, retorna null (não aplica filtro).
+     * Se o assunto for null, não aplica filtro (retorna conjunction).
      */
     public static Specification<Processo> byAssunto(Assunto assunto) {
-        return (root, query, cb) -> 
-            assunto != null ? cb.equal(root.get("assunto"), assunto) : null;
+        return (root, query, cb) -> {
+            if (assunto == null) {
+                return cb.conjunction(); // sempre verdadeiro, não filtra
+            }
+            return cb.equal(root.get("assunto"), assunto);
+        };
     }
-    
+
     /**
      * Filtra processos por relator (Professor).
-     * Se o relator for null, retorna null (não aplica filtro).
+     * Se o relator for null, não aplica filtro (retorna conjunction).
      */
     public static Specification<Processo> byRelator(Professor relator) {
-        return (root, query, cb) -> 
-            relator != null ? cb.equal(root.get("relator"), relator) : null;
+        return (root, query, cb) -> {
+            if (relator == null) {
+                return cb.conjunction(); // sempre verdadeiro, não filtra
+            }
+            return cb.equal(root.get("relator"), relator);
+        };
     }
-    
+
+    /**
+     * Filtra processos por colegiado.
+     * Se o colegiado for null, não aplica filtro (retorna conjunction).
+     */
     public static Specification<Processo> byColegiado(Colegiado colegiado) {
         return (root, query, cb) -> {
             if (colegiado == null) {
-                return null;
+                return cb.conjunction(); // sempre verdadeiro, não filtra
             }
-            // MUDANÇA AQUI: Filtra pelo atributo direto 'colegiado' da entidade Processo
             return cb.equal(root.get("colegiado"), colegiado);
         };
     }
-    
+
     /**
      * Constrói uma Specification combinando todos os filtros fornecidos.
      * Os filtros são combinados com AND.
-     * 
-     * @param aluno Aluno interessado (pode ser null)
-     * @param status Status do processo (pode ser null)
-     * @param assunto Assunto do processo (pode ser null)
-     * @return Specification combinada com todos os filtros não-nulos
+     *
+     * @param aluno Aluno interessado (pode ser null para não filtrar)
+     * @param status Status do processo (pode ser null para não filtrar)
+     * @param assunto Assunto do processo (pode ser null para não filtrar)
+     * @return Specification combinada com todos os filtros aplicáveis
      */
     public static Specification<Processo> buildSpecification(
             Aluno aluno, StatusProcesso status, Assunto assunto) {
-        return Specification
-            .where(byInteressado(aluno))
-            .and(byStatus(status))
-            .and(byAssunto(assunto));
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (aluno != null) {
+                predicates.add(cb.equal(root.get("interessado"), aluno));
+            }
+
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            if (assunto != null) {
+                predicates.add(cb.equal(root.get("assunto"), assunto));
+            }
+
+            // Se não há predicados, retorna todos os registros
+            if (predicates.isEmpty()) {
+                return cb.conjunction();
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
     }
-    
+
     /**
      * Constrói uma Specification combinando todos os filtros fornecidos para processos do colegiado.
      * Os filtros são combinados com AND.
-     * 
-     * @param colegiado Colegiado (obrigatório)
-     * @param status Status do processo (pode ser null)
-     * @param aluno Aluno interessado (pode ser null)
-     * @param relator Professor relator (pode ser null)
-     * @return Specification combinada com todos os filtros não-nulos
+     *
+     * @param colegiado Colegiado (pode ser null para não filtrar)
+     * @param status Status do processo (pode ser null para não filtrar)
+     * @param aluno Aluno interessado (pode ser null para não filtrar)
+     * @param relator Professor relator (pode ser null para não filtrar)
+     * @return Specification combinada com todos os filtros aplicáveis
      */
     public static Specification<Processo> buildSpecificationForColegiado(
             Colegiado colegiado, StatusProcesso status, Aluno aluno, Professor relator) {
-        return Specification
-            .where(byColegiado(colegiado))
-            .and(byStatus(status))
-            .and(byInteressado(aluno))
-            .and(byRelator(relator));
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (colegiado != null) {
+                predicates.add(cb.equal(root.get("colegiado"), colegiado));
+            }
+
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            if (aluno != null) {
+                predicates.add(cb.equal(root.get("interessado"), aluno));
+            }
+
+            if (relator != null) {
+                predicates.add(cb.equal(root.get("relator"), relator));
+            }
+
+            // Se não há predicados, retorna todos os registros
+            if (predicates.isEmpty()) {
+                return cb.conjunction();
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
     }
 }
-

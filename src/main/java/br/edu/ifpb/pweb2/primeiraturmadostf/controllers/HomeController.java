@@ -38,6 +38,16 @@ public class HomeController {
         return "redirect:/home";
     }
 
+    @GetMapping("/login")
+    public String login() {
+        return "auth/login";
+    }
+
+    @GetMapping("/error/403")
+    public String accessDenied() {
+        return "error/403";
+    }
+
     @GetMapping("/home")
     public String exibirHome(Model model) {
         // Estatísticas gerais de processos

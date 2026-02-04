@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+
+<head>
+    <title>Participar da Sessão</title>
+    <style>
+        .pauta-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .processo-item {
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .processo-item:hover {
+            background-color: var(--bg-light, #f5f7fa);
+        }
+        .processo-item.active {
+            background-color: var(--bg-secondary, #34495e);
+            color: white;
+            border-left-color: var(--color-primary, #4a6fa5);
+        }
+        .processo-item.votado {
+            border-left-color: #28a745;
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+        .processo-item.pendente {
+            border-left-color: #ffc107;
+        }
+        .processo-item.active.votado {
+            background-color: var(--bg-secondary, #34495e);
+        }
+        .sessao-header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1.5rem;
+        }
+        .sessao-badge {
+            background-color: #27ae60;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+        }
+        /* Radio buttons estilizados como cards */
+        .voto-options {
+            display: flex;
+            gap: 1rem;
+        }
+        .voto-option {
+            flex: 1;
+        }
+        .voto-option input[type="radio"] {
+            display: none;
+        }
+        .voto-option label {
+            display: block;
+            border: 2px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .voto-option label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .voto-option.com-relator label {
+            border-color: #28a745;
+        }
+        .voto-option.com-relator input:checked + label {
+            background-color: rgba(40, 167, 69, 0.15);
+            border-width: 3px;
+        }
+        .voto-option.divergente label {
+            border-color: #dc3545;
+        }
+        .voto-option.divergente input:checked + label {
+            background-color: rgba(220, 53, 69, 0.15);
+            border-width: 3px;
+        }
+        .voto-registrado {
+            border: 2px solid;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+        .voto-registrado.com-relator {
+            border-color: #28a745;
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+        .voto-registrado.divergente {
+            border-color: #dc3545;
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div layout:fragment="conteudo">
+
+        <!-- Mensagens -->
+        <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${mensagem}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${erro}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Cabecalho da Sessao -->
+        <div class="sessao-header d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-1">
+                    <i class="bi bi-person-check me-2"></i>
+                    Participar da Sessão
+                </h4>
+                <small class="text-white-50">
+                    <span th:text="${reuniao.colegiado.curso.nome}">Curso</span> -
+                    <span th:text="${reuniao.colegiado.portaria}">Portaria</span>
+                </small>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge sessao-badge">
+                    <i class="bi bi-broadcast me-1"></i> SESSÃO EM ANDAMENTO
+                </span>
+                <span class="text-white-50" th:text="${#temporals.format(reuniao.dataReuniao, 'dd/MM/yyyy')}">01/01/2025</span>
+            </div>
+        </div>
+
+        <!-- Info do Professor -->
+        <div class="alert alert-info d-flex align-items-center mb-4">
+            <i class="bi bi-person-badge fs-4 me-3"></i>
+            <div>
+                <span class="small text-uppercase fw-bold d-block">Votando como</span>
+                <span class="fw-bold" th:text="${professorLogado.nome}">Nome do Professor</span>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Menu Lateral Esquerdo - Pauta -->
+            <div class="col-md-4 col-lg-3">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-list-ul me-2"></i> Pauta</span>
+                        <span class="badge bg-secondary" th:text="${#lists.size(processos)}">0</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div th:if="${#lists.isEmpty(processos)}" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox display-6"></i>
+                            <p class="mt-2 mb-0 small">Nenhum processo na pauta.</p>
+                        </div>
+
+                        <div th:unless="${#lists.isEmpty(processos)}" class="pauta-list list-group list-group-flush">
+                            <div th:each="p : ${processos}" class="list-group-item processo-item p-2"
+                                 th:classappend="${(processoSelecionado != null and processoSelecionado.id == p.id) ? 'active' : ''} + ' ' + ${meuVotosPorProcesso.containsKey(p.id) ? 'votado' : 'pendente'}">
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a th:href="@{/reunioes/{reuniaoId}/participar(reuniaoId=${reuniao.id}, processoId=${p.id})}"
+                                           class="text-decoration-none"
+                                           th:classappend="${(processoSelecionado != null and processoSelecionado.id == p.id) ? 'text-white' : 'text-dark'}">
+                                            <strong th:text="${p.numero}">2024/001</strong>
+                                        </a>
+                                        <br>
+                                        <small th:classappend="${(processoSelecionado != null and processoSelecionado.id == p.id) ? 'text-white-50' : 'text-muted'}"
+                                               th:text="${p.interessado.nome}">Nome do Aluno</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <!-- Status do meu voto -->
+                                        <span th:if="${meuVotosPorProcesso.containsKey(p.id)}" class="badge bg-success status-badge">
+                                            <i class="bi bi-check-circle"></i> Votei
+                                        </span>
+                                        <span th:unless="${meuVotosPorProcesso.containsKey(p.id)}" class="badge bg-warning text-dark status-badge">
+                                            <i class="bi bi-clock"></i> Pendente
+                                        </span>
+
+                                        <!-- Tipo do voto (se já votou) -->
+                                        <div th:if="${meuVotosPorProcesso.containsKey(p.id)}" class="mt-1">
+                                            <span th:if="${meuVotosPorProcesso.get(p.id).tipo != null and meuVotosPorProcesso.get(p.id).tipo.name() == 'COM_RELATOR'}"
+                                                  class="badge bg-success" title="Votei com o relator">
+                                                <i class="bi bi-check-circle"></i>
+                                            </span>
+                                            <span th:if="${meuVotosPorProcesso.get(p.id).tipo != null and meuVotosPorProcesso.get(p.id).tipo.name() == 'DIVERGENTE'}"
+                                                  class="badge bg-danger" title="Votei divergente">
+                                                <i class="bi bi-x-circle"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a th:href="@{/reunioes}" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-arrow-left"></i> Voltar para Reunioes
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Area Principal - Detalhes do Processo e Votacao -->
+            <div class="col-md-8 col-lg-9">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-file-earmark-text me-2"></i> Processo
+                    </div>
+                    <div class="card-body">
+
+                        <!-- Mensagem quando nenhum processo selecionado -->
+                        <div th:if="${processoSelecionado == null}" class="text-center text-muted py-5">
+                            <i class="bi bi-hand-index display-4"></i>
+                            <p class="mt-3">Selecione um processo na pauta para visualizar e votar.</p>
+                        </div>
+
+                        <!-- Detalhes do processo selecionado -->
+                        <div th:if="${processoSelecionado != null}">
+
+                            <!-- Informacoes do Processo -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <tr>
+                                            <th class="text-muted" style="width: 35%;">Numero:</th>
+                                            <td class="fw-bold" th:text="${processoSelecionado.numero}">2024/001</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="text-muted">Requerente:</th>
+                                            <td th:text="${processoSelecionado.interessado.nome}">Jose da Silva</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="text-muted">Assunto:</th>
+                                            <td th:text="${processoSelecionado.assunto.nome}">Dispensa de disciplina</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <tr>
+                                            <th class="text-muted" style="width: 35%;">Relator:</th>
+                                            <td>
+                                                <span th:if="${processoSelecionado.relator}" th:text="${processoSelecionado.relator.nome}">Prof. X</span>
+                                                <span th:unless="${processoSelecionado.relator}" class="text-muted">-</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th class="text-muted">Parecer do Relator:</th>
+                                            <td>
+                                                <span th:if="${processoSelecionado.decisaoRelator != null}"
+                                                      class="badge"
+                                                      th:classappend="${processoSelecionado.decisaoRelator.name() == 'DEFERIMENTO' ? 'bg-success' : 'bg-danger'}"
+                                                      th:text="${processoSelecionado.decisaoRelator.titulo}">Deferido</span>
+                                                <span th:unless="${processoSelecionado.decisaoRelator != null}" class="text-muted fst-italic">Sem parecer</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th class="text-muted">Fundamentacao:</th>
+                                            <td>
+                                                <a th:if="${processoSelecionado.parecer != null and !processoSelecionado.parecer.isEmpty()}"
+                                                   href="#" data-bs-toggle="modal" data-bs-target="#modalParecer"
+                                                   class="text-primary" title="Ver parecer completo">
+                                                    <i class="bi bi-file-earmark-text fs-5"></i> Ver
+                                                </a>
+                                                <span th:unless="${processoSelecionado.parecer != null and !processoSelecionado.parecer.isEmpty()}" class="text-muted">-</span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <!-- Se ja votou, mostra o voto registrado -->
+                            <div th:if="${meuVoto != null}">
+                                <h6 class="text-muted mb-3">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i> Seu Voto Registrado
+                                </h6>
+
+                                <div class="voto-registrado"
+                                     th:classappend="${meuVoto.tipo != null and meuVoto.tipo.name() == 'COM_RELATOR'} ? 'com-relator' : 'divergente'">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span th:if="${meuVoto.tipo != null and meuVoto.tipo.name() == 'COM_RELATOR'}"
+                                              class="badge bg-success fs-6 me-2">
+                                            <i class="bi bi-check-circle me-1"></i> Com o Relator
+                                        </span>
+                                        <span th:if="${meuVoto.tipo != null and meuVoto.tipo.name() == 'DIVERGENTE'}"
+                                              class="badge bg-danger fs-6 me-2">
+                                            <i class="bi bi-x-circle me-1"></i> Divergente do Relator
+                                        </span>
+                                        <small class="text-muted" th:if="${meuVoto.dataVoto != null}">
+                                            Registrado em <span th:text="${#temporals.format(meuVoto.dataVoto, 'dd/MM/yyyy HH:mm')}"></span>
+                                        </small>
+                                    </div>
+
+                                    <!-- Mostra a decisão resultante do voto -->
+                                    <div class="mt-2">
+                                        <small class="text-muted">Sua decisão: </small>
+                                        <span th:if="${meuVoto.decisao != null}"
+                                              class="badge"
+                                              th:classappend="${meuVoto.decisao.name() == 'DEFERIMENTO' ? 'bg-success' : 'bg-danger'}"
+                                              th:text="${meuVoto.decisao.titulo}">Decisao</span>
+                                    </div>
+
+                                    <div th:if="${meuVoto.justificativa != null and !meuVoto.justificativa.isEmpty()}" class="mt-3">
+                                        <strong class="small text-muted">Justificativa:</strong>
+                                        <p class="mb-0 mt-1" th:text="${meuVoto.justificativa}" style="white-space: pre-wrap;"></p>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info mt-3 py-2">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Você já registrou seu voto neste processo. Não é possível alterar.
+                                </div>
+                            </div>
+
+                            <!-- Se ainda não votou, mostra formulário de votação -->
+                            <div th:if="${meuVoto == null}">
+
+                                <!-- Se NÃO tem parecer do relator, bloqueia votação -->
+                                <div th:if="${processoSelecionado.decisaoRelator == null}">
+                                    <div class="alert alert-warning">
+                                        <i class="bi bi-hourglass-split me-2 fs-4"></i>
+                                        <strong>Aguardando parecer do relator</strong>
+                                        <p class="mb-0 mt-2">
+                                            O relator ainda não emitiu parecer para este processo.
+                                            Você poderá votar após o relator registrar sua decisão.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Se TEM parecer do relator, mostra formulário de votação -->
+                                <div th:if="${processoSelecionado.decisaoRelator != null}">
+
+                                    <!-- Destaque do parecer do relator -->
+                                    <div class="alert mb-4"
+                                         th:classappend="${processoSelecionado.decisaoRelator.name() == 'DEFERIMENTO' ? 'alert-success' : 'alert-danger'}">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-info-circle fs-4 me-3"></i>
+                                            <div>
+                                                <strong>Parecer do Relator:</strong>
+                                                <span class="badge fs-6 ms-2"
+                                                      th:classappend="${processoSelecionado.decisaoRelator.name() == 'DEFERIMENTO' ? 'bg-success' : 'bg-danger'}"
+                                                      th:text="${processoSelecionado.decisaoRelator.titulo}">Decisao</span>
+                                                <p class="mb-0 mt-1 small">
+                                                    Você deve votar se <strong>concorda</strong> ou <strong>diverge</strong> desta decisão.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <h6 class="text-muted mb-3">
+                                        <i class="bi bi-check2-square me-2"></i> Registrar Voto
+                                    </h6>
+
+                                    <form th:action="@{/reunioes/{reuniaoId}/processo/{processoId}/votar(reuniaoId=${reuniao.id}, processoId=${processoSelecionado.id})}"
+                                          method="post" id="formVoto">
+
+                                        <!-- Opções de Voto -->
+                                        <label class="form-label fw-bold">Seu voto: <span class="text-danger">*</span></label>
+                                        <div class="voto-options mb-4">
+                                            <div class="voto-option com-relator">
+                                                <input type="radio" name="tipoVoto" id="votoComRelator" value="COM_RELATOR" required>
+                                                <label for="votoComRelator">
+                                                    <i class="bi bi-check-circle display-4 text-success"></i>
+                                                    <h5 class="mt-3 mb-1">Com o Relator</h5>
+                                                    <p class="text-muted small mb-2">Concordo com o parecer do relator</p>
+                                                    <span class="badge"
+                                                          th:classappend="${processoSelecionado.decisaoRelator.name() == 'DEFERIMENTO' ? 'bg-success' : 'bg-danger'}"
+                                                          th:text="'Meu voto: ' + ${processoSelecionado.decisaoRelator.titulo}">Decisao</span>
+                                                </label>
+                                            </div>
+                                            <div class="voto-option divergente">
+                                                <input type="radio" name="tipoVoto" id="votoDivergente" value="DIVERGENTE" required>
+                                                <label for="votoDivergente">
+                                                    <i class="bi bi-x-circle display-4 text-danger"></i>
+                                                    <h5 class="mt-3 mb-1">Divergente do Relator</h5>
+                                                    <p class="text-muted small mb-2">Discordo do parecer do relator</p>
+                                                    <span class="badge"
+                                                          th:classappend="${processoSelecionado.decisaoRelator.name() == 'DEFERIMENTO' ? 'bg-danger' : 'bg-success'}"
+                                                          th:text="'Meu voto: ' + ${processoSelecionado.decisaoRelator.name() == 'DEFERIMENTO' ? 'Indeferido' : 'Deferido'}">Decisao</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Justificativa -->
+                                        <div class="mb-4">
+                                            <label for="justificativa" class="form-label">
+                                                Justificativa <span class="text-muted">(opcional, minimo 10 caracteres se preenchido)</span>
+                                            </label>
+                                            <textarea class="form-control" id="justificativa" name="justificativa" rows="3"
+                                                      placeholder="Se desejar, justifique seu voto"></textarea>
+                                        </div>
+
+                                        <!-- Botão de Confirmação -->
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-primary btn-lg">
+                                                <i class="bi bi-check-lg me-2"></i> Confirmar Voto
+                                            </button>
+                                        </div>
+
+                                        <div class="alert alert-warning mt-3 py-2">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                            <strong>Atenção:</strong> Após confirmar, seu voto não poderá ser alterado.
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Parecer -->
+        <div class="modal fade" id="modalParecer" tabindex="-1" aria-labelledby="modalParecerLabel" aria-hidden="true"
+             th:if="${processoSelecionado != null}">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalParecerLabel">
+                            <i class="bi bi-file-earmark-text me-2"></i> Parecer do Relator
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2"><strong>Processo:</strong> <span th:text="${processoSelecionado.numero}">2024/001</span></p>
+                        <p class="mb-2"><strong>Relator:</strong> <span th:text="${processoSelecionado.relator != null ? processoSelecionado.relator.nome : '-'}">Prof. X</span></p>
+                        <p class="mb-2"><strong>Decisão do Relator:</strong>
+                            <span th:if="${processoSelecionado.decisaoRelator != null}"
+                                  class="badge"
+                                  th:classappend="${processoSelecionado.decisaoRelator.name() == 'DEFERIMENTO' ? 'bg-success' : 'bg-danger'}"
+                                  th:text="${processoSelecionado.decisaoRelator.titulo}">Deferido</span>
+                        </p>
+                        <hr>
+                        <h6>Fundamentação:</h6>
+                        <p th:text="${processoSelecionado.parecer}" style="white-space: pre-wrap;">Texto do parecer...</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
