@@ -9,7 +9,7 @@ import java.util.Set;
 @Table(
     name = "colegiado",
     indexes = {
-        @Index(name = "idx_colegiado_curso", columnList = "curso")
+        @Index(name = "idx_colegiado_curso", columnList = "id_curso")
     }
 )
 public class Colegiado {

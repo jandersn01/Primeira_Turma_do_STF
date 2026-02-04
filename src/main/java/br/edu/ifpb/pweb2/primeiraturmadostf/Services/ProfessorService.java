@@ -169,6 +169,6 @@ public class ProfessorService {
     }
 
     public Page<Professor> findByCoordenadores(Pageable paging) {
-        return repository.findByCoordenadores(paging);
+        return repository.findAll(paging);
     }
 }

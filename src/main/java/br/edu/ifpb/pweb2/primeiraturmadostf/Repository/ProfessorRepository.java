@@ -21,5 +21,5 @@ public interface ProfessorRepository extends JpaRepository<Professor, Long>{
 
     List<Professor> findByCursoId(Long cursoId);
 
-    Page<Professor> findByCoordenadores(Pageable paging);
+    //Page<Professor> findByCoordenador(Pageable paging);
 }

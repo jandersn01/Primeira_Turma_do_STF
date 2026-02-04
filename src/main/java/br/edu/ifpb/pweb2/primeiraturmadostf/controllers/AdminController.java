@@ -63,6 +63,9 @@ public class AdminController {
                 pageProfessor.getTotalPages(),
                 pageProfessor.getNumberOfElements(),
                 pageProfessor.getTotalElements());
+
+        model.addAttribute("professores", pageProfessor);
+        model.addAttribute("navPage", navPage);
         return "professor/list";
     }
 
@@ -132,7 +135,7 @@ public class AdminController {
                 pageProfessor.getTotalElements()
         );
 
-        model.addAttribute("listaProfessores", pageProfessor);
+        model.addAttribute("professores", pageProfessor);
         model.addAttribute("navPage", navPage);
         return "professor/list";
     }
@@ -161,7 +164,7 @@ public class AdminController {
                 pageAluno.getTotalElements()
         );
 
-        model.addAttribute("listaAlunos", pageAluno);
+        model.addAttribute("alunos", pageAluno);
         model.addAttribute("navPage", navPage);
         return "aluno/list";
     }
@@ -241,7 +244,7 @@ public class AdminController {
                 pageAssunto.getTotalElements()
         );
 
-        model.addAttribute("listaAssuntos", pageAssunto);
+        model.addAttribute("assuntos", pageAssunto);
         model.addAttribute("navPage", navPage);
         return "assunto/list";
     }
@@ -315,7 +318,7 @@ public class AdminController {
                 pageColegiado.getTotalElements()
         );
 
-        model.addAttribute("listaColegiados", pageColegiado);
+        model.addAttribute("colegiados", pageColegiado);
         model.addAttribute("navPage", navPage);
         return "colegiado/list";
     }
@@ -385,7 +388,7 @@ public class AdminController {
                 pageCurso.getTotalElements()
         );
 
-        model.addAttribute("listaCursos", pageCurso);
+        model.addAttribute("cursos", pageCurso);
         model.addAttribute("navPage", navPage);
         return "curso/list";
     }
