@@ -3,6 +3,9 @@
 -- Sistema: Primeira Turma do STF
 -- =====================================================
 
+-- Configurar encoding UTF-8 para suportar acentuação
+SET client_encoding = 'UTF8';
+
 -- Resetar sequences para garantir IDs sequenciais
 SELECT setval('curso_id_seq', 1, false);
 SELECT setval('assunto_id_seq', 1, false);
@@ -85,21 +88,21 @@ INSERT INTO aluno (matricula, nome, fone, senha, id_curso) VALUES
 ('AL2024027', 'Giovanna Silva Lima', '(83) 99543-2109', '123456', 2);
 
 -- =====================================================
--- 4. PROFESSORES
+-- 4. PROFESSORES (Ministros da Primeira Turma do STF)
 -- =====================================================
 INSERT INTO professor (nome, matricula, fone, senha, coordenador, id_curso) VALUES
-('Joao Carlos Silva', 'PROF1001', '(83) 99911-2233', '123456', true, 1),
-('Maria Eduarda Santos', 'PROF1002', '(83) 99922-3344', '123456', true, 2),
-('Pedro Henrique Oliveira', 'PROF1003', '(83) 99933-4455', '123456', true, 3),
-('Ana Paula Costa', 'PROF1004', '(83) 99944-5566', '123456', false, 1),
-('Roberto Alves Lima', 'PROF1005', '(83) 99955-6677', '123456', false, 1),
-('Claudia Ferreira', 'PROF1006', '(83) 99966-7788', '123456', false, 2),
-('Fernando Souza Rocha', 'PROF1007', '(83) 99911-2233', '123456', false, 2),
-('Luciana Martins', 'PROF1008', '(83) 99922-3344', '123456', false, 3),
-('Ricardo Pereira Gomes', 'PROF1009', '(83) 99933-4455', '123456', false, 4),
-('Sandra Alves', 'PROF1010', '(83) 99944-5566', '123456', false, 4),
-('Marcos Antonio Silva', 'PROF1011', '(83) 99955-6677', '123456', false, 5),
-('Patricia Santos', 'PROF1012', '(83) 99966-7788', '123456', false, 5);
+('Alexandre de Moraes', 'PROF1001', '(83) 99911-2233', '123456', true, 1),
+('Cármen Lúcia', 'PROF1002', '(83) 99922-3344', '123456', true, 2),
+('Gilmar Mendes', 'PROF1003', '(83) 99933-4455', '123456', true, 3),
+('Dias Toffoli', 'PROF1004', '(83) 99944-5566', '123456', false, 1),
+('Luís Roberto Barroso', 'PROF1005', '(83) 99955-6677', '123456', false, 1),
+('Rosa Weber', 'PROF1006', '(83) 99966-7788', '123456', false, 2),
+('Edson Fachin', 'PROF1007', '(83) 99911-2233', '123456', false, 2),
+('Ricardo Lewandowski', 'PROF1008', '(83) 99922-3344', '123456', false, 3),
+('Luiz Fux', 'PROF1009', '(83) 99933-4455', '123456', false, 4),
+('Nunes Marques', 'PROF1010', '(83) 99944-5566', '123456', false, 4),
+('André Mendonça', 'PROF1011', '(83) 99955-6677', '123456', false, 5),
+('Flávio Dino', 'PROF1012', '(83) 99966-7788', '123456', false, 5);
 
 -- =====================================================
 -- 5. COLEGIADOS
@@ -172,112 +175,107 @@ INSERT INTO processo (numero, data_recepcao, data_distribuicao, data_parecer, pa
 ('2024040/2024', '2024-07-25', NULL, NULL, NULL, 'Solicito a transferência do curso de Tecnologia em Análise e Desenvolvimento de Sistemas para o Bacharelado em Ciência da Computação.', 'CRIADO', NULL, 8, 13, NULL, 3);
 
 -- =====================================================
--- 8. REUNIÕES
+-- 8. REUNIÕES (Apenas sessões encerradas)
 -- =====================================================
 INSERT INTO reuniao (data_reuniao, status, ata, colegiado_id) VALUES
-('2024-01-20', 'ENCERRADA', 'Reunião realizada para análise de processos em pauta. Presentes todos os membros do colegiado.', 1),
-('2024-02-15', 'ENCERRADA', 'Reunião ordinária do colegiado para julgamento de processos. Discussão sobre os casos apresentados.', 1),
-('2024-03-10', 'PROGRAMADA', NULL, 1),
-('2024-02-20', 'ENCERRADA', 'Reunião extraordinária convocada para análise de processos urgentes. Decisões tomadas por maioria.', 2),
-('2024-03-15', 'PROGRAMADA', NULL, 2),
-('2024-04-05', 'ENCERRADA', 'Reunião de julgamento de processos. Ata registrada com as decisões e votos dos membros presentes.', 2),
-('2024-03-20', 'ENCERRADA', 'Reunião realizada para análise de processos em pauta. Presentes todos os membros do colegiado.', 3),
-('2024-04-10', 'PROGRAMADA', NULL, 3),
-('2024-04-20', 'ENCERRADA', 'Reunião ordinária do colegiado para julgamento de processos. Discussão sobre os casos apresentados.', 4),
-('2024-05-10', 'PROGRAMADA', NULL, 4),
-('2024-05-20', 'ENCERRADA', 'Reunião extraordinária convocada para análise de processos urgentes. Decisões tomadas por maioria.', 5),
-('2024-06-10', 'PROGRAMADA', NULL, 5);
+('2024-01-20', 'ENCERRADA', 'Sessão realizada para análise de processos em pauta. Presentes todos os membros do colegiado.', 1),
+('2024-02-15', 'ENCERRADA', 'Sessão ordinária do colegiado para julgamento de processos. Discussão sobre os casos apresentados.', 1),
+('2024-02-20', 'ENCERRADA', 'Sessão extraordinária convocada para análise de processos urgentes. Decisões tomadas por maioria.', 2),
+('2024-04-05', 'ENCERRADA', 'Sessão de julgamento de processos. Ata registrada com as decisões e votos dos membros presentes.', 2),
+('2024-03-20', 'ENCERRADA', 'Sessão realizada para análise de processos em pauta. Presentes todos os membros do colegiado.', 3),
+('2024-04-20', 'ENCERRADA', 'Sessão ordinária do colegiado para julgamento de processos. Discussão sobre os casos apresentados.', 4),
+('2024-05-20', 'ENCERRADA', 'Sessão extraordinária convocada para análise de processos urgentes. Decisões tomadas por maioria.', 5);
 
 -- =====================================================
 -- 9. REUNIAO_PROCESSO (Relacionamento Many-to-Many)
 -- =====================================================
 INSERT INTO reuniao_processo (reuniao_id, processo_id) VALUES
--- Reunião 1 (Colegiado 1)
+-- Sessão 1 (Colegiado 1)
 (1, 1), (1, 2), (1, 3),
--- Reunião 2 (Colegiado 1)
+-- Sessão 2 (Colegiado 1)
 (2, 4), (2, 5),
--- Reunião 4 (Colegiado 2)
-(4, 6), (4, 7), (4, 8),
--- Reunião 6 (Colegiado 2)
-(6, 9), (6, 10),
--- Reunião 7 (Colegiado 3)
-(7, 11), (7, 12), (7, 13),
--- Reunião 9 (Colegiado 4)
-(9, 16), (9, 17), (9, 18),
--- Reunião 11 (Colegiado 5)
-(11, 21), (11, 22), (11, 23);
+-- Sessão 3 (Colegiado 2)
+(3, 6), (3, 7), (3, 8),
+-- Sessão 4 (Colegiado 2)
+(4, 9), (4, 10),
+-- Sessão 5 (Colegiado 3)
+(5, 11), (5, 12), (5, 13),
+-- Sessão 6 (Colegiado 4)
+(6, 16), (6, 17), (6, 18),
+-- Sessão 7 (Colegiado 5)
+(7, 21), (7, 22), (7, 23);
 
 -- =====================================================
 -- 10. VOTOS
 -- =====================================================
 INSERT INTO voto (tipo, ausente, justificativa, data_voto, professor_id, processo_id, reuniao_id) VALUES
--- Votos da Reunião 1 (Processo 1)
+-- Votos da Sessão 1 (Processo 1)
 ('COM_RELATOR', false, 'Voto fundamentado conforme análise do processo 2024001/2024.', '2024-01-20 14:30:00', 1, 1, 1),
 ('COM_RELATOR', false, NULL, '2024-01-20 14:32:00', 4, 1, 1),
 ('DIVERGENTE', false, NULL, '2024-01-20 14:35:00', 5, 1, 1),
--- Votos da Reunião 1 (Processo 2)
+-- Votos da Sessão 1 (Processo 2)
 ('COM_RELATOR', false, NULL, '2024-01-20 15:00:00', 1, 2, 1),
 ('DIVERGENTE', false, 'Voto fundamentado conforme análise do processo 2024002/2024.', '2024-01-20 15:02:00', 4, 2, 1),
 ('COM_RELATOR', false, NULL, '2024-01-20 15:05:00', 5, 2, 1),
--- Votos da Reunião 1 (Processo 3)
+-- Votos da Sessão 1 (Processo 3)
 ('COM_RELATOR', false, NULL, '2024-01-20 15:30:00', 1, 3, 1),
 ('COM_RELATOR', false, NULL, '2024-01-20 15:32:00', 4, 3, 1),
 ('COM_RELATOR', false, NULL, '2024-01-20 15:35:00', 5, 3, 1),
--- Votos da Reunião 2 (Processo 4)
+-- Votos da Sessão 2 (Processo 4)
 ('COM_RELATOR', false, NULL, '2024-02-15 14:00:00', 1, 4, 2),
 ('DIVERGENTE', false, NULL, '2024-02-15 14:02:00', 4, 4, 2),
 ('COM_RELATOR', false, NULL, '2024-02-15 14:05:00', 5, 4, 2),
--- Votos da Reunião 2 (Processo 5)
+-- Votos da Sessão 2 (Processo 5)
 ('COM_RELATOR', false, NULL, '2024-02-15 14:30:00', 1, 5, 2),
 ('COM_RELATOR', false, NULL, '2024-02-15 14:32:00', 4, 5, 2),
 ('COM_RELATOR', false, NULL, '2024-02-15 14:35:00', 5, 5, 2),
--- Votos da Reunião 4 (Processo 6)
-('COM_RELATOR', false, NULL, '2024-02-20 14:00:00', 2, 6, 4),
-('DIVERGENTE', false, NULL, '2024-02-20 14:02:00', 6, 6, 4),
-('COM_RELATOR', false, NULL, '2024-02-20 14:05:00', 7, 6, 4),
--- Votos da Reunião 4 (Processo 7)
-('COM_RELATOR', false, 'Voto fundamentado conforme análise do processo 2024007/2024.', '2024-02-20 14:30:00', 2, 7, 4),
-('COM_RELATOR', false, NULL, '2024-02-20 14:32:00', 6, 7, 4),
-('COM_RELATOR', false, NULL, '2024-02-20 14:35:00', 7, 7, 4),
--- Votos da Reunião 4 (Processo 8)
-('COM_RELATOR', false, NULL, '2024-02-20 15:00:00', 2, 8, 4),
-('DIVERGENTE', false, NULL, '2024-02-20 15:02:00', 6, 8, 4),
-('COM_RELATOR', false, NULL, '2024-02-20 15:05:00', 7, 8, 4),
--- Votos da Reunião 6 (Processo 9)
-('COM_RELATOR', false, NULL, '2024-04-05 14:00:00', 2, 9, 6),
-('COM_RELATOR', false, NULL, '2024-04-05 14:02:00', 6, 9, 6),
-('COM_RELATOR', false, NULL, '2024-04-05 14:05:00', 7, 9, 6),
--- Votos da Reunião 6 (Processo 10)
-('COM_RELATOR', false, NULL, '2024-04-05 14:30:00', 2, 10, 6),
-('DIVERGENTE', false, NULL, '2024-04-05 14:32:00', 6, 10, 6),
-('COM_RELATOR', false, NULL, '2024-04-05 14:35:00', 7, 10, 6),
--- Votos da Reunião 7 (Processo 11)
-('COM_RELATOR', false, NULL, '2024-03-20 14:00:00', 3, 11, 7),
-('COM_RELATOR', false, NULL, '2024-03-20 14:02:00', 8, 11, 7),
--- Votos da Reunião 7 (Processo 12)
-('DIVERGENTE', false, NULL, '2024-03-20 14:30:00', 3, 12, 7),
-('COM_RELATOR', false, NULL, '2024-03-20 14:32:00', 8, 12, 7),
--- Votos da Reunião 7 (Processo 13)
-('COM_RELATOR', false, NULL, '2024-03-20 15:00:00', 3, 13, 7),
-('COM_RELATOR', false, NULL, '2024-03-20 15:02:00', 8, 13, 7),
--- Votos da Reunião 9 (Processo 16)
-('COM_RELATOR', false, NULL, '2024-04-20 14:00:00', 9, 16, 9),
-('COM_RELATOR', false, NULL, '2024-04-20 14:02:00', 10, 16, 9),
--- Votos da Reunião 9 (Processo 17)
-('DIVERGENTE', false, NULL, '2024-04-20 14:30:00', 9, 17, 9),
-('COM_RELATOR', false, NULL, '2024-04-20 14:32:00', 10, 17, 9),
--- Votos da Reunião 9 (Processo 18)
-('COM_RELATOR', false, NULL, '2024-04-20 15:00:00', 9, 18, 9),
-('COM_RELATOR', false, NULL, '2024-04-20 15:02:00', 10, 18, 9),
--- Votos da Reunião 11 (Processo 21)
-('COM_RELATOR', false, NULL, '2024-05-20 14:00:00', 11, 21, 11),
-('COM_RELATOR', false, NULL, '2024-05-20 14:02:00', 12, 21, 11),
--- Votos da Reunião 11 (Processo 22)
-('DIVERGENTE', false, NULL, '2024-05-20 14:30:00', 11, 22, 11),
-('COM_RELATOR', false, NULL, '2024-05-20 14:32:00', 12, 22, 11),
--- Votos da Reunião 11 (Processo 23)
-('COM_RELATOR', false, NULL, '2024-05-20 15:00:00', 11, 23, 11),
-('COM_RELATOR', false, NULL, '2024-05-20 15:02:00', 12, 23, 11);
+-- Votos da Sessão 3 (Processo 6)
+('COM_RELATOR', false, NULL, '2024-02-20 14:00:00', 2, 6, 3),
+('DIVERGENTE', false, NULL, '2024-02-20 14:02:00', 6, 6, 3),
+('COM_RELATOR', false, NULL, '2024-02-20 14:05:00', 7, 6, 3),
+-- Votos da Sessão 3 (Processo 7)
+('COM_RELATOR', false, 'Voto fundamentado conforme análise do processo 2024007/2024.', '2024-02-20 14:30:00', 2, 7, 3),
+('COM_RELATOR', false, NULL, '2024-02-20 14:32:00', 6, 7, 3),
+('COM_RELATOR', false, NULL, '2024-02-20 14:35:00', 7, 7, 3),
+-- Votos da Sessão 3 (Processo 8)
+('COM_RELATOR', false, NULL, '2024-02-20 15:00:00', 2, 8, 3),
+('DIVERGENTE', false, NULL, '2024-02-20 15:02:00', 6, 8, 3),
+('COM_RELATOR', false, NULL, '2024-02-20 15:05:00', 7, 8, 3),
+-- Votos da Sessão 4 (Processo 9)
+('COM_RELATOR', false, NULL, '2024-04-05 14:00:00', 2, 9, 4),
+('COM_RELATOR', false, NULL, '2024-04-05 14:02:00', 6, 9, 4),
+('COM_RELATOR', false, NULL, '2024-04-05 14:05:00', 7, 9, 4),
+-- Votos da Sessão 4 (Processo 10)
+('COM_RELATOR', false, NULL, '2024-04-05 14:30:00', 2, 10, 4),
+('DIVERGENTE', false, NULL, '2024-04-05 14:32:00', 6, 10, 4),
+('COM_RELATOR', false, NULL, '2024-04-05 14:35:00', 7, 10, 4),
+-- Votos da Sessão 5 (Processo 11)
+('COM_RELATOR', false, NULL, '2024-03-20 14:00:00', 3, 11, 5),
+('COM_RELATOR', false, NULL, '2024-03-20 14:02:00', 8, 11, 5),
+-- Votos da Sessão 5 (Processo 12)
+('DIVERGENTE', false, NULL, '2024-03-20 14:30:00', 3, 12, 5),
+('COM_RELATOR', false, NULL, '2024-03-20 14:32:00', 8, 12, 5),
+-- Votos da Sessão 5 (Processo 13)
+('COM_RELATOR', false, NULL, '2024-03-20 15:00:00', 3, 13, 5),
+('COM_RELATOR', false, NULL, '2024-03-20 15:02:00', 8, 13, 5),
+-- Votos da Sessão 6 (Processo 16)
+('COM_RELATOR', false, NULL, '2024-04-20 14:00:00', 9, 16, 6),
+('COM_RELATOR', false, NULL, '2024-04-20 14:02:00', 10, 16, 6),
+-- Votos da Sessão 6 (Processo 17)
+('DIVERGENTE', false, NULL, '2024-04-20 14:30:00', 9, 17, 6),
+('COM_RELATOR', false, NULL, '2024-04-20 14:32:00', 10, 17, 6),
+-- Votos da Sessão 6 (Processo 18)
+('COM_RELATOR', false, NULL, '2024-04-20 15:00:00', 9, 18, 6),
+('COM_RELATOR', false, NULL, '2024-04-20 15:02:00', 10, 18, 6),
+-- Votos da Sessão 7 (Processo 21)
+('COM_RELATOR', false, NULL, '2024-05-20 14:00:00', 11, 21, 7),
+('COM_RELATOR', false, NULL, '2024-05-20 14:02:00', 12, 21, 7),
+-- Votos da Sessão 7 (Processo 22)
+('DIVERGENTE', false, NULL, '2024-05-20 14:30:00', 11, 22, 7),
+('COM_RELATOR', false, NULL, '2024-05-20 14:32:00', 12, 22, 7),
+-- Votos da Sessão 7 (Processo 23)
+('COM_RELATOR', false, NULL, '2024-05-20 15:00:00', 11, 23, 7),
+('COM_RELATOR', false, NULL, '2024-05-20 15:02:00', 12, 23, 7);
 
 -- =====================================================
 -- 11. DOCUMENTOS

@@ -3,7 +3,7 @@
     layout:decorate="~{layout/base}">
 
 <head>
-    <title>Participar da Sessao</title>
+    <title>Participar da Sessão</title>
     <style>
         .pauta-list {
             max-height: 500px;
@@ -124,7 +124,7 @@
             <div>
                 <h4 class="mb-1">
                     <i class="bi bi-person-check me-2"></i>
-                    Participar da Sessao
+                    Participar da Sessão
                 </h4>
                 <small class="text-white-50">
                     <span th:text="${reuniao.colegiado.curso.nome}">Curso</span> -
@@ -133,7 +133,7 @@
             </div>
             <div class="d-flex align-items-center gap-3">
                 <span class="badge sessao-badge">
-                    <i class="bi bi-broadcast me-1"></i> SESSAO EM ANDAMENTO
+                    <i class="bi bi-broadcast me-1"></i> SESSÃO EM ANDAMENTO
                 </span>
                 <span class="text-white-50" th:text="${#temporals.format(reuniao.dataReuniao, 'dd/MM/yyyy')}">01/01/2025</span>
             </div>
@@ -305,7 +305,7 @@
 
                                     <!-- Mostra a decisão resultante do voto -->
                                     <div class="mt-2">
-                                        <small class="text-muted">Sua decisao: </small>
+                                        <small class="text-muted">Sua decisão: </small>
                                         <span th:if="${meuVoto.decisao != null}"
                                               class="badge"
                                               th:classappend="${meuVoto.decisao.name() == 'DEFERIMENTO' ? 'bg-success' : 'bg-danger'}"
@@ -320,26 +320,26 @@
 
                                 <div class="alert alert-info mt-3 py-2">
                                     <i class="bi bi-info-circle me-2"></i>
-                                    Voce ja registrou seu voto neste processo. Nao e possivel alterar.
+                                    Você já registrou seu voto neste processo. Não é possível alterar.
                                 </div>
                             </div>
 
-                            <!-- Se ainda nao votou, mostra formulario de votacao -->
+                            <!-- Se ainda não votou, mostra formulário de votação -->
                             <div th:if="${meuVoto == null}">
 
-                                <!-- Se NAO tem parecer do relator, bloqueia votacao -->
+                                <!-- Se NÃO tem parecer do relator, bloqueia votação -->
                                 <div th:if="${processoSelecionado.decisaoRelator == null}">
                                     <div class="alert alert-warning">
                                         <i class="bi bi-hourglass-split me-2 fs-4"></i>
                                         <strong>Aguardando parecer do relator</strong>
                                         <p class="mb-0 mt-2">
-                                            O relator ainda nao emitiu parecer para este processo.
-                                            Voce podera votar apos o relator registrar sua decisao.
+                                            O relator ainda não emitiu parecer para este processo.
+                                            Você poderá votar após o relator registrar sua decisão.
                                         </p>
                                     </div>
                                 </div>
 
-                                <!-- Se TEM parecer do relator, mostra formulario de votacao -->
+                                <!-- Se TEM parecer do relator, mostra formulário de votação -->
                                 <div th:if="${processoSelecionado.decisaoRelator != null}">
 
                                     <!-- Destaque do parecer do relator -->
@@ -353,7 +353,7 @@
                                                       th:classappend="${processoSelecionado.decisaoRelator.name() == 'DEFERIMENTO' ? 'bg-success' : 'bg-danger'}"
                                                       th:text="${processoSelecionado.decisaoRelator.titulo}">Decisao</span>
                                                 <p class="mb-0 mt-1 small">
-                                                    Voce deve votar se <strong>concorda</strong> ou <strong>diverge</strong> desta decisao.
+                                                    Você deve votar se <strong>concorda</strong> ou <strong>diverge</strong> desta decisão.
                                                 </p>
                                             </div>
                                         </div>
@@ -366,7 +366,7 @@
                                     <form th:action="@{/reunioes/{reuniaoId}/processo/{processoId}/votar(reuniaoId=${reuniao.id}, processoId=${processoSelecionado.id})}"
                                           method="post" id="formVoto">
 
-                                        <!-- Opcoes de Voto -->
+                                        <!-- Opções de Voto -->
                                         <label class="form-label fw-bold">Seu voto: <span class="text-danger">*</span></label>
                                         <div class="voto-options mb-4">
                                             <div class="voto-option com-relator">
@@ -402,7 +402,7 @@
                                                       placeholder="Se desejar, justifique seu voto"></textarea>
                                         </div>
 
-                                        <!-- Botao de Confirmacao -->
+                                        <!-- Botão de Confirmação -->
                                         <div class="d-grid">
                                             <button type="submit" class="btn btn-primary btn-lg">
                                                 <i class="bi bi-check-lg me-2"></i> Confirmar Voto
@@ -411,7 +411,7 @@
 
                                         <div class="alert alert-warning mt-3 py-2">
                                             <i class="bi bi-exclamation-triangle me-2"></i>
-                                            <strong>Atencao:</strong> Apos confirmar, seu voto nao podera ser alterado.
+                                            <strong>Atenção:</strong> Após confirmar, seu voto não poderá ser alterado.
                                         </div>
                                     </form>
                                 </div>
@@ -438,14 +438,14 @@
                     <div class="modal-body">
                         <p class="mb-2"><strong>Processo:</strong> <span th:text="${processoSelecionado.numero}">2024/001</span></p>
                         <p class="mb-2"><strong>Relator:</strong> <span th:text="${processoSelecionado.relator != null ? processoSelecionado.relator.nome : '-'}">Prof. X</span></p>
-                        <p class="mb-2"><strong>Decisao do Relator:</strong>
+                        <p class="mb-2"><strong>Decisão do Relator:</strong>
                             <span th:if="${processoSelecionado.decisaoRelator != null}"
                                   class="badge"
                                   th:classappend="${processoSelecionado.decisaoRelator.name() == 'DEFERIMENTO' ? 'bg-success' : 'bg-danger'}"
                                   th:text="${processoSelecionado.decisaoRelator.titulo}">Deferido</span>
                         </p>
                         <hr>
-                        <h6>Fundamentacao:</h6>
+                        <h6>Fundamentação:</h6>
                         <p th:text="${processoSelecionado.parecer}" style="white-space: pre-wrap;">Texto do parecer...</p>
                     </div>
                     <div class="modal-footer">
