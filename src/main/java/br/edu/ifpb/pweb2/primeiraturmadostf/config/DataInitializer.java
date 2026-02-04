@@ -110,7 +110,7 @@ public class DataInitializer implements CommandLineRunner {
             if (usuarioRepository.findByMatricula(prof.getMatricula()).isEmpty()) {
                 Usuario user = new Usuario();
                 user.setMatricula(prof.getMatricula());
-                user.setSenha(passwordEncoder.encode("123"));
+                user.setSenha(passwordEncoder.encode("123456"));
 
                 // Lógica: se o prof for coordenador no banco, ganha ROLE_COORDENADOR
                 if (prof.getCoordenador()) {

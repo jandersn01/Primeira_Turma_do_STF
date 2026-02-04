@@ -16,13 +16,6 @@
             </div>
 
             <div class="card-body">
-                <div th:if="${professorLogado}" class="alert alert-info d-flex align-items-center mb-4">
-                    <div>
-                        <span class="small text-uppercase fw-bold d-block" th:text="${isProfessorView != null ? 'Minhas Reuniões' : 'Visão Coordenador'}"></span>
-                        <span class="fw-bold" th:text="${professorLogado.nome}"></span>
-                    </div>
-                </div>
-
                 <form method="get" th:action="@{/reunioes}" class="row g-3 align-items-end mb-4">
                     <div class="col-md-9">
                         <label for="status" class="form-label small fw-bold text-secondary">Filtrar por Status</label>

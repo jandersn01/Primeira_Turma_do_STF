@@ -44,4 +44,16 @@ public interface VotoRepository extends JpaRepository<Voto, Long> {
      */
     @Query("SELECT v FROM Voto v WHERE v.professor.id = :professorId AND v.processo.id = :processoId AND v.reuniao.id = :reuniaoId")
     Optional<Voto> findByIds(@Param("professorId") Long professorId, @Param("processoId") Long processoId, @Param("reuniaoId") Long reuniaoId);
+
+    /**
+     * Deleta todos os votos de um processo em uma reunião.
+     */
+    void deleteByProcessoAndReuniao(Processo processo, Reuniao reuniao);
+
+    /**
+     * Deleta votos por IDs.
+     */
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM Voto v WHERE v.processo.id = :processoId AND v.reuniao.id = :reuniaoId")
+    void deleteByProcessoIdAndReuniaoId(@Param("processoId") Long processoId, @Param("reuniaoId") Long reuniaoId);
 }
