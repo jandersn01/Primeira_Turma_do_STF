@@ -18,6 +18,7 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.model.Curso;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Processo;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusProcesso;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.TipoDecisao;
 import br.edu.ifpb.pweb2.primeiraturmadostf.repository.ProcessoRepository;
 import br.edu.ifpb.pweb2.primeiraturmadostf.repository.specification.ProcessoSpecifications;
 
@@ -232,6 +233,62 @@ public class ProcessoService {
         processo.setDataDistribuicao(LocalDate.now());
 
         processoRepository.save(processo);
+    }
+
+    /**
+     * Registra o parecer do relator em um processo.
+     * O relator informa sua decisão (DEFERIMENTO ou INDEFERIMENTO) e uma fundamentação.
+     * Após o registro, o processo passa para o status DISPONIVEL.
+     *
+     * @param processoId ID do processo
+     * @param relatorId ID do professor relator
+     * @param decisao Decisão do relator (DEFERIMENTO ou INDEFERIMENTO)
+     * @param parecer Texto de fundamentação do parecer
+     * @throws IllegalArgumentException se processo ou professor não encontrados
+     * @throws IllegalStateException se processo não está DISTRIBUIDO, professor não é o relator,
+     *         ou parecer já foi registrado
+     */
+    public Processo registrarParecer(Long processoId, Long relatorId, TipoDecisao decisao, String parecer) {
+        Processo processo = findById(processoId);
+        if (processo == null) {
+            throw new IllegalArgumentException("Processo não encontrado");
+        }
+
+        Professor professor = professorService.findById(relatorId);
+        if (professor == null) {
+            throw new IllegalArgumentException("Professor não encontrado");
+        }
+
+        // Verifica se o professor é o relator do processo
+        if (processo.getRelator() == null || !processo.getRelator().getId().equals(relatorId)) {
+            throw new IllegalStateException("Você não é o relator deste processo");
+        }
+
+        // Verifica se o processo está no status correto
+        if (processo.getStatus() != StatusProcesso.DISTRIBUIDO) {
+            throw new IllegalStateException("O processo não está no status DISTRIBUÍDO. Status atual: " + processo.getStatus().getDescricao());
+        }
+
+        // Verifica se já tem parecer
+        if (processo.getDecisaoRelator() != null) {
+            throw new IllegalStateException("Este processo já possui parecer registrado");
+        }
+
+        // Valida o parecer
+        if (parecer == null || parecer.trim().isEmpty()) {
+            throw new IllegalArgumentException("A fundamentação do parecer é obrigatória");
+        }
+        if (parecer.trim().length() < 20) {
+            throw new IllegalArgumentException("A fundamentação deve ter no mínimo 20 caracteres");
+        }
+
+        // Registra o parecer
+        processo.setDecisaoRelator(decisao);
+        processo.setParecer(parecer.trim());
+        processo.setDataParecer(LocalDate.now());
+        processo.setStatus(StatusProcesso.DISPONIVEL);
+
+        return processoRepository.save(processo);
     }
 
 }

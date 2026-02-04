@@ -141,7 +141,8 @@
                                 <i class="bi bi-person-circle fs-3"></i>
                             </div>
                             <div class="flex-grow-1 ms-2">
-                                <div class="small fw-bold" sec:authentication="name">Usuario</div>
+                                <div class="small fw-bold" th:text="${#authentication.principal.nome}">Nome</div>
+                                <div class="text-white-50" style="font-size: 0.75rem;" sec:authentication="name">Matricula</div>
                                 <form th:action="@{/logout}" method="post" class="d-inline">
                                     <button type="submit" class="btn btn-link text-white-50 p-0"
                                         style="font-size: 0.75rem; text-decoration: none;">

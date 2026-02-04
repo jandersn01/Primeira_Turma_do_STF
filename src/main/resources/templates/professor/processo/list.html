@@ -59,28 +59,39 @@
                                 </td>
                                 <td th:text="${processo.assunto.nome}">Assunto do Processo</td>
                                 <td>
-                                    <span class="badge bg-secondary" 
+                                    <span class="badge bg-secondary"
                                           th:if="${processo.status.name() == 'CRIADO'}"
                                           th:text="${processo.status.descricao}">Criado</span>
-                                    <span class="badge bg-info text-dark" 
+                                    <span class="badge bg-info text-dark"
                                           th:if="${processo.status.name() == 'DISTRIBUIDO'}"
-                                          th:text="${processo.status.descricao}">Distribuído</span>
-                                    <span class="badge bg-warning text-dark" 
+                                          th:text="${processo.status.descricao}">Distribuido</span>
+                                    <span class="badge bg-primary"
+                                          th:if="${processo.status.name() == 'DISPONIVEL'}"
+                                          th:text="${processo.status.descricao}">Disponivel</span>
+                                    <span class="badge bg-warning text-dark"
                                           th:if="${processo.status.name() == 'EM_PAUTA'}"
                                           th:text="${processo.status.descricao}">Em Pauta</span>
-                                    <span class="badge bg-primary" 
+                                    <span class="badge bg-warning"
                                           th:if="${processo.status.name() == 'EM_JULGAMENTO'}"
                                           th:text="${processo.status.descricao}">Em Julgamento</span>
-                                    <span class="badge bg-success" 
+                                    <span class="badge bg-success"
                                           th:if="${processo.status.name() == 'JULGADO'}"
                                           th:text="${processo.status.descricao}">Julgado</span>
                                 </td>
                                 <td th:text="${#temporals.format(processo.dataRecepcao, 'dd/MM/yyyy')}">01/01/2024</td>
                                 <td th:text="${processo.interessado.nome}">Nome do Aluno</td>
                                 <td>
-                                    <a th:href="@{/professor/processo/{id}(id=${processo.id})}" 
+                                    <!-- Botao para emitir parecer (apenas se DISTRIBUIDO) -->
+                                    <a th:if="${processo.status.name() == 'DISTRIBUIDO'}"
+                                       th:href="@{/professor/processo/{id}(id=${processo.id})}"
+                                       class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil-square"></i> Emitir Parecer
+                                    </a>
+                                    <!-- Botao para ver detalhes (outros status) -->
+                                    <a th:unless="${processo.status.name() == 'DISTRIBUIDO'}"
+                                       th:href="@{/professor/processo/{id}(id=${processo.id})}"
                                        class="btn btn-sm btn-outline-primary">
-                                        Ver Detalhes
+                                        <i class="bi bi-eye"></i> Ver Detalhes
                                     </a>
                                 </td>
                             </tr>

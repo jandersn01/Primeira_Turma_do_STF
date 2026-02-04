@@ -4,7 +4,6 @@ import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -32,13 +31,11 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("Usuário desativado: " + matricula);
         }
 
-        return new User(
+        return new CustomUserDetails(
                 usuario.getMatricula(),
                 usuario.getSenha(),
+                usuario.getNome(),
                 usuario.getAtivo(),
-                true,
-                true,
-                true,
                 Collections.singletonList(new SimpleGrantedAuthority(usuario.getRole().name()))
         );
     }

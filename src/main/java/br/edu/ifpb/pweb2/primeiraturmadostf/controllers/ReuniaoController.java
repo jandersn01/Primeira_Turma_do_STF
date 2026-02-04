@@ -376,4 +376,110 @@ public class ReuniaoController {
 
         return "redirect:/reunioes";
     }
+
+    // ========== VOTAÇÃO INDIVIDUAL DO PROFESSOR ==========
+
+    /**
+     * Tela de participação do professor na sessão.
+     * Exibe os processos da pauta e permite votar individualmente.
+     */
+    @GetMapping("/{id}/participar")
+    public String participarSessao(
+            @PathVariable Long id,
+            @RequestParam(name = "processoId", required = false) Long processoId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        Reuniao reuniao = reuniaoService.findByIdComDetalhes(id);
+
+        if (reuniao == null) {
+            redirectAttributes.addFlashAttribute("erro", "Reunião não encontrada.");
+            return "redirect:/reunioes";
+        }
+
+        if (reuniao.getStatus() != StatusReuniao.EM_ANDAMENTO) {
+            redirectAttributes.addFlashAttribute("erro", "Esta reunião não está em andamento.");
+            return "redirect:/reunioes";
+        }
+
+        // Busca o professor logado
+        Professor professorLogado = professorService.findByMatricula(userDetails.getUsername());
+        if (professorLogado == null) {
+            redirectAttributes.addFlashAttribute("erro", "Professor não encontrado.");
+            return "redirect:/reunioes";
+        }
+
+        // Verifica se professor é membro do colegiado
+        if (!reuniao.getColegiado().getMembros().contains(professorLogado)) {
+            redirectAttributes.addFlashAttribute("erro", "Você não é membro do colegiado desta reunião.");
+            return "redirect:/reunioes";
+        }
+
+        model.addAttribute("reuniao", reuniao);
+        model.addAttribute("processos", reuniao.getProcessos());
+        model.addAttribute("professorLogado", professorLogado);
+
+        // Busca votos já registrados pelo professor nesta reunião
+        java.util.List<br.edu.ifpb.pweb2.primeiraturmadostf.model.Voto> votosDoProfessor =
+            reuniaoService.getVotosDoProfessorNaReuniao(id, professorLogado.getId());
+
+        // Mapa de processoId -> voto do professor
+        Map<Long, br.edu.ifpb.pweb2.primeiraturmadostf.model.Voto> votosMap = new HashMap<>();
+        for (br.edu.ifpb.pweb2.primeiraturmadostf.model.Voto v : votosDoProfessor) {
+            votosMap.put(v.getProcesso().getId(), v);
+        }
+        model.addAttribute("meuVotosPorProcesso", votosMap);
+
+        // Processo selecionado para votação
+        if (processoId != null) {
+            Processo processoSelecionado = processoService.findById(processoId);
+            // Verifica se o processo pertence à pauta (por ID)
+            boolean pertencePauta = reuniao.getProcessos().stream()
+                    .anyMatch(p -> p.getId().equals(processoId));
+
+            if (processoSelecionado != null && pertencePauta) {
+                model.addAttribute("processoSelecionado", processoSelecionado);
+
+                // Verifica se já votou neste processo
+                br.edu.ifpb.pweb2.primeiraturmadostf.model.Voto meuVoto = votosMap.get(processoId);
+                model.addAttribute("meuVoto", meuVoto);
+            }
+        }
+
+        return "reuniao/participar";
+    }
+
+    /**
+     * Registra o voto individual do professor em um processo.
+     */
+    @PostMapping("/{reuniaoId}/processo/{processoId}/votar")
+    public String registrarVotoIndividual(
+            @PathVariable Long reuniaoId,
+            @PathVariable Long processoId,
+            @RequestParam String tipoVoto,
+            @RequestParam(required = false) String justificativa,
+            @AuthenticationPrincipal UserDetails userDetails,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            Professor professorLogado = professorService.findByMatricula(userDetails.getUsername());
+            if (professorLogado == null) {
+                redirectAttributes.addFlashAttribute("erro", "Professor não encontrado.");
+                return "redirect:/reunioes";
+            }
+
+            reuniaoService.registrarVotoIndividual(reuniaoId, processoId, professorLogado.getId(),
+                                                    tipoVoto, justificativa);
+
+            redirectAttributes.addFlashAttribute("mensagem", "Voto registrado com sucesso!");
+
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("erro", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", "Erro ao registrar voto: " + e.getMessage());
+        }
+
+        return "redirect:/reunioes/" + reuniaoId + "/participar?processoId=" + processoId;
+    }
 }
