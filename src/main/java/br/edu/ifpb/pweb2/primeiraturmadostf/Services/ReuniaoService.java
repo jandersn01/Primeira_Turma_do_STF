@@ -197,18 +197,18 @@ public class ReuniaoService {
     public void registrarVotos(Long reuniaoId, Long processoId, Map<Long, String> votos) {
         Reuniao reuniao = findById(reuniaoId);
         if (reuniao == null) {
-            throw new IllegalArgumentException("Reuniao nao encontrada");
+            throw new IllegalArgumentException("Reunião não encontrada");
         }
 
-        // REQFUNC 12: Nao permite alterar votos de reuniao encerrada
+        // REQFUNC 12: Não permite alterar votos de reunião encerrada
         if (reuniao.getStatus() == StatusReuniao.ENCERRADA) {
-            throw new IllegalStateException("Nao e possivel alterar votos de uma reuniao encerrada");
+            throw new IllegalStateException("Não é possível alterar votos de uma reunião encerrada");
         }
 
         Processo processo = processoRepository.findById(processoId)
-                .orElseThrow(() -> new IllegalArgumentException("Processo nao encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
 
-        // Remove votos anteriores deste processo nesta reuniao (do banco e da colecao em memoria)
+        // Remove votos anteriores deste processo nesta reunião (do banco e da coleção em memória)
         votoRepository.deleteByProcessoIdAndReuniaoId(processoId, reuniaoId);
         reuniao.getVotos().removeIf(v -> v.getProcesso().getId().equals(processoId));
 
@@ -218,7 +218,7 @@ public class ReuniaoService {
             String tipoVotoStr = entry.getValue();
 
             Professor professor = professorRepository.findById(professorId)
-                    .orElseThrow(() -> new IllegalArgumentException("Professor nao encontrado: " + professorId));
+                    .orElseThrow(() -> new IllegalArgumentException("Professor não encontrado: " + professorId));
 
             Voto voto;
             if ("AUSENTE".equals(tipoVotoStr)) {
@@ -251,21 +251,21 @@ public class ReuniaoService {
     public void retirarProcessoDaPauta(Long reuniaoId, Long processoId) {
         Reuniao reuniao = findById(reuniaoId);
         if (reuniao == null) {
-            throw new IllegalArgumentException("Reuniao nao encontrada");
+            throw new IllegalArgumentException("Reunião não encontrada");
         }
 
-        // REQFUNC 12: Nao permite alterar pauta de reuniao encerrada
+        // REQFUNC 12: Não permite alterar pauta de reunião encerrada
         if (reuniao.getStatus() == StatusReuniao.ENCERRADA) {
-            throw new IllegalStateException("Nao e possivel alterar a pauta de uma reuniao encerrada");
+            throw new IllegalStateException("Não é possível alterar a pauta de uma reunião encerrada");
         }
 
         Processo processo = processoRepository.findById(processoId)
-                .orElseThrow(() -> new IllegalArgumentException("Processo nao encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
 
         // Remove o processo da pauta
         reuniao.getProcessos().remove(processo);
 
-        // Remove votos relacionados a este processo nesta reuniao
+        // Remove votos relacionados a este processo nesta reunião
         reuniao.getVotos().removeIf(v -> v.getProcesso().getId().equals(processoId));
 
         // Volta o status do processo para DISPONIVEL (já tem parecer do relator)
