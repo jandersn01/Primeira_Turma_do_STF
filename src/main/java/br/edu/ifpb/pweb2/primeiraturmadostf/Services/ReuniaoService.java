@@ -17,6 +17,7 @@ import br.edu.ifpb.pweb2.primeiraturmadostf.model.Professor;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Reuniao;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusProcesso;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.StatusReuniao;
+import br.edu.ifpb.pweb2.primeiraturmadostf.model.TipoDecisao;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.TipoVoto;
 import br.edu.ifpb.pweb2.primeiraturmadostf.model.Voto;
 import br.edu.ifpb.pweb2.primeiraturmadostf.repository.ColegiadoRepository;
@@ -54,7 +55,16 @@ public class ReuniaoService {
 
         List<Processo> processosSelecionados = processoRepository.findAllById(processosIds);
 
+        // Valida que todos os processos têm parecer do relator
         for (Processo processo : processosSelecionados) {
+            if (processo.getDecisaoRelator() == null) {
+                throw new IllegalStateException("O processo " + processo.getNumero() +
+                    " não possui parecer do relator. Apenas processos com parecer podem ser incluídos na pauta.");
+            }
+            if (processo.getStatus() != StatusProcesso.DISPONIVEL) {
+                throw new IllegalStateException("O processo " + processo.getNumero() +
+                    " não está disponível para pauta. Status atual: " + processo.getStatus().getDescricao());
+            }
             processo.setStatus(StatusProcesso.EM_PAUTA);
             reuniao.getProcessos().add(processo);
         }
@@ -82,10 +92,11 @@ public class ReuniaoService {
         Colegiado colegiado = colegiadoRepository.findById(colegiadoId)
                 .orElseThrow(() -> new IllegalArgumentException("Colegiado não encontrado com id: " + colegiadoId));
 
+        // Busca processos no status DISPONIVEL (relator já emitiu parecer)
         return processoRepository.findAll(
                 ProcessoSpecifications.buildSpecificationForColegiado(
                         colegiado,
-                        StatusProcesso.DISTRIBUIDO,
+                        StatusProcesso.DISPONIVEL,
                         null,
                         null
                 )
@@ -244,8 +255,8 @@ public class ReuniaoService {
         // Remove votos relacionados a este processo nesta reuniao
         reuniao.getVotos().removeIf(v -> v.getProcesso().getId().equals(processoId));
 
-        // Volta o status do processo para DISTRIBUIDO
-        processo.setStatus(StatusProcesso.DISTRIBUIDO);
+        // Volta o status do processo para DISPONIVEL (já tem parecer do relator)
+        processo.setStatus(StatusProcesso.DISPONIVEL);
         processoRepository.save(processo);
 
         reuniaoRepository.save(reuniao);
@@ -414,5 +425,145 @@ public class ReuniaoService {
                 .filter(p -> p.getStatus() == StatusProcesso.EM_JULGAMENTO)
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * Registra o voto individual de um professor em um processo.
+     * O professor vota COM_RELATOR ou DIVERGENTE em relação ao parecer do relator.
+     * A decisão final (DEFERIMENTO/INDEFERIMENTO) é calculada automaticamente.
+     *
+     * @param reuniaoId ID da reunião
+     * @param processoId ID do processo
+     * @param professorId ID do professor que está votando
+     * @param tipoVotoStr Tipo do voto (COM_RELATOR ou DIVERGENTE)
+     * @param justificativa Justificativa opcional (se preenchida, mínimo 10 caracteres)
+     * @throws IllegalArgumentException se reunião, processo ou professor não encontrados
+     * @throws IllegalStateException se reunião não está EM_ANDAMENTO, processo não está em pauta,
+     *         professor não é membro do colegiado, professor já votou, ou relator não deu parecer
+     */
+    @Transactional
+    public Voto registrarVotoIndividual(Long reuniaoId, Long processoId, Long professorId,
+                                         String tipoVotoStr, String justificativa) {
+        Reuniao reuniao = findById(reuniaoId);
+        if (reuniao == null) {
+            throw new IllegalArgumentException("Reunião não encontrada");
+        }
+
+        if (reuniao.getStatus() != StatusReuniao.EM_ANDAMENTO) {
+            throw new IllegalStateException("A reunião não está em andamento");
+        }
+
+        Processo processo = processoRepository.findById(processoId)
+                .orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
+
+        // Verifica se processo pertence à pauta (por ID)
+        boolean pertencePauta = reuniao.getProcessos().stream()
+                .anyMatch(p -> p.getId().equals(processoId));
+        if (!pertencePauta) {
+            throw new IllegalStateException("Processo não pertence à pauta desta reunião");
+        }
+
+        // Verifica se processo está na pauta (EM_PAUTA ou EM_JULGAMENTO)
+        if (processo.getStatus() != StatusProcesso.EM_PAUTA &&
+            processo.getStatus() != StatusProcesso.EM_JULGAMENTO) {
+            throw new IllegalStateException("Processo não está disponível para votação. Status atual: " + processo.getStatus().getDescricao());
+        }
+
+        // VALIDAÇÃO CRÍTICA: Verifica se o relator já deu parecer
+        if (processo.getDecisaoRelator() == null) {
+            throw new IllegalStateException("O relator ainda não emitiu parecer para este processo. Aguarde o parecer do relator para votar.");
+        }
+
+        Professor professor = professorRepository.findById(professorId)
+                .orElseThrow(() -> new IllegalArgumentException("Professor não encontrado"));
+
+        // Verifica se professor é membro do colegiado
+        boolean membroColegiado = reuniao.getColegiado().getMembros().stream()
+                .anyMatch(m -> m.getId().equals(professorId));
+        if (!membroColegiado) {
+            throw new IllegalStateException("Professor não é membro do colegiado desta reunião");
+        }
+
+        // Verifica se professor já votou neste processo nesta reunião
+        if (votoRepository.existsByProfessorAndProcessoAndReuniao(professor, processo, reuniao)) {
+            throw new IllegalStateException("Você já registrou seu voto neste processo");
+        }
+
+        // Valida justificativa (opcional, mas se preenchida, mínimo 10 caracteres)
+        if (justificativa != null && !justificativa.trim().isEmpty() && justificativa.trim().length() < 10) {
+            throw new IllegalArgumentException("A justificativa deve ter no mínimo 10 caracteres");
+        }
+
+        // Converte o tipo de voto (COM_RELATOR ou DIVERGENTE)
+        TipoVoto tipoVoto = TipoVoto.valueOf(tipoVotoStr);
+
+        // Calcula a decisão baseada no parecer do relator e no tipo de voto
+        TipoDecisao decisao;
+        if (tipoVoto == TipoVoto.COM_RELATOR) {
+            // Se vota com o relator, a decisão é igual à do relator
+            decisao = processo.getDecisaoRelator();
+        } else {
+            // Se vota divergente, a decisão é o inverso da do relator
+            decisao = processo.getDecisaoRelator().inverter();
+        }
+
+        // Cria o voto
+        Voto voto = new Voto();
+        voto.setProfessor(professor);
+        voto.setProcesso(processo);
+        voto.setReuniao(reuniao);
+        voto.setTipo(tipoVoto);
+        voto.setDecisao(decisao);
+        voto.setAusente(false);
+        voto.setDataVoto(java.time.LocalDateTime.now());
+
+        // Define justificativa se fornecida
+        if (justificativa != null && !justificativa.trim().isEmpty()) {
+            voto.setJustificativa(justificativa.trim());
+        }
+
+        reuniao.getVotos().add(voto);
+        reuniaoRepository.save(reuniao);
+
+        return voto;
+    }
+
+    /**
+     * Busca o voto de um professor em um processo específico de uma reunião.
+     */
+    @Transactional(readOnly = true)
+    public Voto getVotoDoProfessor(Long reuniaoId, Long processoId, Long professorId) {
+        return votoRepository.findByIds(professorId, processoId, reuniaoId).orElse(null);
+    }
+
+    /**
+     * Verifica se um professor já votou em um processo.
+     */
+    @Transactional(readOnly = true)
+    public boolean professorJaVotou(Long reuniaoId, Long processoId, Long professorId) {
+        Reuniao reuniao = findById(reuniaoId);
+        Processo processo = processoRepository.findById(processoId).orElse(null);
+        Professor professor = professorRepository.findById(professorId).orElse(null);
+
+        if (reuniao == null || processo == null || professor == null) {
+            return false;
+        }
+
+        return votoRepository.existsByProfessorAndProcessoAndReuniao(professor, processo, reuniao);
+    }
+
+    /**
+     * Busca todos os votos de um professor em uma reunião.
+     */
+    @Transactional(readOnly = true)
+    public List<Voto> getVotosDoProfessorNaReuniao(Long reuniaoId, Long professorId) {
+        Reuniao reuniao = findById(reuniaoId);
+        Professor professor = professorRepository.findById(professorId).orElse(null);
+
+        if (reuniao == null || professor == null) {
+            return java.util.Collections.emptyList();
+        }
+
+        return votoRepository.findByProfessorAndReuniao(professor, reuniao);
     }
 }

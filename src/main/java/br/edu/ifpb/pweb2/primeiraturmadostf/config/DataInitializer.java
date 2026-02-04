@@ -28,9 +28,8 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        //criarUsuarioAdminSeNaoExistir();
-        //criarUsuariosParaRegistrosExistentes();
-        //corrigirSenhasESincronizarUsuarios();
+        criarUsuarioAdminSeNaoExistir();
+        criarUsuariosParaRegistrosExistentes();
     }
 
     private void criarUsuarioAdminSeNaoExistir() {
@@ -99,7 +98,7 @@ public class DataInitializer implements CommandLineRunner {
             if (usuarioRepository.findByMatricula(aluno.getMatricula()).isEmpty()) {
                 Usuario user = new Usuario();
                 user.setMatricula(aluno.getMatricula());
-                user.setSenha(passwordEncoder.encode("123")); // Senha padrão
+                user.setSenha(passwordEncoder.encode("123456")); // Senha padrão
                 user.setRole(Role.ROLE_ALUNO);
                 user.setAluno(aluno);
                 usuarioRepository.save(user);

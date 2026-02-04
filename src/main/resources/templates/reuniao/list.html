@@ -65,9 +65,16 @@
                                 <td class="text-end pe-3">
                                     <div class="btn-group btn-group-sm">
                                         <button class="btn btn-outline-info" th:onclick="|carregarDetalhes(${r.id})|">Detalhes</button>
+                                        <!-- Acoes do Coordenador -->
                                         <th:block th:if="${isProfessorView == null}">
                                             <form th:if="${r.status.name() == 'PROGRAMADA'}" th:action="@{/reunioes/{id}/iniciar(id=${r.id})}" method="post"><button type="submit" class="btn btn-success">Iniciar</button></form>
                                             <a th:if="${r.status.name() == 'EM_ANDAMENTO'}" th:href="@{/reunioes/{id}/conduzir(id=${r.id})}" class="btn btn-warning">Conduzir</a>
+                                        </th:block>
+                                        <!-- Acao do Professor: Participar da sessao em andamento -->
+                                        <th:block th:if="${isProfessorView != null}">
+                                            <a th:if="${r.status.name() == 'EM_ANDAMENTO'}" th:href="@{/reunioes/{id}/participar(id=${r.id})}" class="btn btn-success">
+                                                <i class="bi bi-box-arrow-in-right"></i> Participar
+                                            </a>
                                         </th:block>
                                     </div>
                                 </td>
