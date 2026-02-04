@@ -3,6 +3,8 @@ package br.edu.ifpb.pweb2.primeiraturmadostf.services;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,5 +70,9 @@ public class CursoService {
     public boolean existsByNomeAndNotId(String nome, Long id) {
         Curso curso = this.findByNome(nome);
         return curso != null && !curso.getId().equals(id);
+    }
+
+    public Page<Curso> findAll(Pageable paging) {
+        return cursoRepository.findAll(paging);
     }
 }
