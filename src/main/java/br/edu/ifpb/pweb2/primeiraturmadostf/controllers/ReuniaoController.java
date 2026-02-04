@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -228,13 +230,19 @@ public class ReuniaoController {
 
         model.addAttribute("reuniao", reuniao);
         model.addAttribute("processos", reuniao.getProcessos());
-        model.addAttribute("membros", reuniao.getColegiado().getMembros());
 
         // Processo selecionado para apreciacao
         if (processoId != null) {
             Processo processoSelecionado = processoService.findById(processoId);
             if (processoSelecionado != null && reuniao.getProcessos().contains(processoSelecionado)) {
                 model.addAttribute("processoSelecionado", processoSelecionado);
+
+                // Filtra membros excluindo o relator (ele já deu parecer)
+                Set<Professor> membrosParaVotar = reuniao.getColegiado().getMembros().stream()
+                        .filter(m -> processoSelecionado.getRelator() == null ||
+                                     !m.getId().equals(processoSelecionado.getRelator().getId()))
+                        .collect(Collectors.toSet());
+                model.addAttribute("membros", membrosParaVotar);
 
                 // Carrega votos ja registrados para este processo nesta reuniao
                 Map<Long, String> votosRegistrados = new HashMap<>();
@@ -249,6 +257,9 @@ public class ReuniaoController {
                 }
                 model.addAttribute("votosRegistrados", votosRegistrados);
             }
+        } else {
+            // Se nenhum processo selecionado, mostra todos os membros
+            model.addAttribute("membros", reuniao.getColegiado().getMembros());
         }
 
         return "reuniao/conduzir";
@@ -315,17 +326,23 @@ public class ReuniaoController {
                     return "redirect:/reunioes/" + reuniaoId + "/conduzir?processoId=" + processoId;
                 }
 
-                // Coleta os votos do formulário
+                // Filtra membros excluindo o relator (ele já deu parecer)
+                Set<Professor> membrosParaVotar = reuniao.getColegiado().getMembros().stream()
+                        .filter(m -> processo.getRelator() == null ||
+                                     !m.getId().equals(processo.getRelator().getId()))
+                        .collect(Collectors.toSet());
+
+                // Coleta os votos do formulário (apenas dos membros que devem votar)
                 Map<Long, String> votos = new HashMap<>();
-                for (Professor membro : reuniao.getColegiado().getMembros()) {
+                for (Professor membro : membrosParaVotar) {
                     String votoValue = request.getParameter("voto_" + membro.getId());
                     if (votoValue != null && !votoValue.isEmpty()) {
                         votos.put(membro.getId(), votoValue);
                     }
                 }
 
-                // Verifica se todos os membros votaram
-                if (votos.size() < reuniao.getColegiado().getMembros().size()) {
+                // Verifica se todos os membros (exceto relator) votaram
+                if (votos.size() < membrosParaVotar.size()) {
                     redirectAttributes.addFlashAttribute("erro", "Todos os membros devem votar antes de concluir o julgamento.");
                     // Salva os votos parciais mesmo assim
                     reuniaoService.registrarVotos(reuniaoId, processoId, votos);

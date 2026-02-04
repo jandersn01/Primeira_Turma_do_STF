@@ -200,10 +200,16 @@ public class ReuniaoService {
             throw new IllegalArgumentException("Reuniao nao encontrada");
         }
 
+        // REQFUNC 12: Nao permite alterar votos de reuniao encerrada
+        if (reuniao.getStatus() == StatusReuniao.ENCERRADA) {
+            throw new IllegalStateException("Nao e possivel alterar votos de uma reuniao encerrada");
+        }
+
         Processo processo = processoRepository.findById(processoId)
                 .orElseThrow(() -> new IllegalArgumentException("Processo nao encontrado"));
 
-        // Remove votos anteriores deste processo nesta reuniao
+        // Remove votos anteriores deste processo nesta reuniao (do banco e da colecao em memoria)
+        votoRepository.deleteByProcessoIdAndReuniaoId(processoId, reuniaoId);
         reuniao.getVotos().removeIf(v -> v.getProcesso().getId().equals(processoId));
 
         // Registra os novos votos
@@ -225,13 +231,15 @@ public class ReuniaoService {
             reuniao.getVotos().add(voto);
         }
 
-        // Atualiza status do processo para JULGADO se todos votaram
-        int totalMembros = reuniao.getColegiado().getMembros().size();
+        // Atualiza status do processo para JULGADO se todos votaram (exceto relator, que já deu parecer)
+        long totalMembrosParaVotar = reuniao.getColegiado().getMembros().stream()
+                .filter(m -> processo.getRelator() == null || !m.getId().equals(processo.getRelator().getId()))
+                .count();
         long votosRegistrados = reuniao.getVotos().stream()
                 .filter(v -> v.getProcesso().getId().equals(processoId))
                 .count();
 
-        if (votosRegistrados == totalMembros) {
+        if (votosRegistrados == totalMembrosParaVotar) {
             processo.setStatus(StatusProcesso.JULGADO);
             processoRepository.save(processo);
         }
@@ -244,6 +252,11 @@ public class ReuniaoService {
         Reuniao reuniao = findById(reuniaoId);
         if (reuniao == null) {
             throw new IllegalArgumentException("Reuniao nao encontrada");
+        }
+
+        // REQFUNC 12: Nao permite alterar pauta de reuniao encerrada
+        if (reuniao.getStatus() == StatusReuniao.ENCERRADA) {
+            throw new IllegalStateException("Nao e possivel alterar a pauta de uma reuniao encerrada");
         }
 
         Processo processo = processoRepository.findById(processoId)
